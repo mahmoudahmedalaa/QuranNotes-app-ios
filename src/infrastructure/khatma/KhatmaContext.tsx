@@ -153,6 +153,7 @@ interface KhatmaContextType {
     completedSurahs: number[];
     nextSurah: SurahMeta;
     markSurahComplete: (surahNumber: number) => Promise<void>;
+    unmarkSurah: (surahNumber: number) => Promise<void>;
 
     // Juz-level (auto-derived)
     completedJuz: number[];
@@ -332,6 +333,20 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         });
     }, []);
 
+    const unmarkSurah = useCallback(async (surahNumber: number) => {
+        if (surahNumber < 1 || surahNumber > 114) return;
+        setState(prev => {
+            if (!prev.completedSurahs.includes(surahNumber)) return prev;
+            const updated = prev.completedSurahs.filter(n => n !== surahNumber);
+            const newState: KhatmaState = {
+                ...prev,
+                completedSurahs: updated,
+            };
+            saveProgress(newState);
+            return newState;
+        });
+    }, []);
+
     const resetKhatma = useCallback(async () => {
         const newState = INITIAL_STATE(currentYear);
         setState(newState);
@@ -413,6 +428,7 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         completedSurahs: state.completedSurahs,
         nextSurah,
         markSurahComplete,
+        unmarkSurah,
         completedJuz,
         currentJuz,
         isComplete,

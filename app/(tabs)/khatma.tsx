@@ -15,7 +15,7 @@ import * as Haptics from 'expo-haptics';
 import { useKhatma } from '../../src/infrastructure/khatma/KhatmaContext';
 import { ProgressRing } from '../../src/presentation/components/khatma/ProgressRing';
 import { JuzGrid } from '../../src/presentation/components/khatma/JuzGrid';
-import { SurahReadingCard } from '../../src/presentation/components/khatma/TodayReadingCard';
+import { JuzSurahList } from '../../src/presentation/components/khatma/TodayReadingCard';
 import { CatchUpBanner } from '../../src/presentation/components/khatma/CatchUpBanner';
 import { StreakBadge } from '../../src/presentation/components/khatma/StreakBadge';
 import {
@@ -49,6 +49,7 @@ function ActiveTrackerView() {
         currentJuz,
         nextSurah,
         markSurahComplete,
+        unmarkSurah,
         isComplete,
         totalPagesRead,
         streakDays,
@@ -106,8 +107,6 @@ function ActiveTrackerView() {
         }, [triggerCelebrationIfNeeded]),
     );
 
-    // Is the current next surah already completed? (for the card state)
-    const isNextSurahCompleted = completedSurahs.includes(nextSurah.number);
 
     return (
         <ScrollView
@@ -214,11 +213,13 @@ function ActiveTrackerView() {
                 currentJuz={currentJuz}
             />
 
-            {/* ── Surah Reading Card ── */}
-            <SurahReadingCard
-                surah={nextSurah}
-                isCompleted={isNextSurahCompleted}
-                onMarkComplete={() => markSurahComplete(nextSurah.number)}
+            {/* ── Juz Surah List ── */}
+            <JuzSurahList
+                currentJuz={currentJuz}
+                completedSurahs={completedSurahs}
+                nextSurahNumber={nextSurah.number}
+                onMarkComplete={(n) => markSurahComplete(n)}
+                onUnmark={(n) => unmarkSurah(n)}
                 isTrialExpired={isTrialExpired}
             />
 

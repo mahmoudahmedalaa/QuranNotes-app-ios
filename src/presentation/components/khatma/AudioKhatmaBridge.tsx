@@ -1,16 +1,20 @@
 /**
- * AudioKhatmaBridge — Updates global reading position during audio playback.
+ * AudioKhatmaBridge — Updates global reading position during audio playback
+ * AND auto-completes surahs when the audio finishes playing all verses.
  *
  * Always updates the GLOBAL ReadingPositionService so that the home screen
  * "Continue Reading" and the Khatma "Continue Reading" features work correctly.
  */
 import React, { useEffect, useRef } from 'react';
 import { useAudio } from '../../../infrastructure/audio/AudioContext';
+import { useKhatma } from '../../../infrastructure/khatma/KhatmaContext';
 import { ReadingPositionService } from '../../../infrastructure/reading/ReadingPositionService';
 
 export const AudioKhatmaBridge: React.FC = () => {
-    const { playingVerse, currentSurahNum, currentSurahName } = useAudio();
+    const { playingVerse, currentSurahNum, currentSurahName, lastCompletedPlayback } = useAudio();
+    const { markSurahComplete } = useKhatma();
     const highestVerseRef = useRef<{ surah: number; verse: number } | null>(null);
+    const lastHandledTimestamp = useRef<number>(0);
 
     // Reset highest verse tracking when surah changes
     useEffect(() => {
@@ -33,6 +37,22 @@ export const AudioKhatmaBridge: React.FC = () => {
             ReadingPositionService.save(playingVerse.surah, playingVerse.verse, currentSurahName || undefined);
         }
     }, [playingVerse, currentSurahNum, currentSurahName]);
+
+    // Auto-complete surah when audio finishes the entire playlist
+    useEffect(() => {
+        if (!lastCompletedPlayback) return;
+        if (lastCompletedPlayback.timestamp <= lastHandledTimestamp.current) return;
+
+        // Mark this event as handled
+        lastHandledTimestamp.current = lastCompletedPlayback.timestamp;
+
+        // Auto-mark the surah as complete in Khatma
+        markSurahComplete(lastCompletedPlayback.surah);
+
+        if (__DEV__) {
+            console.log(`[AudioKhatmaBridge] Auto-completed surah ${lastCompletedPlayback.surah}`);
+        }
+    }, [lastCompletedPlayback, markSurahComplete]);
 
     return null;
 };

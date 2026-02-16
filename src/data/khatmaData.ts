@@ -149,6 +149,20 @@ export function getJuzForSurah(surahNumber: number): number[] {
 }
 
 /**
+ * Get all surah numbers that belong to a specific Juz.
+ * A surah belongs to a Juz if it starts or ends within the Juz's surah range.
+ */
+export function getSurahsInJuz(juzNumber: number): number[] {
+    const juz = JUZ_DATA.find(j => j.juzNumber === juzNumber);
+    if (!juz) return [];
+    const surahs: number[] = [];
+    for (let s = juz.startSurahNumber; s <= juz.endSurahNumber; s++) {
+        surahs.push(s);
+    }
+    return surahs;
+}
+
+/**
  * Check if a page belongs to a specific Juz
  */
 export function isPageInJuz(pageNumber: number, juzNumber: number): boolean {
