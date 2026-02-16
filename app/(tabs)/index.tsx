@@ -70,8 +70,8 @@ export default function Index() {
         };
         cycleMessage();
         const interval = setInterval(cycleMessage, 3500);
-        // Show 1 message (3.5s) then dismiss — returning users want to get to reading quickly
-        const timer = setTimeout(() => setMinLoading(false), 3500);
+        // Brief transition (0.8s) then dismiss — returning users want to get to reading quickly
+        const timer = setTimeout(() => setMinLoading(false), 800);
         return () => {
             clearInterval(interval);
             clearTimeout(timer);

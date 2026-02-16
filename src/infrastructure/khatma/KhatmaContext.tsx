@@ -1,45 +1,199 @@
 /**
- * Khatma Context — Self-Paced Juz Tracker
- * No day/calendar mapping. User reads at their own pace and toggles Juz complete.
+ * Khatma Context — Surah-Based Sequential Reading
+ * User reads one surah at a time (always from verse 1). Juz progress auto-derives.
  */
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getJuzInfo, JuzInfo } from '../../data/khatmaData';
+import { JUZ_DATA } from '../../data/khatmaData';
 import { useAuth } from '../auth/AuthContext';
-import { KhatmaReadingPosition } from './KhatmaReadingPosition';
+
+// ─── Surah metadata (name + Arabic) for the 114 surahs ─────────────────────
+// Minimal inline list — only what the reading card needs.
+const SURAH_NAMES: { number: number; english: string; arabic: string; verses: number }[] = [
+    { number: 1, english: 'Al-Fatiha', arabic: 'الفاتحة', verses: 7 },
+    { number: 2, english: 'Al-Baqarah', arabic: 'البقرة', verses: 286 },
+    { number: 3, english: 'Al-Imran', arabic: 'آل عمران', verses: 200 },
+    { number: 4, english: 'An-Nisa', arabic: 'النساء', verses: 176 },
+    { number: 5, english: "Al-Ma'idah", arabic: 'المائدة', verses: 120 },
+    { number: 6, english: "Al-An'am", arabic: 'الأنعام', verses: 165 },
+    { number: 7, english: "Al-A'raf", arabic: 'الأعراف', verses: 206 },
+    { number: 8, english: 'Al-Anfal', arabic: 'الأنفال', verses: 75 },
+    { number: 9, english: 'At-Tawbah', arabic: 'التوبة', verses: 129 },
+    { number: 10, english: 'Yunus', arabic: 'يونس', verses: 109 },
+    { number: 11, english: 'Hud', arabic: 'هود', verses: 123 },
+    { number: 12, english: 'Yusuf', arabic: 'يوسف', verses: 111 },
+    { number: 13, english: "Ar-Ra'd", arabic: 'الرعد', verses: 43 },
+    { number: 14, english: 'Ibrahim', arabic: 'إبراهيم', verses: 52 },
+    { number: 15, english: 'Al-Hijr', arabic: 'الحجر', verses: 99 },
+    { number: 16, english: 'An-Nahl', arabic: 'النحل', verses: 128 },
+    { number: 17, english: "Al-Isra'", arabic: 'الإسراء', verses: 111 },
+    { number: 18, english: 'Al-Kahf', arabic: 'الكهف', verses: 110 },
+    { number: 19, english: 'Maryam', arabic: 'مريم', verses: 98 },
+    { number: 20, english: 'Ta-Ha', arabic: 'طه', verses: 135 },
+    { number: 21, english: 'Al-Anbiya', arabic: 'الأنبياء', verses: 112 },
+    { number: 22, english: 'Al-Hajj', arabic: 'الحج', verses: 78 },
+    { number: 23, english: "Al-Mu'minun", arabic: 'المؤمنون', verses: 118 },
+    { number: 24, english: 'An-Nur', arabic: 'النور', verses: 64 },
+    { number: 25, english: 'Al-Furqan', arabic: 'الفرقان', verses: 77 },
+    { number: 26, english: "Ash-Shu'ara", arabic: 'الشعراء', verses: 227 },
+    { number: 27, english: 'An-Naml', arabic: 'النمل', verses: 93 },
+    { number: 28, english: 'Al-Qasas', arabic: 'القصص', verses: 88 },
+    { number: 29, english: 'Al-Ankabut', arabic: 'العنكبوت', verses: 69 },
+    { number: 30, english: 'Ar-Rum', arabic: 'الروم', verses: 60 },
+    { number: 31, english: 'Luqman', arabic: 'لقمان', verses: 34 },
+    { number: 32, english: 'As-Sajdah', arabic: 'السجدة', verses: 30 },
+    { number: 33, english: 'Al-Ahzab', arabic: 'الأحزاب', verses: 73 },
+    { number: 34, english: "Saba'", arabic: 'سبأ', verses: 54 },
+    { number: 35, english: 'Fatir', arabic: 'فاطر', verses: 45 },
+    { number: 36, english: 'Ya-Sin', arabic: 'يس', verses: 83 },
+    { number: 37, english: 'As-Saffat', arabic: 'الصافات', verses: 182 },
+    { number: 38, english: 'Sad', arabic: 'ص', verses: 88 },
+    { number: 39, english: 'Az-Zumar', arabic: 'الزمر', verses: 75 },
+    { number: 40, english: 'Ghafir', arabic: 'غافر', verses: 85 },
+    { number: 41, english: 'Fussilat', arabic: 'فصلت', verses: 54 },
+    { number: 42, english: 'Ash-Shura', arabic: 'الشورى', verses: 53 },
+    { number: 43, english: 'Az-Zukhruf', arabic: 'الزخرف', verses: 89 },
+    { number: 44, english: 'Ad-Dukhan', arabic: 'الدخان', verses: 59 },
+    { number: 45, english: 'Al-Jathiyah', arabic: 'الجاثية', verses: 37 },
+    { number: 46, english: 'Al-Ahqaf', arabic: 'الأحقاف', verses: 35 },
+    { number: 47, english: 'Muhammad', arabic: 'محمد', verses: 38 },
+    { number: 48, english: 'Al-Fath', arabic: 'الفتح', verses: 29 },
+    { number: 49, english: 'Al-Hujurat', arabic: 'الحجرات', verses: 18 },
+    { number: 50, english: 'Qaf', arabic: 'ق', verses: 45 },
+    { number: 51, english: 'Adh-Dhariyat', arabic: 'الذاريات', verses: 60 },
+    { number: 52, english: 'At-Tur', arabic: 'الطور', verses: 49 },
+    { number: 53, english: 'An-Najm', arabic: 'النجم', verses: 62 },
+    { number: 54, english: 'Al-Qamar', arabic: 'القمر', verses: 55 },
+    { number: 55, english: 'Ar-Rahman', arabic: 'الرحمن', verses: 78 },
+    { number: 56, english: "Al-Waqi'ah", arabic: 'الواقعة', verses: 96 },
+    { number: 57, english: 'Al-Hadid', arabic: 'الحديد', verses: 29 },
+    { number: 58, english: 'Al-Mujadila', arabic: 'المجادلة', verses: 22 },
+    { number: 59, english: 'Al-Hashr', arabic: 'الحشر', verses: 24 },
+    { number: 60, english: 'Al-Mumtahina', arabic: 'الممتحنة', verses: 13 },
+    { number: 61, english: 'As-Saff', arabic: 'الصف', verses: 14 },
+    { number: 62, english: "Al-Jumu'ah", arabic: 'الجمعة', verses: 11 },
+    { number: 63, english: 'Al-Munafiqun', arabic: 'المنافقون', verses: 11 },
+    { number: 64, english: 'At-Taghabun', arabic: 'التغابن', verses: 18 },
+    { number: 65, english: 'At-Talaq', arabic: 'الطلاق', verses: 12 },
+    { number: 66, english: 'At-Tahrim', arabic: 'التحريم', verses: 12 },
+    { number: 67, english: 'Al-Mulk', arabic: 'الملك', verses: 30 },
+    { number: 68, english: 'Al-Qalam', arabic: 'القلم', verses: 52 },
+    { number: 69, english: 'Al-Haqqah', arabic: 'الحاقة', verses: 52 },
+    { number: 70, english: "Al-Ma'arij", arabic: 'المعارج', verses: 44 },
+    { number: 71, english: 'Nuh', arabic: 'نوح', verses: 28 },
+    { number: 72, english: 'Al-Jinn', arabic: 'الجن', verses: 28 },
+    { number: 73, english: 'Al-Muzzammil', arabic: 'المزمل', verses: 20 },
+    { number: 74, english: 'Al-Muddaththir', arabic: 'المدثر', verses: 56 },
+    { number: 75, english: 'Al-Qiyamah', arabic: 'القيامة', verses: 40 },
+    { number: 76, english: 'Al-Insan', arabic: 'الإنسان', verses: 31 },
+    { number: 77, english: 'Al-Mursalat', arabic: 'المرسلات', verses: 50 },
+    { number: 78, english: "An-Naba'", arabic: 'النبأ', verses: 40 },
+    { number: 79, english: "An-Nazi'at", arabic: 'النازعات', verses: 46 },
+    { number: 80, english: 'Abasa', arabic: 'عبس', verses: 42 },
+    { number: 81, english: 'At-Takwir', arabic: 'التكوير', verses: 29 },
+    { number: 82, english: 'Al-Infitar', arabic: 'الانفطار', verses: 19 },
+    { number: 83, english: 'Al-Mutaffifin', arabic: 'المطففين', verses: 36 },
+    { number: 84, english: 'Al-Inshiqaq', arabic: 'الانشقاق', verses: 25 },
+    { number: 85, english: 'Al-Buruj', arabic: 'البروج', verses: 22 },
+    { number: 86, english: 'At-Tariq', arabic: 'الطارق', verses: 17 },
+    { number: 87, english: "Al-A'la", arabic: 'الأعلى', verses: 19 },
+    { number: 88, english: 'Al-Ghashiyah', arabic: 'الغاشية', verses: 26 },
+    { number: 89, english: 'Al-Fajr', arabic: 'الفجر', verses: 30 },
+    { number: 90, english: 'Al-Balad', arabic: 'البلد', verses: 20 },
+    { number: 91, english: 'Ash-Shams', arabic: 'الشمس', verses: 15 },
+    { number: 92, english: 'Al-Layl', arabic: 'الليل', verses: 21 },
+    { number: 93, english: 'Ad-Duha', arabic: 'الضحى', verses: 11 },
+    { number: 94, english: 'Ash-Sharh', arabic: 'الشرح', verses: 8 },
+    { number: 95, english: 'At-Tin', arabic: 'التين', verses: 8 },
+    { number: 96, english: "Al-'Alaq", arabic: 'العلق', verses: 19 },
+    { number: 97, english: 'Al-Qadr', arabic: 'القدر', verses: 5 },
+    { number: 98, english: 'Al-Bayyinah', arabic: 'البينة', verses: 8 },
+    { number: 99, english: 'Az-Zalzalah', arabic: 'الزلزلة', verses: 8 },
+    { number: 100, english: "Al-'Adiyat", arabic: 'العاديات', verses: 11 },
+    { number: 101, english: "Al-Qari'ah", arabic: 'القارعة', verses: 11 },
+    { number: 102, english: 'At-Takathur', arabic: 'التكاثر', verses: 8 },
+    { number: 103, english: "Al-'Asr", arabic: 'العصر', verses: 3 },
+    { number: 104, english: 'Al-Humazah', arabic: 'الهمزة', verses: 9 },
+    { number: 105, english: 'Al-Fil', arabic: 'الفيل', verses: 5 },
+    { number: 106, english: 'Quraysh', arabic: 'قريش', verses: 4 },
+    { number: 107, english: "Al-Ma'un", arabic: 'الماعون', verses: 7 },
+    { number: 108, english: 'Al-Kawthar', arabic: 'الكوثر', verses: 3 },
+    { number: 109, english: 'Al-Kafirun', arabic: 'الكافرون', verses: 6 },
+    { number: 110, english: 'An-Nasr', arabic: 'النصر', verses: 3 },
+    { number: 111, english: 'Al-Masad', arabic: 'المسد', verses: 5 },
+    { number: 112, english: 'Al-Ikhlas', arabic: 'الإخلاص', verses: 4 },
+    { number: 113, english: 'Al-Falaq', arabic: 'الفلق', verses: 5 },
+    { number: 114, english: 'An-Nas', arabic: 'الناس', verses: 6 },
+];
+
+export function getSurahMeta(surahNumber: number) {
+    return SURAH_NAMES.find(s => s.number === surahNumber) ?? SURAH_NAMES[0];
+}
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface KhatmaState {
-    completedJuz: number[];
+    completedSurahs: number[];  // e.g. [1, 2, 3] = Fatiha, Baqarah, Imran done
     year: number;
-    isComplete: boolean;
-    /** ISO date string of last progress */
     lastProgressDate?: string;
     currentRound: number;
     completedRounds: number[];
     streakCount: number;
 }
 
-interface JuzProgress {
-    isComplete: boolean;
+export interface SurahMeta {
+    number: number;
+    english: string;
+    arabic: string;
+    verses: number;
 }
 
 interface KhatmaContextType {
+    // Surah-level
+    completedSurahs: number[];
+    nextSurah: SurahMeta;
+    markSurahComplete: (surahNumber: number) => Promise<void>;
+
+    // Juz-level (auto-derived)
     completedJuz: number[];
+    currentJuz: number;         // The Juz the user is currently reading in
+
+    // Global
     isComplete: boolean;
     totalPagesRead: number;
     loading: boolean;
-    getJuzProgress: (juzNumber: number) => JuzProgress;
-    markJuzComplete: (juzNumber: number) => Promise<void>;
-    unmarkJuz: (juzNumber: number) => Promise<void>;
-    toggleJuz: (juzNumber: number) => Promise<void>;
     resetKhatma: () => Promise<void>;
     startNextRound: () => Promise<void>;
     streakDays: number;
     currentRound: number;
     completedRounds: number[];
     isTrialExpired: boolean;
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/**
+ * Derive which Juz are complete from the list of completed surahs.
+ * A Juz is complete when ALL surahs from 1..endSurahNumber are complete
+ * (since reading is sequential, if endSurahNumber is done, everything before it is too).
+ */
+function deriveCompletedJuz(completedSurahs: number[]): number[] {
+    if (completedSurahs.length === 0) return [];
+    const highestCompleted = Math.max(...completedSurahs);
+    return JUZ_DATA
+        .filter(juz => juz.endSurahNumber <= highestCompleted)
+        .map(juz => juz.juzNumber);
+}
+
+/**
+ * Which Juz is the user currently reading in?
+ * Based on the next surah to read.
+ */
+function deriveCurrentJuz(nextSurahNumber: number): number {
+    const juz = JUZ_DATA.find(j =>
+        nextSurahNumber >= j.startSurahNumber && nextSurahNumber <= j.endSurahNumber
+    );
+    return juz?.juzNumber ?? 1;
 }
 
 // ─── Storage ─────────────────────────────────────────────────────────────────
@@ -63,9 +217,8 @@ export const useKhatma = (): KhatmaContextType => {
 // ─── Provider ────────────────────────────────────────────────────────────────
 
 const INITIAL_STATE = (year: number): KhatmaState => ({
-    completedJuz: [],
+    completedSurahs: [],
     year,
-    isComplete: false,
     currentRound: 1,
     completedRounds: [],
     streakCount: 0,
@@ -92,7 +245,6 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
         if (currentUid !== prevUidRef.current) {
             prevUidRef.current = currentUid;
-            if (__DEV__) console.log(`[Khatma] Auth user changed, reloading...`);
             loadProgress();
         }
     }, [user?.id]);
@@ -102,16 +254,41 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             const key = getStorageKey(currentYear);
             const raw = await AsyncStorage.getItem(key);
             if (raw) {
-                const parsed = JSON.parse(raw) as KhatmaState;
-                if (Array.isArray(parsed.completedJuz)) {
-                    if (__DEV__) console.log(`[Khatma] Loaded: ${parsed.completedJuz.length} Juz completed`);
+                const parsed = JSON.parse(raw);
+
+                // Migration: old format had completedJuz, new format has completedSurahs
+                if (Array.isArray(parsed.completedJuz) && !Array.isArray(parsed.completedSurahs)) {
+                    // Migrate: convert completedJuz to completedSurahs
+                    // Find the highest surah number covered by the completed Juz
+                    const juzNumbers = parsed.completedJuz as number[];
+                    let highestSurah = 0;
+                    for (const juzNum of juzNumbers) {
+                        const juz = JUZ_DATA.find(j => j.juzNumber === juzNum);
+                        if (juz && juz.endSurahNumber > highestSurah) {
+                            highestSurah = juz.endSurahNumber;
+                        }
+                    }
+                    const migratedSurahs = Array.from({ length: highestSurah }, (_, i) => i + 1);
+                    const migratedState: KhatmaState = {
+                        completedSurahs: migratedSurahs,
+                        year: parsed.year || currentYear,
+                        lastProgressDate: parsed.lastProgressDate,
+                        currentRound: parsed.currentRound || 1,
+                        completedRounds: parsed.completedRounds || [],
+                        streakCount: parsed.streakCount || 0,
+                    };
+                    setState(migratedState);
+                    saveProgress(migratedState);
+                    return;
+                }
+
+                if (Array.isArray(parsed.completedSurahs)) {
                     setState({
-                        completedJuz: parsed.completedJuz.filter(
+                        completedSurahs: parsed.completedSurahs.filter(
                             (n: number, i: number, arr: number[]) =>
-                                typeof n === 'number' && n >= 1 && n <= 30 && arr.indexOf(n) === i
+                                typeof n === 'number' && n >= 1 && n <= 114 && arr.indexOf(n) === i
                         ),
                         year: parsed.year || currentYear,
-                        isComplete: parsed.isComplete || false,
                         lastProgressDate: parsed.lastProgressDate,
                         currentRound: parsed.currentRound || 1,
                         completedRounds: parsed.completedRounds || [],
@@ -138,19 +315,16 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     };
 
-    const getJuzProgress = useCallback((juzNumber: number): JuzProgress => ({
-        isComplete: state.completedJuz.includes(juzNumber),
-    }), [state.completedJuz]);
+    // ─── Actions ─────────────────────────────────────────────────────────
 
-    const markJuzComplete = useCallback(async (juzNumber: number) => {
-        if (juzNumber < 1 || juzNumber > 30) return;
+    const markSurahComplete = useCallback(async (surahNumber: number) => {
+        if (surahNumber < 1 || surahNumber > 114) return;
         setState(prev => {
-            if (prev.completedJuz.includes(juzNumber)) return prev;
-            const updated = [...prev.completedJuz, juzNumber].sort((a, b) => a - b);
+            if (prev.completedSurahs.includes(surahNumber)) return prev;
+            const updated = [...prev.completedSurahs, surahNumber].sort((a, b) => a - b);
             const newState: KhatmaState = {
                 ...prev,
-                completedJuz: updated,
-                isComplete: updated.length >= 30,
+                completedSurahs: updated,
                 lastProgressDate: todayDateString(),
             };
             saveProgress(newState);
@@ -158,53 +332,17 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         });
     }, []);
 
-    const unmarkJuz = useCallback(async (juzNumber: number) => {
-        setState(prev => {
-            const updated = prev.completedJuz.filter(n => n !== juzNumber);
-            const newState: KhatmaState = { ...prev, completedJuz: updated, isComplete: false };
-            saveProgress(newState);
-            return newState;
-        });
-    }, []);
-
-    const toggleJuz = useCallback(async (juzNumber: number) => {
-        setState(prev => {
-            if (prev.completedJuz.includes(juzNumber)) {
-                const updated = prev.completedJuz.filter(n => n !== juzNumber);
-                const newState: KhatmaState = { ...prev, completedJuz: updated, isComplete: false };
-                saveProgress(newState);
-                return newState;
-            } else {
-                const updated = [...prev.completedJuz, juzNumber].sort((a, b) => a - b);
-                const newState: KhatmaState = {
-                    ...prev,
-                    completedJuz: updated,
-                    isComplete: updated.length >= 30,
-                    lastProgressDate: todayDateString(),
-                };
-                saveProgress(newState);
-                return newState;
-            }
-        });
-    }, []);
-
     const resetKhatma = useCallback(async () => {
         const newState = INITIAL_STATE(currentYear);
         setState(newState);
         await saveProgress(newState);
-        // Clear all Juz-specific reading positions so nothing shows as "in progress"
-        await KhatmaReadingPosition.clearAll();
     }, [currentYear]);
 
     const startNextRound = useCallback(async () => {
-        // Clear all Juz-specific reading positions FIRST
-        // so JuzGrid won't show stale "in progress" state
-        await KhatmaReadingPosition.clearAll();
         setState(prev => {
             const newState: KhatmaState = {
-                completedJuz: [],
+                completedSurahs: [],
                 year: currentYear,
-                isComplete: false,
                 currentRound: prev.currentRound + 1,
                 completedRounds: [...prev.completedRounds, Date.now()],
                 streakCount: prev.streakCount,
@@ -217,14 +355,27 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // ─── Derived values ──────────────────────────────────────────────────
 
+    const completedJuz = useMemo(() => deriveCompletedJuz(state.completedSurahs), [state.completedSurahs]);
+
+    const nextSurahNumber = useMemo(() => {
+        for (let i = 1; i <= 114; i++) {
+            if (!state.completedSurahs.includes(i)) return i;
+        }
+        return 114; // all done
+    }, [state.completedSurahs]);
+
+    const nextSurah = useMemo(() => getSurahMeta(nextSurahNumber), [nextSurahNumber]);
+    const currentJuz = useMemo(() => deriveCurrentJuz(nextSurahNumber), [nextSurahNumber]);
+    const isComplete = useMemo(() => state.completedSurahs.length >= 114, [state.completedSurahs]);
+
     const totalPagesRead = useMemo(() => {
         let total = 0;
-        for (const juzNum of state.completedJuz) {
-            const juz = getJuzInfo(juzNum);
+        for (const juzNum of completedJuz) {
+            const juz = JUZ_DATA.find(j => j.juzNumber === juzNum);
             total += juz?.totalPages ?? 20;
         }
         return total;
-    }, [state.completedJuz]);
+    }, [completedJuz]);
 
     // Trial: 3 days from first use
     const [trialStartDate, setTrialStartDate] = useState<string | null>(null);
@@ -259,14 +410,14 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }, [state.lastProgressDate, state.streakCount]);
 
     const value: KhatmaContextType = {
-        completedJuz: state.completedJuz,
-        isComplete: state.isComplete,
+        completedSurahs: state.completedSurahs,
+        nextSurah,
+        markSurahComplete,
+        completedJuz,
+        currentJuz,
+        isComplete,
         totalPagesRead,
         loading,
-        getJuzProgress,
-        markJuzComplete,
-        unmarkJuz,
-        toggleJuz,
         resetKhatma,
         startNextRound,
         streakDays,

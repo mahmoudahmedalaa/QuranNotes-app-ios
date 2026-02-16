@@ -29,7 +29,7 @@ export interface InsightMetrics {
 
 export const useInsightsData = (): InsightMetrics => {
     const { streak } = useStreaks();
-    const { totalPagesRead, completedJuz } = useKhatma();
+    const { totalPagesRead, completedJuz, completedSurahs } = useKhatma();
     const { recordingRepo, noteRepo } = useRepositories();
     const [recordings, setRecordings] = useState<Recording[]>([]);
     const [notes, setNotes] = useState<Note[]>([]);
@@ -97,7 +97,7 @@ export const useInsightsData = (): InsightMetrics => {
             const todayStr = today.toISOString().split('T')[0];
             if (activityMap.has(todayStr)) {
                 // Estimate: average pages across active days, ~2 min/page
-                const activeDays = Math.max(1, completedJuz.length);
+                const activeDays = Math.max(1, completedSurahs.length);
                 const avgPagesPerDay = Math.ceil(totalPagesRead / activeDays);
                 const readingMins = avgPagesPerDay * 2;
                 activityMap.set(todayStr, (activityMap.get(todayStr) || 0) + readingMins);
@@ -124,7 +124,7 @@ export const useInsightsData = (): InsightMetrics => {
 
         // Add Khatma reading days (each completed juz = activity on that day)
         // Generate entries for days the user has been active this month
-        if (completedJuz.length > 0 || totalPagesRead > 0) {
+        if (completedSurahs.length > 0 || totalPagesRead > 0) {
             const today = new Date();
             const year = today.getFullYear();
             const month = today.getMonth();
@@ -148,7 +148,7 @@ export const useInsightsData = (): InsightMetrics => {
     // 3. Topic Breakdown — include Khatma reading as "Reading" category
     const getTopicBreakdown = () => {
         // Include Khatma pages read as a "reading" activity unit
-        const khatmaReadingUnits = Math.max(completedJuz.length, Math.floor(totalPagesRead / 20));
+        const khatmaReadingUnits = Math.max(completedSurahs.length, Math.floor(totalPagesRead / 20));
         const totalItems = khatmaReadingUnits + (streak?.totalReflections || 0) + recordings.length + notes.length;
 
         if (totalItems === 0)
@@ -200,7 +200,7 @@ export const useInsightsData = (): InsightMetrics => {
             totalTimeMinutes: getTotalTime(),
             versesRead: Math.max(streak?.totalReflections || 0, totalPagesRead),
             recordingsCount: recordings.length,
-            favoritesCount: completedJuz.length,
+            favoritesCount: completedSurahs.length,
         },
         loading,
     };

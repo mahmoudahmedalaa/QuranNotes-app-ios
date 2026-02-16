@@ -1,212 +1,201 @@
 /**
- * TodayReadingCard — Reading card for Khatma.
- * Shows Juz info, surah range, total pages, and action buttons.
- *
- * Uses VERSE-BASED navigation (not page-based) for reliable Juz start.
- * Passes `khatmaJuz` as a URL param so the surah screen can:
- *   1. Auto-continue to the next surah within the Juz when a surah finishes
- *   2. Auto-complete the Juz when the last verse is reached
- *   3. Save khatma-specific reading positions
- *
- * "Continue Reading" detection: uses KhatmaReadingPosition (Juz-specific)
- * to track exactly where the user left off within each Juz.
+ * SurahReadingCard — Shows the next surah to read with Start/Continue/Mark Complete.
+ * Always navigates to the surah from verse 1 (Start) or saved position (Continue).
+ * No Juz-offset navigation, no khatmaJuz params, no mid-surah starts.
  */
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useTheme } from 'react-native-paper';
-import { useRouter } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
+import { useRouter, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { JuzInfo } from '../../../data/khatmaData';
-import { KhatmaReadingPosition, KhatmaPosition } from '../../../infrastructure/khatma/KhatmaReadingPosition';
+import { ReadingPositionService, ReadingPosition } from '../../../infrastructure/reading/ReadingPositionService';
+import { SurahMeta } from '../../../infrastructure/khatma/KhatmaContext';
+import { getJuzForSurah } from '../../../data/khatmaData';
 import { Spacing, BorderRadius, Shadows } from '../../theme/DesignSystem';
 
 const ACCENT = {
     gold: '#F5A623',
-    goldLight: '#F5A62320',
     green: '#10B981',
-    greenLight: '#10B98120',
+    blue: '#6C8EEF',
 };
 
-interface TodayReadingCardProps {
-    juz: JuzInfo;
+interface SurahReadingCardProps {
+    surah: SurahMeta;
     isCompleted: boolean;
-    isToday: boolean;
-    onToggle: () => void;
-    isTrialExpired?: boolean;
-    /** Increment this to force a refresh (e.g. on tab focus) */
-    refreshKey?: number;
+    onMarkComplete: () => void;
+    isTrialExpired: boolean;
 }
 
-export const TodayReadingCard: React.FC<TodayReadingCardProps> = ({
-    juz,
+export const SurahReadingCard: React.FC<SurahReadingCardProps> = ({
+    surah,
     isCompleted,
-    isToday,
-    onToggle,
+    onMarkComplete,
     isTrialExpired,
-    refreshKey,
 }) => {
     const theme = useTheme();
     const router = useRouter();
+    const [savedPosition, setSavedPosition] = useState<ReadingPosition | null>(null);
 
-    // Track Juz-specific reading position for "Continue Reading"
-    const [savedPos, setSavedPos] = useState<KhatmaPosition | null>(null);
+    // Check for saved reading position on focus
+    const checkPosition = useCallback(async () => {
+        const pos = await ReadingPositionService.get(surah.number);
+        setSavedPosition(pos);
+    }, [surah.number]);
+
+    useFocusEffect(
+        useCallback(() => {
+            checkPosition();
+        }, [checkPosition]),
+    );
 
     useEffect(() => {
-        KhatmaReadingPosition.get(juz.juzNumber).then(pos => {
-            setSavedPos(pos);
-        });
-    }, [juz.juzNumber, refreshKey]);
+        checkPosition();
+    }, [checkPosition]);
 
-    const hasStartedReading = savedPos !== null;
+    const hasStartedReading = savedPosition !== null && savedPosition.verse > 1;
 
     const handleStartReading = () => {
         if (isTrialExpired) {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-            router.push('/paywall?reason=khatma');
+            router.push('/paywall');
             return;
         }
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        // Always starts from verse 1 — clean and simple
+        router.push(`/surah/${surah.number}?autoplay=true`);
+    };
 
-        // Set active session so AudioKhatmaBridge saves positions for this Juz
-        KhatmaReadingPosition.startSession(juz.juzNumber);
-
-        if (hasStartedReading && savedPos) {
-            // Resume from saved position within this Juz
-            router.push(`/surah/${savedPos.surah}?verse=${savedPos.verse}&autoplay=true&khatmaJuz=${juz.juzNumber}`);
-        } else {
-            // First time: navigate to the Juz's start verse using VERSE-BASED navigation
-            // This is reliable — no page-guessing, exact verse number
-            router.push(`/surah/${juz.startSurahNumber}?verse=${juz.startVerseNumber}&autoplay=true&khatmaJuz=${juz.juzNumber}`);
+    const handleContinueReading = () => {
+        if (isTrialExpired) {
+            router.push('/paywall');
+            return;
         }
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        // Navigate to saved position
+        router.push(`/surah/${savedPosition!.surah}?verse=${savedPosition!.verse}&autoplay=true`);
     };
 
-    const getHeaderText = () => {
-        if (isCompleted) return 'Completed';
-        if (isToday) return "Today's Reading";
-        return `Juz ${juz.juzNumber}`;
+    const handleMarkComplete = () => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        onMarkComplete();
     };
+
+    // Which Juz does this surah belong to?
+    const juzNumbers = getJuzForSurah(surah.number);
+    const juzLabel = juzNumbers.length === 1
+        ? `Juz ${juzNumbers[0]}`
+        : `Juz ${juzNumbers[0]}–${juzNumbers[juzNumbers.length - 1]}`;
+
+    if (isCompleted) {
+        return (
+            <MotiView
+                from={{ opacity: 0, translateY: 10 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ type: 'spring', damping: 18, delay: 200 }}
+            >
+                <View style={[styles.card, { backgroundColor: theme.colors.surface }, Shadows.sm]}>
+                    <View style={styles.completedRow}>
+                        <MaterialCommunityIcons name="check-circle" size={24} color={ACCENT.green} />
+                        <View style={styles.completedTextGroup}>
+                            <Text style={[styles.completedTitle, { color: ACCENT.green }]}>
+                                {surah.arabic} · {surah.english}
+                            </Text>
+                            <Text style={[styles.completedSubtitle, { color: theme.colors.onSurfaceVariant }]}>
+                                Completed ✓
+                            </Text>
+                        </View>
+                    </View>
+                </View>
+            </MotiView>
+        );
+    }
 
     return (
         <MotiView
             from={{ opacity: 0, translateY: 10 }}
             animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: 'spring', damping: 20, delay: 100 }}
+            transition={{ type: 'spring', damping: 18, delay: 200 }}
         >
-            <View
-                style={[
-                    styles.card,
-                    { backgroundColor: theme.colors.surface },
-                    Shadows.md,
-                ]}
-            >
-                {/* Header */}
-                <View style={styles.headerRow}>
-                    <View style={styles.headerLeft}>
-                        <View
-                            style={[
-                                styles.juzBadge,
-                                {
-                                    backgroundColor: isCompleted
-                                        ? ACCENT.green
-                                        : ACCENT.goldLight,
-                                },
-                            ]}
-                        >
-                            {isCompleted ? (
-                                <MaterialCommunityIcons name="check" size={20} color="#FFF" />
-                            ) : (
-                                <Text style={[styles.juzNumber, { color: ACCENT.gold }]}>
-                                    {juz.juzNumber}
-                                </Text>
-                            )}
-                        </View>
-                        <View style={styles.headerInfo}>
-                            <Text style={[styles.headerText, { color: theme.colors.onSurface }]}>
-                                {getHeaderText()}
-                            </Text>
-                            <Text style={[styles.juzLabel, { color: theme.colors.onSurfaceVariant }]}>
-                                Juz {juz.juzNumber} · {juz.startSurah} → {juz.endSurah} · {juz.totalPages} pages
-                            </Text>
-                        </View>
+            <View style={[styles.card, { backgroundColor: theme.colors.surface }, Shadows.sm]}>
+                {/* Surah info */}
+                <View style={styles.surahHeader}>
+                    <Text style={[styles.upNextLabel, { color: theme.colors.onSurfaceVariant }]}>
+                        Up Next
+                    </Text>
+                    <View style={[styles.juzBadge, { backgroundColor: theme.colors.primaryContainer }]}>
+                        <Text style={[styles.juzBadgeText, { color: theme.colors.primary }]}>
+                            {juzLabel}
+                        </Text>
                     </View>
                 </View>
 
-                {/* Action Buttons */}
-                <View style={styles.actionRow}>
-                    {!isCompleted && (
+                <Text style={[styles.surahName, { color: theme.colors.onSurface }]}>
+                    {surah.arabic}
+                </Text>
+                <Text style={[styles.surahEnglish, { color: theme.colors.onSurfaceVariant }]}>
+                    {surah.english} · {surah.verses} verses
+                </Text>
+
+                {/* Progress indicator if mid-surah */}
+                {hasStartedReading && (
+                    <View style={styles.progressRow}>
+                        <View style={[styles.progressBar, { backgroundColor: theme.colors.surfaceVariant }]}>
+                            <View
+                                style={[
+                                    styles.progressFill,
+                                    {
+                                        backgroundColor: ACCENT.gold,
+                                        width: `${Math.min((savedPosition!.verse / surah.verses) * 100, 100)}%`,
+                                    },
+                                ]}
+                            />
+                        </View>
+                        <Text style={[styles.progressLabel, { color: theme.colors.onSurfaceVariant }]}>
+                            Verse {savedPosition!.verse} of {surah.verses}
+                        </Text>
+                    </View>
+                )}
+
+                {/* Action buttons */}
+                <View style={styles.buttonsRow}>
+                    {hasStartedReading ? (
+                        <Pressable
+                            onPress={handleContinueReading}
+                            style={({ pressed }) => [
+                                styles.primaryButton,
+                                { backgroundColor: ACCENT.gold },
+                                pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
+                            ]}
+                        >
+                            <Ionicons name="play" size={16} color="#FFF" />
+                            <Text style={styles.primaryButtonText}>Continue Reading</Text>
+                        </Pressable>
+                    ) : (
                         <Pressable
                             onPress={handleStartReading}
                             style={({ pressed }) => [
-                                styles.continueButton,
-                                { backgroundColor: theme.colors.primary },
-                                Shadows.primary,
-                                pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                                styles.primaryButton,
+                                { backgroundColor: ACCENT.blue },
+                                pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
                             ]}
                         >
-                            <MaterialCommunityIcons
-                                name={hasStartedReading ? 'book-open-page-variant' : 'book-open-variant'}
-                                size={18}
-                                color="#FFF"
-                            />
-                            <Text style={styles.continueButtonText}>
-                                {hasStartedReading ? 'Continue Reading' : 'Start Reading'}
-                            </Text>
+                            <Ionicons name="book-outline" size={16} color="#FFF" />
+                            <Text style={styles.primaryButtonText}>Start Reading</Text>
                         </Pressable>
                     )}
 
                     <Pressable
-                        onPress={() => {
-                            if (isCompleted) {
-                                Alert.alert(
-                                    'Start Over?',
-                                    `This will reset progress for Juz ${juz.juzNumber}. You can always complete it again.`,
-                                    [
-                                        { text: 'Cancel', style: 'cancel' },
-                                        {
-                                            text: 'Start Over',
-                                            style: 'destructive',
-                                            onPress: () => {
-                                                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-                                                KhatmaReadingPosition.clear(juz.juzNumber);
-                                                onToggle();
-                                            },
-                                        },
-                                    ]
-                                );
-                            } else {
-                                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                                onToggle();
-                            }
-                        }}
+                        onPress={handleMarkComplete}
                         style={({ pressed }) => [
-                            styles.toggleButton,
-                            {
-                                backgroundColor: isCompleted
-                                    ? theme.colors.surfaceVariant
-                                    : ACCENT.greenLight,
-                                flex: isCompleted ? undefined : 0,
-                            },
-                            pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] },
+                            styles.markCompleteButton,
+                            { borderColor: ACCENT.green },
+                            pressed && { opacity: 0.7, transform: [{ scale: 0.97 }] },
                         ]}
                     >
-                        <MaterialCommunityIcons
-                            name={isCompleted ? 'restart' : 'check-circle-outline'}
-                            size={18}
-                            color={isCompleted ? theme.colors.onSurfaceVariant : ACCENT.green}
-                        />
-                        <Text
-                            style={[
-                                styles.toggleButtonText,
-                                {
-                                    color: isCompleted
-                                        ? theme.colors.onSurfaceVariant
-                                        : ACCENT.green,
-                                },
-                            ]}
-                        >
-                            {isCompleted ? 'Start Over' : 'Mark Complete'}
+                        <MaterialCommunityIcons name="check" size={16} color={ACCENT.green} />
+                        <Text style={[styles.markCompleteText, { color: ACCENT.green }]}>
+                            Mark Complete
                         </Text>
                     </Pressable>
                 </View>
@@ -221,68 +210,103 @@ const styles = StyleSheet.create({
         padding: Spacing.md,
         marginHorizontal: Spacing.xs,
     },
-    headerRow: {
+    surahHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        marginBottom: 4,
     },
-    headerLeft: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: Spacing.sm,
-        flex: 1,
-    },
-    headerInfo: {
-        flex: 1,
+    upNextLabel: {
+        fontSize: 12,
+        fontWeight: '600',
+        textTransform: 'uppercase',
+        letterSpacing: 1,
     },
     juzBadge: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: BorderRadius.full,
     },
-    juzNumber: {
-        fontSize: 17,
+    juzBadgeText: {
+        fontSize: 11,
+        fontWeight: '600',
+    },
+    surahName: {
+        fontSize: 32,
         fontWeight: '800',
+        textAlign: 'right',
+        marginVertical: 4,
     },
-    headerText: {
-        fontSize: 16,
-        fontWeight: '700',
+    surahEnglish: {
+        fontSize: 15,
+        fontWeight: '500',
+        marginBottom: Spacing.sm,
     },
-    juzLabel: {
-        fontSize: 13,
+    progressRow: {
+        marginBottom: Spacing.sm,
     },
-    actionRow: {
+    progressBar: {
+        height: 4,
+        borderRadius: 2,
+        overflow: 'hidden',
+        marginBottom: 4,
+    },
+    progressFill: {
+        height: '100%',
+        borderRadius: 2,
+    },
+    progressLabel: {
+        fontSize: 11,
+        fontWeight: '500',
+    },
+    buttonsRow: {
         flexDirection: 'row',
-        gap: Spacing.sm,
-        marginTop: Spacing.md,
+        gap: 10,
     },
-    continueButton: {
+    primaryButton: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 13,
+        paddingVertical: 14,
         borderRadius: BorderRadius.full,
         gap: 8,
     },
-    continueButtonText: {
+    primaryButtonText: {
         color: '#FFF',
-        fontWeight: '700',
         fontSize: 15,
+        fontWeight: '700',
     },
-    toggleButton: {
+    markCompleteButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 13,
+        paddingVertical: 14,
         paddingHorizontal: 16,
         borderRadius: BorderRadius.full,
+        borderWidth: 1.5,
         gap: 6,
     },
-    toggleButtonText: {
-        fontWeight: '600',
+    markCompleteText: {
         fontSize: 13,
+        fontWeight: '700',
+    },
+    completedRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        paddingVertical: 4,
+    },
+    completedTextGroup: {
+        flex: 1,
+    },
+    completedTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+    },
+    completedSubtitle: {
+        fontSize: 13,
+        fontWeight: '500',
+        marginTop: 2,
     },
 });

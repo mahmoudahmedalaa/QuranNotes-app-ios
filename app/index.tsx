@@ -33,9 +33,9 @@ export default function Index() {
         );
     }
 
-    // 1. Not signed in -> Auth (Login/Signup)
+    // 1. Not signed in -> Auth (Sign up / Login)
     if (!user) {
-        return <Redirect href="/(auth)/login" />;
+        return <Redirect href="/(auth)/sign-up" />;
     }
 
     // 2. New user who hasn't completed onboarding -> Onboarding Flow

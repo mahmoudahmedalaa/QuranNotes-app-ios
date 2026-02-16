@@ -1,6 +1,6 @@
 /**
- * Khatma Tab Screen — Self-paced Juz tracker
- * "Read the Quran at your own pace. Track which Juz you've finished."
+ * Khatma Tab Screen — Surah-based sequential reading
+ * "Read the Quran one surah at a time. Juz progress fills in automatically."
  */
 import React, { useState, useMemo, useEffect, useRef, useCallback, Suspense } from 'react';
 import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
@@ -13,10 +13,9 @@ import { useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { useKhatma } from '../../src/infrastructure/khatma/KhatmaContext';
-import { getJuzInfo } from '../../src/data/khatmaData';
 import { ProgressRing } from '../../src/presentation/components/khatma/ProgressRing';
 import { JuzGrid } from '../../src/presentation/components/khatma/JuzGrid';
-import { TodayReadingCard } from '../../src/presentation/components/khatma/TodayReadingCard';
+import { SurahReadingCard } from '../../src/presentation/components/khatma/TodayReadingCard';
 import { CatchUpBanner } from '../../src/presentation/components/khatma/CatchUpBanner';
 import { StreakBadge } from '../../src/presentation/components/khatma/StreakBadge';
 import {
@@ -34,22 +33,24 @@ const KhatmaCelebrationModal = React.lazy(() =>
 
 const ACCENT = {
     gold: '#F5A623',
-    goldLight: '#F5A62320',
     green: '#10B981',
-    greenLight: '#10B98120',
 };
 
 const CELEBRATION_SHOWN_KEY = 'khatma_celebration_shown_round';
+const ONBOARDING_DISMISSED_KEY = 'khatma_onboarding_dismissed';
 
 // ─── Active Khatma Tracker View ───────────────────────────────────────────
 
 function ActiveTrackerView() {
     const theme = useTheme();
     const {
+        completedSurahs,
         completedJuz,
+        currentJuz,
+        nextSurah,
+        markSurahComplete,
         isComplete,
         totalPagesRead,
-        toggleJuz,
         streakDays,
         currentRound,
         completedRounds,
@@ -58,17 +59,20 @@ function ActiveTrackerView() {
         loading,
     } = useKhatma();
 
-    const [selectedJuz, setSelectedJuz] = useState(1);
     const [showCelebration, setShowCelebration] = useState(false);
-    const selectedJuzInfo = useMemo(() => getJuzInfo(selectedJuz), [selectedJuz]);
+    const [showOnboarding, setShowOnboarding] = useState(false);
 
-    // Refresh key — incremented on tab focus so JuzGrid + TodayReadingCard re-check positions
-    const [refreshKey, setRefreshKey] = useState(0);
-    useFocusEffect(
-        useCallback(() => {
-            setRefreshKey(k => k + 1);
-        }, []),
-    );
+    // Check if onboarding banner should be shown
+    useEffect(() => {
+        AsyncStorage.getItem(ONBOARDING_DISMISSED_KEY).then(val => {
+            if (!val) setShowOnboarding(true);
+        });
+    }, []);
+
+    const dismissOnboarding = () => {
+        setShowOnboarding(false);
+        AsyncStorage.setItem(ONBOARDING_DISMISSED_KEY, 'true');
+    };
 
     // ── Celebration trigger ──
     const triggerCelebrationIfNeeded = useCallback(async () => {
@@ -83,17 +87,17 @@ function ActiveTrackerView() {
         }
     }, [isComplete, currentRound, loading]);
 
-    // Detect in-session completion
+    // Detect in-session completion (all 114 surahs)
     const prevCompletedCountRef = useRef<number | null>(null);
     useEffect(() => {
         if (loading) return;
         const prev = prevCompletedCountRef.current;
-        prevCompletedCountRef.current = completedJuz.length;
+        prevCompletedCountRef.current = completedSurahs.length;
         if (prev === null) return;
-        if (completedJuz.length >= 30 && prev < 30) {
+        if (completedSurahs.length >= 114 && prev < 114) {
             setShowCelebration(true);
         }
-    }, [completedJuz.length, loading]);
+    }, [completedSurahs.length, loading]);
 
     // Fallback: check on tab focus
     useFocusEffect(
@@ -101,6 +105,9 @@ function ActiveTrackerView() {
             triggerCelebrationIfNeeded();
         }, [triggerCelebrationIfNeeded]),
     );
+
+    // Is the current next surah already completed? (for the card state)
+    const isNextSurahCompleted = completedSurahs.includes(nextSurah.number);
 
     return (
         <ScrollView
@@ -127,12 +134,33 @@ function ActiveTrackerView() {
                         <View style={[styles.progressBadge, { backgroundColor: theme.colors.primaryContainer }]}>
                             <MaterialCommunityIcons name="book-open-variant" size={14} color={theme.colors.primary} />
                             <Text style={[styles.progressBadgeText, { color: theme.colors.primary }]}>
-                                {completedJuz.length} of 30 Juz
+                                {completedSurahs.length} of 114 Surahs
                             </Text>
                         </View>
                     </View>
                 </View>
             </MotiView>
+
+            {/* ── Onboarding Banner (dismissible, shown once) ── */}
+            {showOnboarding && (
+                <MotiView
+                    from={{ opacity: 0, translateY: -8 }}
+                    animate={{ opacity: 1, translateY: 0 }}
+                    transition={{ type: 'spring', damping: 18, delay: 50 }}
+                >
+                    <View style={[styles.onboardingBanner, { backgroundColor: theme.colors.primaryContainer }]}>
+                        <View style={styles.onboardingContent}>
+                            <MaterialCommunityIcons name="information-outline" size={18} color={theme.colors.primary} />
+                            <Text style={[styles.onboardingText, { color: theme.colors.primary }]}>
+                                Read one surah at a time. Your Juz progress fills in automatically as you go. 📖
+                            </Text>
+                        </View>
+                        <Pressable onPress={dismissOnboarding} hitSlop={12}>
+                            <MaterialCommunityIcons name="close" size={18} color={theme.colors.primary} />
+                        </Pressable>
+                    </View>
+                </MotiView>
+            )}
 
             {/* ── Progress Ring + Status ── */}
             <MotiView
@@ -141,7 +169,7 @@ function ActiveTrackerView() {
                 transition={{ type: 'spring', damping: 18, delay: 100 }}
             >
                 <View style={[styles.progressSection, { backgroundColor: theme.colors.surface }, Shadows.sm]}>
-                    {/* Trophy badge — shows when user has completed at least one full Khatma */}
+                    {/* Trophy badge */}
                     {(isComplete || completedRounds.length > 0) && (
                         <MotiView
                             from={{ scale: 0, opacity: 0 }}
@@ -180,25 +208,19 @@ function ActiveTrackerView() {
                 </View>
             </MotiView>
 
-            {/* ── Juz Grid ── */}
+            {/* ── Juz Grid (read-only, auto-derived) ── */}
             <JuzGrid
                 completedJuz={completedJuz}
-                selectedJuz={selectedJuz}
-                onSelectJuz={setSelectedJuz}
-                refreshKey={refreshKey}
+                currentJuz={currentJuz}
             />
 
-            {/* ── Selected Juz Reading Card ── */}
-            {selectedJuzInfo && (
-                <TodayReadingCard
-                    juz={selectedJuzInfo}
-                    isCompleted={completedJuz.includes(selectedJuzInfo.juzNumber)}
-                    isToday={false}
-                    onToggle={() => toggleJuz(selectedJuzInfo.juzNumber)}
-                    isTrialExpired={isTrialExpired}
-                    refreshKey={refreshKey}
-                />
-            )}
+            {/* ── Surah Reading Card ── */}
+            <SurahReadingCard
+                surah={nextSurah}
+                isCompleted={isNextSurahCompleted}
+                onMarkComplete={() => markSurahComplete(nextSurah.number)}
+                isTrialExpired={isTrialExpired}
+            />
 
             {/* ── Celebration Modal ── */}
             {showCelebration && (
@@ -210,8 +232,6 @@ function ActiveTrackerView() {
                             AsyncStorage.setItem(CELEBRATION_SHOWN_KEY, String(currentRound));
                         }}
                         onStartNextRound={() => {
-                            // Save celebration_shown for the NEXT round (currentRound + 1)
-                            // because startNextRound() increments currentRound
                             const nextRound = currentRound + 1;
                             startNextRound();
                             setShowCelebration(false);
@@ -270,18 +290,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 8,
     },
-    khatmaCountBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: BorderRadius.full,
-    },
-    khatmaCountText: {
-        fontSize: 13,
-        fontWeight: '700',
-    },
     headerTitle: {
         fontSize: 28,
         fontWeight: '800',
@@ -297,6 +305,28 @@ const styles = StyleSheet.create({
     progressBadgeText: {
         fontSize: 13,
         fontWeight: '600',
+    },
+    onboardingBanner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: Spacing.md,
+        paddingVertical: Spacing.sm,
+        borderRadius: BorderRadius.lg,
+        marginHorizontal: Spacing.xs,
+    },
+    onboardingContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        flex: 1,
+        marginRight: 8,
+    },
+    onboardingText: {
+        fontSize: 13,
+        fontWeight: '500',
+        flex: 1,
+        lineHeight: 18,
     },
     progressSection: {
         alignItems: 'center',
