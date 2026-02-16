@@ -8,7 +8,7 @@ interface ProContextType {
     loading: boolean;
     restorePurchases: () => Promise<void>;
     checkStatus: () => Promise<void>;
-    toggleDebugPro: () => void; // New Debug Method
+    toggleDebugPro: () => void;
 }
 
 const ProContext = createContext<ProContextType>({
@@ -22,8 +22,8 @@ const ProContext = createContext<ProContextType>({
 export const usePro = () => useContext(ProContext);
 
 export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [isPro, setIsPro] = useState(false); // Default to FREE for now
-    const [loading, setLoading] = useState(false);
+    const [isPro, setIsPro] = useState(false);
+    const [loading, setLoading] = useState(true); // Start loading until RevenueCat checked
 
     const checkStatus = async () => {
         setLoading(true);
@@ -38,6 +38,11 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     };
 
+    // Check RevenueCat status on app startup
+    useEffect(() => {
+        checkStatus();
+    }, []);
+
     const restorePurchases = async () => {
         setLoading(true);
         try {
@@ -50,8 +55,11 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     };
 
+    // Debug only — no-op in production
     const toggleDebugPro = () => {
-        setIsPro(prev => !prev);
+        if (__DEV__) {
+            setIsPro(prev => !prev);
+        }
     };
 
     return (

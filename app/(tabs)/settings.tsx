@@ -815,8 +815,8 @@ export default function SettingsScreen() {
                         </View>
                     )}
 
-                    {/* Debug Section — TODO: gate behind __DEV__ before App Store submission */}
-                    {(
+                    {/* Debug Section — only visible in development builds */}
+                    {__DEV__ && (
                         <View style={styles.section}>
                             <Text
                                 style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>

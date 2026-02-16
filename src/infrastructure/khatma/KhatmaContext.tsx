@@ -415,11 +415,12 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }, [completedJuz]);
 
     // Juz-based premium gate: free for first 2 Juz, then premium required
-    const { isPro } = usePro();
+    const { isPro, loading: proLoading } = usePro();
     const isGated = useMemo(() => {
+        if (proLoading) return false; // Don't gate while checking subscription
         if (isPro) return false;
         return completedJuz.length >= FREE_JUZ_LIMIT;
-    }, [isPro, completedJuz]);
+    }, [isPro, proLoading, completedJuz]);
 
     // Debug: reset all progress for testing the gate
     const debugResetProgress = useCallback(async () => {
