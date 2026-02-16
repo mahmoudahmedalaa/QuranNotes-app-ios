@@ -151,8 +151,7 @@ export default function SettingsScreen() {
                                         try {
                                             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
                                             await deleteAccount();
-                                            // Navigate to index — it detects user=null and redirects to login
-                                            router.replace('/');
+                                            router.replace('/(auth)/sign-up');
                                         } catch (error: any) {
                                             if (error.code === 'auth/needs-password') {
                                                 // Email/password user — prompt for password
@@ -160,7 +159,7 @@ export default function SettingsScreen() {
                                             } else if (error.code === 'auth/invalid-login-credentials' || error.code === 'auth/requires-recent-login') {
                                                 // Session expired — just sign out and redirect
                                                 await logout();
-                                                router.replace('/');
+                                                router.replace('/(auth)/sign-up');
                                                 Alert.alert('Account Removed', 'Your session had expired. You have been signed out.');
                                             } else {
                                                 Alert.alert('Error', error.message || 'Failed to delete account. Please try again.');
@@ -194,7 +193,7 @@ export default function SettingsScreen() {
                         try {
                             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
                             await deleteAccountWithPassword(password);
-                            router.replace('/');
+                            router.replace('/(auth)/sign-up');
                         } catch (error: any) {
                             if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
                                 Alert.alert('Incorrect Password', 'The password you entered is incorrect. Please try again.', [
