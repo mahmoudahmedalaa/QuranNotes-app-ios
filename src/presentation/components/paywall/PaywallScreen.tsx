@@ -72,7 +72,7 @@ export default function PaywallScreen() {
             case 'khatma':
                 return {
                     title: 'Unlock Khatma Tracker',
-                    subtitle: 'Your 3-day free trial has ended. Upgrade to Pro for unlimited Quran completion tracking.',
+                    subtitle: 'You\'ve completed your free Khatma preview. Upgrade to Pro to continue tracking your Quran completion journey.',
                     highlightIndex: 3
                 };
             default:
