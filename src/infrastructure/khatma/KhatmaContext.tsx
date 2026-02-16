@@ -323,10 +323,27 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setState(prev => {
             if (prev.completedSurahs.includes(surahNumber)) return prev;
             const updated = [...prev.completedSurahs, surahNumber].sort((a, b) => a - b);
+            const today = todayDateString();
+
+            // Compute streak: same day = keep, yesterday = increment, older = reset to 1
+            let newStreak = 1;
+            if (prev.lastProgressDate) {
+                const lastDate = new Date(prev.lastProgressDate + 'T00:00:00');
+                const todayDate = new Date(today + 'T00:00:00');
+                const diffDays = Math.round((todayDate.getTime() - lastDate.getTime()) / 86400000);
+                if (diffDays === 0) {
+                    newStreak = Math.max(prev.streakCount, 1); // same day, don't double-count
+                } else if (diffDays === 1) {
+                    newStreak = prev.streakCount + 1; // consecutive day
+                }
+                // else: gap > 1 day, reset to 1
+            }
+
             const newState: KhatmaState = {
                 ...prev,
                 completedSurahs: updated,
-                lastProgressDate: todayDateString(),
+                lastProgressDate: today,
+                streakCount: newStreak,
             };
             saveProgress(newState);
             return newState;
