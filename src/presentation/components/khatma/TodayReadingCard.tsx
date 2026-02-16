@@ -318,6 +318,10 @@ export const JuzSurahList: React.FC<JuzSurahListProps> = ({
     };
 
     const handleMarkComplete = (surahNum: number) => {
+        if (isGated) {
+            router.push('/paywall');
+            return;
+        }
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         onMarkComplete(surahNum);
     };
