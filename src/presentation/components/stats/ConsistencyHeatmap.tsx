@@ -15,8 +15,10 @@ const GAP = 4;
 const ACCENT = {
     green: '#10B981',
     greenLight: '#10B98130',
-    indigo: '#6366F1',
-    indigoLight: '#6366F130',
+    // Calendar activity levels — 3 distinct, easy-to-read colors
+    activityLow: '#7DD3FC',    // Soft sky blue
+    activityMid: '#FBBF24',    // Warm amber
+    activityHigh: '#10B981',   // Vibrant green
 };
 
 interface ConsistencyHeatmapProps {
@@ -148,9 +150,9 @@ export const ConsistencyHeatmap: React.FC<ConsistencyHeatmapProps> = ({ data }) 
                             const isFuture = month === today.getMonth() && year === today.getFullYear() && day > today.getDate();
 
                             let dotColor = 'transparent';
-                            if (activity === 'low') dotColor = `${ACCENT.indigo}60`;
-                            if (activity === 'medium') dotColor = `${ACCENT.indigo}B0`;
-                            if (activity === 'high') dotColor = ACCENT.indigo;
+                            if (activity === 'low') dotColor = ACCENT.activityLow;
+                            if (activity === 'medium') dotColor = ACCENT.activityMid;
+                            if (activity === 'high') dotColor = ACCENT.activityHigh;
 
                             return (
                                 <View key={dayIndex} style={styles.dayCell}>
@@ -180,15 +182,15 @@ export const ConsistencyHeatmap: React.FC<ConsistencyHeatmapProps> = ({ data }) 
             {/* Legend */}
             <View style={styles.legend}>
                 <View style={styles.legendItem}>
-                    <View style={[styles.legendDot, { backgroundColor: `${ACCENT.indigo}60` }]} />
+                    <View style={[styles.legendDot, { backgroundColor: ACCENT.activityLow }]} />
                     <Text style={[styles.legendText, { color: theme.colors.onSurfaceVariant }]}>Light</Text>
                 </View>
                 <View style={styles.legendItem}>
-                    <View style={[styles.legendDot, { backgroundColor: `${ACCENT.indigo}B0` }]} />
+                    <View style={[styles.legendDot, { backgroundColor: ACCENT.activityMid }]} />
                     <Text style={[styles.legendText, { color: theme.colors.onSurfaceVariant }]}>Moderate</Text>
                 </View>
                 <View style={styles.legendItem}>
-                    <View style={[styles.legendDot, { backgroundColor: ACCENT.indigo }]} />
+                    <View style={[styles.legendDot, { backgroundColor: ACCENT.activityHigh }]} />
                     <Text style={[styles.legendText, { color: theme.colors.onSurfaceVariant }]}>Active</Text>
                 </View>
             </View>
