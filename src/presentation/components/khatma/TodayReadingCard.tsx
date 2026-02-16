@@ -4,7 +4,7 @@
  * Replaces the old single SurahReadingCard.
  */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
@@ -33,6 +33,7 @@ const ACCENT = {
 
 interface JuzSurahListProps {
     currentJuz: number;
+    displayJuz?: number | null;  // override which Juz to display (from grid tap)
     completedSurahs: number[];
     nextSurahNumber: number;
     onMarkComplete: (surahNumber: number) => void;
@@ -220,8 +221,16 @@ const SurahCard: React.FC<SurahCardProps> = ({
 
 // ─── Juz Surah List (wrapper) ───────────────────────────────────────────────
 
+const COLLAPSED_COUNT = 3; // show first 3 surahs when collapsed
+
+// Enable LayoutAnimation on Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 export const JuzSurahList: React.FC<JuzSurahListProps> = ({
     currentJuz,
+    displayJuz,
     completedSurahs,
     nextSurahNumber,
     onMarkComplete,
@@ -232,13 +241,35 @@ export const JuzSurahList: React.FC<JuzSurahListProps> = ({
     const router = useRouter();
     const isDark = theme.dark;
 
-    // Get all surahs in the current Juz
-    const surahNumbers = useMemo(() => getSurahsInJuz(currentJuz), [currentJuz]);
+    // Which Juz to show — user-selected overrides current
+    const activeJuz = displayJuz ?? currentJuz;
+    const isViewingDifferentJuz = displayJuz != null && displayJuz !== currentJuz;
+
+    // Collapse state — reset when Juz changes
+    const [expanded, setExpanded] = useState(false);
+    useEffect(() => {
+        setExpanded(false);
+    }, [activeJuz]);
+
+    const toggleExpanded = () => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setExpanded(prev => !prev);
+    };
+
+    // Get all surahs in the active Juz
+    const surahNumbers = useMemo(() => getSurahsInJuz(activeJuz), [activeJuz]);
     const surahs = useMemo(() => surahNumbers.map(n => getSurahMeta(n)), [surahNumbers]);
     const completedInJuz = useMemo(
         () => surahNumbers.filter(n => completedSurahs.includes(n)).length,
         [surahNumbers, completedSurahs],
     );
+
+    // Decide which surahs to show
+    const needsCollapse = surahNumbers.length > COLLAPSED_COUNT + 1; // don't collapse if only 1 extra
+    const visibleSurahs = needsCollapse && !expanded
+        ? surahs.slice(0, COLLAPSED_COUNT)
+        : surahs;
+    const hiddenCount = surahNumbers.length - COLLAPSED_COUNT;
 
     // Fetch saved reading positions for all surahs in this Juz
     const [positions, setPositions] = useState<Record<number, ReadingPosition | null>>({});
@@ -303,8 +334,13 @@ export const JuzSurahList: React.FC<JuzSurahListProps> = ({
                     <View style={styles.sectionLeft}>
                         <MaterialCommunityIcons name="book-open-variant" size={18} color={theme.colors.primary} />
                         <Text style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>
-                            Juz {currentJuz} · Surahs
+                            Juz {activeJuz} · Surahs
                         </Text>
+                        {isViewingDifferentJuz && (
+                            <View style={[styles.browsingBadge, { backgroundColor: `${ACCENT.blue}15` }]}>
+                                <Text style={[styles.browsingText, { color: ACCENT.blue }]}>Browsing</Text>
+                            </View>
+                        )}
                     </View>
                     <View style={[styles.countBadge, { backgroundColor: theme.colors.primaryContainer }]}>
                         <Text style={[styles.countText, { color: theme.colors.primary }]}>
@@ -316,7 +352,7 @@ export const JuzSurahList: React.FC<JuzSurahListProps> = ({
 
             {/* Surah cards */}
             <View style={styles.cardList}>
-                {surahs.map((surah, i) => {
+                {visibleSurahs.map((surah, i) => {
                     const status = getStatus(surah.number);
                     const pos = positions[surah.number];
                     const savedVerse = pos && pos.verse > 1 ? pos.verse : null;
@@ -337,6 +373,27 @@ export const JuzSurahList: React.FC<JuzSurahListProps> = ({
                     );
                 })}
             </View>
+
+            {/* Expand/Collapse toggle */}
+            {needsCollapse && (
+                <Pressable
+                    onPress={toggleExpanded}
+                    style={({ pressed }) => [
+                        styles.expandButton,
+                        { backgroundColor: theme.colors.surfaceVariant },
+                        pressed && { opacity: 0.7 },
+                    ]}
+                >
+                    <MaterialCommunityIcons
+                        name={expanded ? 'chevron-up' : 'chevron-down'}
+                        size={18}
+                        color={theme.colors.onSurfaceVariant}
+                    />
+                    <Text style={[styles.expandText, { color: theme.colors.onSurfaceVariant }]}>
+                        {expanded ? 'Show less' : `Show all ${surahNumbers.length} surahs`}
+                    </Text>
+                </Pressable>
+            )}
         </View>
     );
 };
@@ -522,5 +579,33 @@ const styles = StyleSheet.create({
     startOverText: {
         ...Typography.caption,
         fontWeight: '600',
+    },
+
+    // ── Expand/collapse toggle ──
+    expandButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        paddingVertical: 12,
+        borderRadius: BorderRadius.md,
+        marginTop: Spacing.xs,
+    },
+    expandText: {
+        ...Typography.bodyMedium,
+        fontWeight: '600',
+    },
+
+    // ── Browsing badge ──
+    browsingBadge: {
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: BorderRadius.full,
+        marginLeft: 4,
+    },
+    browsingText: {
+        fontSize: 10,
+        fontWeight: '700',
+        textTransform: 'uppercase',
     },
 });

@@ -62,6 +62,7 @@ function ActiveTrackerView() {
 
     const [showCelebration, setShowCelebration] = useState(false);
     const [showOnboarding, setShowOnboarding] = useState(false);
+    const [selectedJuz, setSelectedJuz] = useState<number | null>(null);
 
     // Check if onboarding banner should be shown
     useEffect(() => {
@@ -211,11 +212,14 @@ function ActiveTrackerView() {
             <JuzGrid
                 completedJuz={completedJuz}
                 currentJuz={currentJuz}
+                selectedJuz={selectedJuz}
+                onJuzPress={(juz) => setSelectedJuz(prev => prev === juz ? null : juz)}
             />
 
             {/* ── Juz Surah List ── */}
             <JuzSurahList
                 currentJuz={currentJuz}
+                displayJuz={selectedJuz}
                 completedSurahs={completedSurahs}
                 nextSurahNumber={nextSurah.number}
                 onMarkComplete={(n) => markSurahComplete(n)}

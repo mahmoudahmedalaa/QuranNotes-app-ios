@@ -1,10 +1,10 @@
 /**
- * JuzGrid — Read-only 5×6 grid showing auto-derived Juz progress.
+ * JuzGrid — 5×6 grid showing auto-derived Juz progress.
  * Green = Juz complete, Gold = current Juz, Gray = future.
- * Not tappable — purely a visual progress indicator.
+ * Cells are tappable — tap any Juz to view its surahs.
  */
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
@@ -18,14 +18,18 @@ const ACCENT = {
     goldLight: '#F5A62350',
     green: '#10B981',
     greenLight: '#10B98140',
+    selected: '#5B7FFF',
+    selectedLight: '#5B7FFF30',
 };
 
 interface JuzGridProps {
     completedJuz: number[];
     currentJuz: number;
+    selectedJuz?: number | null;
+    onJuzPress?: (juzNumber: number) => void;
 }
 
-export const JuzGrid: React.FC<JuzGridProps> = ({ completedJuz, currentJuz }) => {
+export const JuzGrid: React.FC<JuzGridProps> = ({ completedJuz, currentJuz, selectedJuz, onJuzPress }) => {
     const theme = useTheme();
 
     type CellState = 'completed' | 'current' | 'future';
@@ -38,6 +42,7 @@ export const JuzGrid: React.FC<JuzGridProps> = ({ completedJuz, currentJuz }) =>
 
     const renderCell = (juzNumber: number) => {
         const state = getCellState(juzNumber);
+        const isSelected = selectedJuz === juzNumber;
 
         let bgColor: string;
         let textColor: string;
@@ -56,20 +61,33 @@ export const JuzGrid: React.FC<JuzGridProps> = ({ completedJuz, currentJuz }) =>
                 textColor = theme.colors.onSurfaceVariant;
         }
 
+        // Override with selected highlight
+        if (isSelected) {
+            bgColor = ACCENT.selectedLight;
+            textColor = ACCENT.selected;
+        }
+
         return (
-            <View
+            <Pressable
                 key={juzNumber}
-                style={[styles.cell, { backgroundColor: bgColor }]}
-                accessibilityLabel={`Juz ${juzNumber}, ${state}`}
+                onPress={() => onJuzPress?.(juzNumber)}
+                style={({ pressed }) => [
+                    styles.cell,
+                    { backgroundColor: bgColor },
+                    isSelected && { borderWidth: 2, borderColor: ACCENT.selected },
+                    pressed && { opacity: 0.7, transform: [{ scale: 0.92 }] },
+                ]}
+                accessibilityLabel={`Juz ${juzNumber}, ${state}${isSelected ? ', selected' : ''}`}
+                accessibilityRole="button"
             >
-                {state === 'completed' ? (
+                {state === 'completed' && !isSelected ? (
                     <MaterialCommunityIcons name="check" size={16} color={ACCENT.green} />
                 ) : (
                     <Text style={[styles.cellText, { color: textColor }]}>
                         {juzNumber}
                     </Text>
                 )}
-            </View>
+            </Pressable>
         );
     };
 
@@ -120,6 +138,11 @@ export const JuzGrid: React.FC<JuzGridProps> = ({ completedJuz, currentJuz }) =>
                         </Text>
                     </View>
                 </View>
+
+                {/* Hint */}
+                <Text style={[styles.hintText, { color: theme.colors.onSurfaceVariant }]}>
+                    Tap any Juz to view its surahs
+                </Text>
             </View>
         </MotiView>
     );
@@ -183,5 +206,11 @@ const styles = StyleSheet.create({
     legendText: {
         fontSize: 11,
         fontWeight: '500',
+    },
+    hintText: {
+        fontSize: 10,
+        textAlign: 'center',
+        marginTop: 6,
+        opacity: 0.6,
     },
 });
