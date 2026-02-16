@@ -38,7 +38,7 @@ interface JuzSurahListProps {
     nextSurahNumber: number;
     onMarkComplete: (surahNumber: number) => void;
     onUnmark: (surahNumber: number) => void;
-    isTrialExpired: boolean;
+    isGated: boolean;
 }
 
 // ─── Individual Surah Card ──────────────────────────────────────────────────
@@ -235,7 +235,7 @@ export const JuzSurahList: React.FC<JuzSurahListProps> = ({
     nextSurahNumber,
     onMarkComplete,
     onUnmark,
-    isTrialExpired,
+    isGated,
 }) => {
     const theme = useTheme();
     const router = useRouter();
@@ -299,7 +299,7 @@ export const JuzSurahList: React.FC<JuzSurahListProps> = ({
     };
 
     const handleNav = (surahNum: number, verse?: number) => {
-        if (isTrialExpired) {
+        if (isGated) {
             router.push('/paywall');
             return;
         }

@@ -6,6 +6,10 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { JUZ_DATA } from '../../data/khatmaData';
 import { useAuth } from '../auth/AuthContext';
+import { usePro } from '../auth/ProContext';
+
+// First N Juz are free, then premium required
+const FREE_JUZ_LIMIT = 2;
 
 // ─── Surah metadata (name + Arabic) for the 114 surahs ─────────────────────
 // Minimal inline list — only what the reading card needs.
@@ -168,7 +172,8 @@ interface KhatmaContextType {
     streakDays: number;
     currentRound: number;
     completedRounds: number[];
-    isTrialExpired: boolean;
+    isGated: boolean;           // true when premium required (completed >= FREE_JUZ_LIMIT and not pro)
+    debugResetProgress: () => Promise<void>;  // for testing
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -409,26 +414,26 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return total;
     }, [completedJuz]);
 
-    // Trial: 3 days from first use
-    const [trialStartDate, setTrialStartDate] = useState<string | null>(null);
-    useEffect(() => {
-        AsyncStorage.getItem('khatma_trial_start').then(date => {
-            if (date) {
-                setTrialStartDate(date);
-            } else {
-                const today = todayDateString();
-                AsyncStorage.setItem('khatma_trial_start', today);
-                setTrialStartDate(today);
-            }
-        });
-    }, []);
+    // Juz-based premium gate: free for first 2 Juz, then premium required
+    const { isPro } = usePro();
+    const isGated = useMemo(() => {
+        if (isPro) return false;
+        return completedJuz.length >= FREE_JUZ_LIMIT;
+    }, [isPro, completedJuz]);
 
-    const isTrialExpired = useMemo(() => {
-        if (!trialStartDate) return false;
-        const start = new Date(trialStartDate + 'T00:00:00');
-        const diffDays = Math.floor((Date.now() - start.getTime()) / 86400000);
-        return diffDays >= 3;
-    }, [trialStartDate]);
+    // Debug: reset all progress for testing the gate
+    const debugResetProgress = useCallback(async () => {
+        const emptyState: KhatmaState = {
+            completedSurahs: [],
+            year: new Date().getFullYear(),
+            lastProgressDate: undefined,
+            currentRound: 1,
+            completedRounds: [],
+            streakCount: 0,
+        };
+        setState(emptyState);
+        await saveProgress(emptyState);
+    }, []);
 
     // Streak
     const streakDays = useMemo(() => {
@@ -456,7 +461,8 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         streakDays,
         currentRound: state.currentRound,
         completedRounds: state.completedRounds,
-        isTrialExpired,
+        isGated,
+        debugResetProgress,
     };
 
     return (

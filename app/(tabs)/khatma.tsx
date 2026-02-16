@@ -56,7 +56,8 @@ function ActiveTrackerView() {
         currentRound,
         completedRounds,
         startNextRound,
-        isTrialExpired,
+        isGated,
+        debugResetProgress,
         loading,
     } = useKhatma();
 
@@ -224,7 +225,7 @@ function ActiveTrackerView() {
                 nextSurahNumber={nextSurah.number}
                 onMarkComplete={(n) => markSurahComplete(n)}
                 onUnmark={(n) => unmarkSurah(n)}
-                isTrialExpired={isTrialExpired}
+                isGated={isGated}
             />
 
             {/* ── Celebration Modal ── */}

@@ -19,6 +19,7 @@ import * as Haptics from 'expo-haptics';
 import { usePro } from '../../src/infrastructure/auth/ProContext';
 import { useAuth } from '../../src/infrastructure/auth/AuthContext';
 import { useMood } from '../../src/infrastructure/mood/MoodContext';
+import { useKhatma } from '../../src/infrastructure/khatma/KhatmaContext';
 import { NotificationService } from '../../src/infrastructure/notifications/NotificationService';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
@@ -41,6 +42,7 @@ export default function SettingsScreen() {
     const { settings, updateSettings, resetSettings } = useSettings();
 
     const { toggleDebugPro, isPro } = usePro();
+    const { debugResetProgress, completedJuz } = useKhatma();
     const { debugResetAll, debugUseOneCredit, freeUsesRemaining } = useMood();
     const { user, loading, logout, deleteAccount, deleteAccountWithPassword } = useAuth();
     const [reciterPickerVisible, setReciterPickerVisible] = useState(false);
@@ -938,6 +940,50 @@ export default function SettingsScreen() {
                                     color="#10B981"
                                 />
                             </View>
+
+                            {/* Debug: Reset Khatma Progress */}
+                            <Pressable
+                                onPress={() => {
+                                    Alert.alert(
+                                        'Reset Khatma Progress',
+                                        'This will clear ALL completed surahs and reset your Khatma. Use this to test the premium gate.',
+                                        [
+                                            { text: 'Cancel', style: 'cancel' },
+                                            {
+                                                text: 'Reset',
+                                                style: 'destructive',
+                                                onPress: async () => {
+                                                    await debugResetProgress();
+                                                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                                                    Alert.alert('Done', 'Khatma progress has been reset.');
+                                                },
+                                            },
+                                        ],
+                                    );
+                                }}
+                                style={[
+                                    styles.card,
+                                    { backgroundColor: theme.colors.surface, marginTop: Spacing.sm },
+                                    Shadows.sm,
+                                ]}
+                            >
+                                <View
+                                    style={[
+                                        styles.iconContainer,
+                                        { backgroundColor: '#EF444420' },
+                                    ]}>
+                                    <Ionicons name="refresh-circle-outline" size={18} color="#EF4444" />
+                                </View>
+                                <View style={styles.cardContent}>
+                                    <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
+                                        Reset Khatma Progress
+                                    </Text>
+                                    <Text style={[styles.cardSubtitle, { color: theme.colors.onSurfaceVariant }]}>
+                                        {completedJuz.length} Juz completed · Gate at 2
+                                    </Text>
+                                </View>
+                                <Ionicons name="chevron-forward" size={18} color={theme.colors.onSurfaceVariant} />
+                            </Pressable>
                         </View>
                     )}
 
