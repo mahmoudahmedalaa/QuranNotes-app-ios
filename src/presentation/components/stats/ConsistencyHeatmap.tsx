@@ -14,11 +14,7 @@ const GAP = 4;
 
 const ACCENT = {
     green: '#10B981',
-    greenLight: '#10B98130',
-    // Calendar activity levels — 3 distinct, easy-to-read colors
-    activityLow: '#7DD3FC',    // Soft sky blue
-    activityMid: '#FBBF24',    // Warm amber
-    activityHigh: '#10B981',   // Vibrant green
+    greenLight: '#D1FAE5',
 };
 
 interface ConsistencyHeatmapProps {
@@ -55,13 +51,9 @@ export const ConsistencyHeatmap: React.FC<ConsistencyHeatmapProps> = ({ data }) 
         return day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
     };
 
-    const getActivityLevel = (day: number): 'none' | 'low' | 'medium' | 'high' => {
+    const isActive = (day: number): boolean => {
         const dateStr = new Date(year, month, day).toISOString().split('T')[0];
-        const count = activityMap.get(dateStr) || 0;
-        if (count === 0) return 'none';
-        if (count <= 2) return 'low';
-        if (count <= 5) return 'medium';
-        return 'high';
+        return (activityMap.get(dateStr) || 0) > 0;
     };
 
     // Build calendar grid
@@ -91,7 +83,7 @@ export const ConsistencyHeatmap: React.FC<ConsistencyHeatmapProps> = ({ data }) 
 
     // Count active days this month
     const activeDays = Array.from({ length: daysInMonth }, (_, i) => i + 1)
-        .filter(d => getActivityLevel(d) !== 'none').length;
+        .filter(d => isActive(d)).length;
 
     const canGoForward = monthOffset < 0;
 
@@ -145,32 +137,29 @@ export const ConsistencyHeatmap: React.FC<ConsistencyHeatmapProps> = ({ data }) 
                                 return <View key={dayIndex} style={styles.dayCell} />;
                             }
 
-                            const activity = getActivityLevel(day);
+                            const active = isActive(day);
                             const isTodayCell = isToday(day);
                             const isFuture = month === today.getMonth() && year === today.getFullYear() && day > today.getDate();
-
-                            let dotColor = 'transparent';
-                            if (activity === 'low') dotColor = ACCENT.activityLow;
-                            if (activity === 'medium') dotColor = ACCENT.activityMid;
-                            if (activity === 'high') dotColor = ACCENT.activityHigh;
 
                             return (
                                 <View key={dayIndex} style={styles.dayCell}>
                                     <View style={[
                                         styles.dayCircle,
+                                        active && !isTodayCell && { backgroundColor: ACCENT.greenLight },
                                         isTodayCell && { backgroundColor: `${theme.colors.primary}20`, borderWidth: 1.5, borderColor: theme.colors.primary },
                                         isFuture && { opacity: 0.3 },
                                     ]}>
                                         <Text style={[
                                             styles.dayText,
                                             { color: isTodayCell ? theme.colors.primary : theme.colors.onSurface },
+                                            active && !isTodayCell && { color: ACCENT.green, fontWeight: '700' },
                                             isFuture && { color: theme.colors.onSurfaceVariant },
                                         ]}>
                                             {day}
                                         </Text>
                                     </View>
-                                    {activity !== 'none' && (
-                                        <View style={[styles.activityDot, { backgroundColor: dotColor }]} />
+                                    {active && (
+                                        <View style={[styles.activityDot, { backgroundColor: ACCENT.green }]} />
                                     )}
                                 </View>
                             );
@@ -182,16 +171,8 @@ export const ConsistencyHeatmap: React.FC<ConsistencyHeatmapProps> = ({ data }) 
             {/* Legend */}
             <View style={styles.legend}>
                 <View style={styles.legendItem}>
-                    <View style={[styles.legendDot, { backgroundColor: ACCENT.activityLow }]} />
-                    <Text style={[styles.legendText, { color: theme.colors.onSurfaceVariant }]}>Light</Text>
-                </View>
-                <View style={styles.legendItem}>
-                    <View style={[styles.legendDot, { backgroundColor: ACCENT.activityMid }]} />
-                    <Text style={[styles.legendText, { color: theme.colors.onSurfaceVariant }]}>Moderate</Text>
-                </View>
-                <View style={styles.legendItem}>
-                    <View style={[styles.legendDot, { backgroundColor: ACCENT.activityHigh }]} />
-                    <Text style={[styles.legendText, { color: theme.colors.onSurfaceVariant }]}>Active</Text>
+                    <View style={[styles.legendDot, { backgroundColor: ACCENT.green }]} />
+                    <Text style={[styles.legendText, { color: theme.colors.onSurfaceVariant }]}>Read that day</Text>
                 </View>
             </View>
         </View>
