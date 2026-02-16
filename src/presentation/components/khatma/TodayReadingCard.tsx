@@ -354,6 +354,28 @@ export const JuzSurahList: React.FC<JuzSurahListProps> = ({
                 </View>
             </MotiView>
 
+            {/* Juz completion celebration */}
+            {completedInJuz === surahNumbers.length && surahNumbers.length > 0 && (
+                <MotiView
+                    from={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: 'spring', damping: 18, delay: 100 }}
+                >
+                    <View style={[
+                        styles.juzCompleteCard,
+                        { backgroundColor: isDark ? ACCENT.greenBgDark : ACCENT.greenBg },
+                    ]}>
+                        <Text style={styles.juzCompleteTrophy}>🏆</Text>
+                        <Text style={[styles.juzCompleteTitle, { color: theme.colors.onSurface }]}>
+                            Juz {activeJuz} Complete!
+                        </Text>
+                        <Text style={[styles.juzCompleteSubtitle, { color: theme.colors.onSurfaceVariant }]}>
+                            All {surahNumbers.length} surahs finished. ما شاء الله
+                        </Text>
+                    </View>
+                </MotiView>
+            )}
+
             {/* Surah cards */}
             <View style={styles.cardList}>
                 {visibleSurahs.map((surah, i) => {
@@ -611,5 +633,26 @@ const styles = StyleSheet.create({
         fontSize: 10,
         fontWeight: '700',
         textTransform: 'uppercase',
+    },
+
+    // ── Juz completion ──
+    juzCompleteCard: {
+        alignItems: 'center',
+        padding: Spacing.lg,
+        borderRadius: BorderRadius.lg,
+        marginBottom: Spacing.sm,
+    },
+    juzCompleteTrophy: {
+        fontSize: 40,
+        marginBottom: Spacing.xs,
+    },
+    juzCompleteTitle: {
+        ...Typography.titleLarge,
+        fontWeight: '700',
+        marginBottom: 4,
+    },
+    juzCompleteSubtitle: {
+        ...Typography.bodyMedium,
+        textAlign: 'center',
     },
 });
