@@ -217,6 +217,40 @@ export default function Index() {
 
                     <MoodCheckInCard />
 
+                    {/* Browse Topics Card */}
+                    <MotiView
+                        from={{ opacity: 0, translateY: 15 }}
+                        animate={{ opacity: 1, translateY: 0 }}
+                        transition={{ type: 'spring', damping: 18, delay: 160 }}
+                        style={{ paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}
+                    >
+                        <Pressable
+                            onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                router.push('/topic/patience' as any);
+                            }}
+                            style={({ pressed }) => [
+                                styles.continueCard,
+                                { backgroundColor: theme.colors.surface },
+                                Shadows.md,
+                                pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                            ]}
+                        >
+                            <View style={[styles.continueIcon, { backgroundColor: '#5B7FFF15' }]}>
+                                <Text style={{ fontSize: 22 }}>📖</Text>
+                            </View>
+                            <View style={styles.continueTextGroup}>
+                                <Text style={[styles.continueTitle, { color: theme.colors.onSurface }]} numberOfLines={1}>
+                                    Browse by Topic
+                                </Text>
+                                <Text style={[styles.continueSubtitle, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
+                                    15 curated categories
+                                </Text>
+                            </View>
+                            <Ionicons name="chevron-forward" size={20} color={theme.colors.onSurfaceVariant} />
+                        </Pressable>
+                    </MotiView>
+
                     {/* Adhkar Quick Access Card */}
                     <MotiView
                         from={{ opacity: 0, translateY: 15 }}
