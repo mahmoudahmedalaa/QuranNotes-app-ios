@@ -313,58 +313,208 @@ git add -A && git commit -m "feat: topic-based verse browsing with 15 curated ca
 
 ---
 
-### 📱 FEATURE 3: iOS Widgets (WidgetKit via expo-widgets or native)
+### 📱 FEATURE 3: iOS Home Screen Widgets (HIGHEST QUALITY — User's Favorite)
 
-**Goal:** Beautiful iOS home screen widgets showing:
-1. **Daily Verse** (small/medium) — random verse each day with translation
-2. **Prayer Times** (medium) — next prayer countdown + all 5 times
-3. **Khatma Progress** (small) — circular ring showing completion %
+> **⚠️ The user explicitly said this is the BIGGEST value-add and must be extremely beautiful.**
+> **This is a key differentiator. Invest extra time here to make it premium.**
 
-**IMPORTANT NOTE:** React Native doesn't natively support widgets. There are two approaches:
+**Goal:** Native iOS WidgetKit home screen widgets that users see every time they pick up their phone. Three widget types:
 
-**Approach A (Recommended): Shared Data + Simple Widget-Like Experience on Home Screen**
-Since proper WidgetKit integration requires native Swift code and significant setup, and the user is asleep, implement a "widget-like" experience using:
-- **Daily Verse push notification** — schedule a daily notification at user's preferred time with a beautiful verse
-- **Enhanced home screen cards** that mimic widget functionality within the app
+1. **Daily Verse Widget** (small + medium sizes)
+2. **Prayer Times Widget** (medium size)
+3. **Streak Counter Widget** (small size)
 
-**Approach B (If you're confident): Native WidgetKit**
-If the project has a native iOS directory (`ios/`), you can add a WidgetKit extension:
-1. Check if `ios/QuranNotes.xcodeproj` exists
-2. Create a Widget Extension target
-3. Use shared UserDefaults (App Groups) to pass data between app and widget
-4. This is complex — only attempt if you're very confident
+---
 
-**For this overnight session, implement Approach A:**
+#### IMPLEMENTATION APPROACH: TWO-LAYER STRATEGY
 
-#### Enhanced Home Screen Experience
-Create premium home screen cards that serve as "in-app widgets":
+**Layer 1: React Native Data Bridge (write data from the app → shared storage)**
+The main React Native app writes widget data to shared `UserDefaults` via App Groups, using `react-native-shared-group-preferences` or direct native module.
 
-1. **DailyVerseCard.tsx** — Beautiful card with:
-   - Random verse from curated collection (use the topics data)
-   - Arabic text + translation
-   - Gradient background that changes based on time of day (morning/afternoon/evening)
-   - Share button
-   - Refresh button for new verse
-   - Persist daily verse in AsyncStorage so it stays consistent for the day
+**Layer 2: Native SwiftUI Widgets (read from shared storage → render on home screen)**
+The widgets are native SwiftUI code in a WidgetKit extension. They read from the shared `UserDefaults` and render beautiful UI.
 
-2. **PrayerTimesCard.tsx** — already described in Feature 1
+---
 
-3. **KhatmaProgressWidget.tsx** — Compact ring chart showing:
-   - Circular progress ring (gold gradient fill)
-   - "X/30 Juz" in center
-   - Current pace: "X Juz/week"
+#### Step 1: Install Dependencies & Configure App Groups
 
-#### Daily Verse Notification
-Extend `NotificationService.ts`:
-- Add `scheduleDailyVerseNotification(hour, minute)` method
-- Pulls a verse from the curated topics collection
-- Sends as a notification with Arabic snippet + translation  
-- Add toggle in Settings under a "DAILY VERSE" section
+```bash
+npm install react-native-shared-group-preferences
+```
+
+Add to `app.json` inside the `ios` section:
+```json
+"entitlements": {
+    "com.apple.security.application-groups": [
+        "group.com.mahmoudahmedalaa.qurannotes"
+    ]
+}
+```
+
+#### Step 2: Create React Native Data Bridge
+
+##### `src/infrastructure/widgets/WidgetDataService.ts`
+This service writes data to shared UserDefaults so the native widgets can read it:
+```typescript
+import SharedGroupPreferences from 'react-native-shared-group-preferences';
+
+const APP_GROUP = 'group.com.mahmoudahmedalaa.qurannotes';
+
+export interface DailyVerseWidgetData {
+    arabicText: string;
+    translation: string;
+    surahName: string;
+    verseNumber: number;
+    date: string; // ISO date to know when to refresh
+}
+
+export interface PrayerTimesWidgetData {
+    fajr: string;
+    sunrise: string;
+    dhuhr: string;
+    asr: string;
+    maghrib: string;
+    isha: string;
+    nextPrayer: string;
+    hijriDate: string;
+    location: string;
+}
+
+export interface StreakWidgetData {
+    currentStreak: number;
+    todayCompleted: boolean;
+    lastReadDate: string;
+}
+
+export class WidgetDataService {
+    static async updateDailyVerse(data: DailyVerseWidgetData): Promise<void> {
+        try {
+            await SharedGroupPreferences.setItem('dailyVerse', JSON.stringify(data), APP_GROUP);
+        } catch (e) {
+            console.warn('Widget data write failed:', e);
+        }
+    }
+
+    static async updatePrayerTimes(data: PrayerTimesWidgetData): Promise<void> {
+        try {
+            await SharedGroupPreferences.setItem('prayerTimes', JSON.stringify(data), APP_GROUP);
+        } catch (e) {
+            console.warn('Widget data write failed:', e);
+        }
+    }
+
+    static async updateStreak(data: StreakWidgetData): Promise<void> {
+        try {
+            await SharedGroupPreferences.setItem('streakData', JSON.stringify(data), APP_GROUP);
+        } catch (e) {
+            console.warn('Widget data write failed:', e);
+        }
+    }
+}
+```
+
+Call `WidgetDataService.updateDailyVerse()` when:
+- App launches (from topics/mood curated verses)
+- Date changes (pick new random verse)
+
+Call `WidgetDataService.updatePrayerTimes()` when:
+- Prayer times are fetched (Feature 1)
+
+Call `WidgetDataService.updateStreak()` when:
+- User reads any verse or surah
+- On app launch to sync current streak
+
+#### Step 3: Create WidgetKit Extension (Native Swift/SwiftUI)
+
+Create directory: `ios/QuranNotesWidget/`
+
+##### `ios/QuranNotesWidget/QuranNotesWidget.swift`
+Main widget bundle declaring all 3 widget types.
+
+##### `ios/QuranNotesWidget/DailyVerseWidget.swift`
+SwiftUI view for the Daily Verse widget:
+- **Small**: Arabic text only (2-3 lines, elegant gold on deep navy gradient)
+- **Medium**: Arabic text + English translation + surah reference
+- **Design**: 
+  - Background: `LinearGradient` from `#0C1220` to `#1A2D50` (matches share card)
+  - Gold accent: `#C9983A` for decorative elements
+  - Arabic font: System with `.largeTitle` weight
+  - Translation: `.caption` in `#8892B0`
+  - Subtle ✦ ornaments in corners
+  - "QuranNotes" branding at bottom in small text
+
+##### `ios/QuranNotesWidget/PrayerTimesWidget.swift`
+SwiftUI view (medium only):
+- Shows all 5 prayer names + times in a clean row
+- Next prayer highlighted with gold background pill
+- Countdown timer to next prayer using SwiftUI `Text(.date, style: .timer)`
+- Hijri date at top
+- Location name at bottom
+- Design: dark navy base with golden highlights
+
+##### `ios/QuranNotesWidget/StreakWidget.swift`
+SwiftUI view (small only):
+- Large streak number in center (bold, gold color)
+- "Day Streak" label below
+- 🔥 fire emoji if streak > 7
+- Circular ring around the number showing progress toward next milestone (7, 30, 100)
+- Green check if today is completed, grey if not yet
+
+##### `ios/QuranNotesWidget/Info.plist`
+Standard WidgetKit plist.
+
+##### `ios/QuranNotesWidget/Assets.xcassets`
+Widget icon and color assets.
+
+#### Step 4: Register Widget Extension in Xcode Project
+
+**IMPORTANT:** Since we're using a prebuild Expo setup, you'll need to:
+1. Run `npx expo prebuild -p ios --clean` after making changes
+2. Open `ios/QuranNotes.xcworkspace` in Xcode
+3. Add a new "Widget Extension" target via File → New → Target → Widget Extension
+4. Name it "QuranNotesWidget"
+5. Enable App Groups for BOTH the main app target and the widget target
+6. Set the App Group to `group.com.mahmoudahmedalaa.qurannotes`
+
+**ALTERNATIVE (if Xcode manipulation is too complex):**
+If you can't reliably modify the Xcode project from the command line, implement just the **React Native data bridge** (`WidgetDataService.ts`) AND create the **enhanced in-app home screen cards** (DailyVerseCard, KhatmaProgressWidget) as beautiful in-app alternatives. Then leave a clear README for the user to add the native widget target in Xcode manually.
+
+#### Step 4a: In-App Widget Cards (ALWAYS implement these regardless)
+
+Even with native widgets, the app needs great home screen cards. Create these:
+
+##### `src/presentation/components/home/DailyVerseCard.tsx`
+- Beautiful card showing today's verse
+- Arabic text + translation
+- Gradient background shifts based on time of day:
+  - Morning (5am-12pm): soft golden sunrise gradient
+  - Afternoon (12pm-5pm): warm amber gradient  
+  - Evening (5pm-9pm): purple sunset gradient
+  - Night (9pm-5am): deep navy cosmic gradient
+- Share button (reuse ShareCardGenerator)
+- Tap to open the verse in surah screen
+- Refresh button to get a different verse
+- Data persisted in AsyncStorage with date key
+
+##### `src/presentation/components/home/KhatmaProgressRing.tsx`
+- Circular SVG progress ring (use `react-native-svg`)
+- Gold gradient fill on the progress arc
+- Center: "X/30" in large text
+- Below ring: "X Juz/week" pace indicator
+- Tappable → navigates to Khatma tab
+- MotiView animation on the ring fill
+
+##### Home Screen Integration (`app/(tabs)/index.tsx`)
+Add these cards to the home screen in this order:
+1. PrayerTimesCard (from Feature 1)
+2. DailyVerseCard
+3. KhatmaProgressRing (compact, side-by-side with streak if possible)
+4. MoodCheckInCard (existing)
 
 **After completing:**
 ```bash
 npx tsc --noEmit
-git add -A && git commit -m "feat: enhanced home screen cards (daily verse, prayer widget, khatma ring)" && git push origin feature/phase3-competitive-edge
+git add -A && git commit -m "feat: iOS widget data bridge + premium home screen cards (daily verse, khatma ring)" && git push origin feature/phase3-competitive-edge
 ```
 
 ---
@@ -463,6 +613,62 @@ git add -A && git commit -m "feat: AI verse explanation with Gemini API + cachin
 
 ---
 
+### 🎓 FEATURE 5: Onboarding Slides for New Features
+
+**Goal:** Add onboarding slides for each new feature so users discover them during first launch.
+
+**Current onboarding flow** (in `app/onboarding/_layout.tsx`):
+```
+index → pick-surah → listen → reciter → record → follow-along → note → 
+library-tour → folders → reminders → adhkar → languages → premium
+```
+
+**Add 3 new slides BEFORE the `premium` slide:**
+
+#### `app/onboarding/prayer-times.tsx`
+- Title: "🕌 Prayer Times"
+- Subtitle: "Never miss a prayer"
+- Content: Show mock PrayerTimesCard with all 5 times, next prayer highlighted
+- Description: "Accurate prayer times based on your location, with optional notifications before each prayer."
+- Animation: prayers fade in one by one using MotiView stagger
+- Follow the exact same onboarding slide pattern as existing slides (look at `app/onboarding/adhkar.tsx` for reference)
+
+#### `app/onboarding/topics.tsx`
+- Title: "📖 Browse by Topic"
+- Subtitle: "Find verses that speak to your heart"
+- Content: Show 6 TopicCards in a 2x3 grid preview (Patience, Gratitude, Peace, etc.)
+- Description: "Explore 15 curated categories — from Patience to Marriage — each with hand-picked verses."
+- Animation: cards pop in with spring animation
+
+#### `app/onboarding/ai-tafseer.tsx`
+- Title: "🤖 AI Verse Explanations"
+- Subtitle: "Understand any verse instantly"
+- Content: Show a mock verse with a "lightbulb" explanation card below it
+- Description: "Tap any verse to get a clear, scholarly explanation powered by AI."
+- Animation: verse appears, then explanation slides up from bottom
+
+#### Layout Registration
+Update `app/onboarding/_layout.tsx` to add the 3 new slides:
+```typescript
+<Stack.Screen name="adhkar" />
+<Stack.Screen name="languages" />
+<Stack.Screen name="prayer-times" />    // NEW
+<Stack.Screen name="topics" />           // NEW  
+<Stack.Screen name="ai-tafseer" />       // NEW
+<Stack.Screen name="premium" />
+```
+
+#### Update navigation flow
+Each slide's "Next" button should route to the correct next slide. Check the existing pattern — each slide likely has a `router.push('/onboarding/next-slide')` call.
+
+**After completing:**
+```bash
+npx tsc --noEmit
+git add -A && git commit -m "feat: onboarding slides for prayer times, topics, and AI tafseer" && git push origin feature/phase3-competitive-edge
+```
+
+---
+
 ## 4. Important User Preferences
 
 - **Design must be premium** — not basic or bland. Follow `DesignSystem.ts` and the mobile-ui-design skill
@@ -501,8 +707,8 @@ git push origin feature/phase3-competitive-edge
 ## 7. Dependencies to Install First
 ```bash
 npx expo install expo-location
+npm install react-native-shared-group-preferences
 ```
-That's the only new dependency needed. Everything else is already installed.
 
 ## 8. Git Protocol
 ```bash
@@ -535,7 +741,16 @@ kill %1
 cd /Users/mahmoudalaaeldin/Documents/Projects/VibeCoding/Projects/QuranApp
 git checkout -b feature/phase3-competitive-edge
 npx expo install expo-location
+npm install react-native-shared-group-preferences
 npx tsc --noEmit  # Verify clean baseline
 ```
+
+## 11. IMPLEMENTATION ORDER SUMMARY
+1. **Prayer Times** → commit & push
+2. **Topic-Based Browsing** → commit & push
+3. **iOS Widgets + Home Cards** → commit & push
+4. **AI Tafseer** → commit & push
+5. **Onboarding Slides** → commit & push
+6. **Final verification** → `npx tsc --noEmit` + push
 
 Good luck. Make this app a million-dollar product. 🚀
