@@ -164,7 +164,7 @@ export const VerseItem = ({
                         )}
                         {onShare && (
                             <IconButton
-                                icon="share-social-outline"
+                                icon="share-variant-outline"
                                 iconColor={theme.colors.onSurfaceVariant}
                                 size={22}
                                 onPress={() => {

@@ -83,39 +83,52 @@ ShareCardGenerator.displayName = 'ShareCardGenerator';
 // ═══════════════════════════════════════════════════════════════════════
 const VerseCard = ({ data }: { data: VerseShareData }) => (
     <LinearGradient
-        colors={['#1A1A2E', '#16213E', '#0F3460']}
+        colors={['#0C1220', '#152238', '#1A2D50']}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 0.5, y: 1 }}
         style={styles.card}
     >
-        {/* Decorative top border */}
+        {/* Decorative top gold accent */}
         <LinearGradient
-            colors={['#D4A853', '#F5D799', '#D4A853']}
+            colors={['#C9983A', '#E8C872', '#C9983A']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.goldStripe}
         />
 
-        {/* Bismillah ornament */}
+        {/* Corner ornaments */}
+        <Text style={styles.cornerOrnamentLeft}>✦</Text>
+        <Text style={styles.cornerOrnamentRight}>✦</Text>
+
+        {/* Bismillah */}
         <Text style={styles.ornament}>﷽</Text>
 
         {/* Surah name */}
         <Text style={styles.surahArabic}>{data.surahNameArabic}</Text>
         <Text style={styles.surahEnglish}>
-            {data.surahName} · Verse {data.verseNumber}
+            {data.surahName.toUpperCase()} · VERSE {data.verseNumber}
         </Text>
 
-        {/* Arabic verse text */}
+        {/* Arabic verse — glassmorphic container */}
         <View style={styles.verseContainer}>
-            <Text style={styles.arabicVerse}>{data.arabicText}</Text>
+            <View style={styles.verseInnerBorder}>
+                <Text style={styles.arabicVerse}>{data.arabicText}</Text>
+            </View>
         </View>
 
         {/* English translation */}
         {data.englishText && (
-            <Text style={styles.englishTranslation} numberOfLines={4}>
+            <Text style={styles.englishTranslation} numberOfLines={6}>
                 "{data.englishText}"
             </Text>
         )}
+
+        {/* Decorative divider */}
+        <View style={styles.decorativeDivider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerStar}>✦</Text>
+            <View style={styles.dividerLine} />
+        </View>
 
         {/* Branding */}
         <View style={styles.brandRow}>
@@ -306,6 +319,45 @@ const styles = StyleSheet.create({
         letterSpacing: 2,
         textTransform: 'uppercase',
         fontWeight: '600',
+    },
+    cornerOrnamentLeft: {
+        position: 'absolute',
+        top: 16,
+        left: 16,
+        fontSize: 12,
+        color: '#C9983A',
+        opacity: 0.5,
+    },
+    cornerOrnamentRight: {
+        position: 'absolute',
+        top: 16,
+        right: 16,
+        fontSize: 12,
+        color: '#C9983A',
+        opacity: 0.5,
+    },
+    verseInnerBorder: {
+        borderWidth: 1,
+        borderColor: 'rgba(201,152,58,0.2)',
+        borderRadius: BorderRadius.md,
+        padding: Spacing.lg,
+    },
+    decorativeDivider: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '100%',
+        marginTop: Spacing.md,
+    },
+    dividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+    },
+    dividerStar: {
+        fontSize: 10,
+        color: '#C9983A',
+        marginHorizontal: Spacing.sm,
+        opacity: 0.6,
     },
     achievementEmoji: {
         fontSize: 56,
