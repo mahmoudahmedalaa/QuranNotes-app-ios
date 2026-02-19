@@ -379,9 +379,10 @@ POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:ge
 ```
 
 **API Key Setup:**
-- The API key needs to be stored in the `.env` file
-- Add `EXPO_PUBLIC_GEMINI_API_KEY=` to `.env`
-- **IMPORTANT:** Since the user is asleep, create a placeholder constant and document clearly that the user needs to add their API key. Make the feature gracefully show "API key not configured" if missing.
+- The API key is **already configured** in `.env` as `EXPO_PUBLIC_GEMINI_API_KEY`
+- Access it via `process.env.EXPO_PUBLIC_GEMINI_API_KEY`
+- The key is live and ready to use — no setup needed
+- Still implement a graceful fallback message if the key is empty (defensive coding)
 
 **Files to Create:**
 
