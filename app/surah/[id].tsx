@@ -16,6 +16,7 @@ import { WaveBackground } from '../../src/presentation/components/animated/WaveB
 import { NoorMascot } from '../../src/presentation/components/mascot/NoorMascot';
 import { StickyAudioPlayer } from '../../src/presentation/components/quran/StickyAudioPlayer';
 import { RecordingIndicatorBar } from '../../src/presentation/components/recording/RecordingIndicatorBar';
+import { VerseTafseerModal } from '../../src/presentation/components/quran/VerseTafseerModal';
 import { RecordingSaveModal } from '../../src/presentation/components/recording/RecordingSaveModal';
 import { VoiceFollowAlongOverlay } from '../../src/presentation/components/voice/VoiceFollowAlongOverlay';
 import { FollowAlongSaveModal } from '../../src/presentation/components/voice/FollowAlongSaveModal';
@@ -82,6 +83,9 @@ export default function SurahDetail() {
     // ── Share state ──
     const shareCardRef = useRef<ShareCardHandle>(null);
     const [shareVerseData, setShareVerseData] = useState<VerseShareData | null>(null);
+
+    // ── Tafseer state ──
+    const [tafseerVerse, setTafseerVerse] = useState<{ arabicText: string; translation: string; surahName: string; verseNumber: number } | null>(null);
 
     useEffect(() => {
         if (id) loadSurah(Number(id), settings.translationEdition, settings.showTransliteration);
@@ -490,6 +494,12 @@ export default function SurahDetail() {
                         }
                         onRecord={() => handleRecordVerse(item.number)}
                         onShare={() => handleShareVerse(item)}
+                        onExplain={() => setTafseerVerse({
+                            arabicText: item.text,
+                            translation: item.translation || '',
+                            surahName: surah.englishName,
+                            verseNumber: item.number,
+                        })}
                         isStudyMode={isStudyMode}
                         isHighlighted={followAlong.matchedVerseId === item.number}
                         showTransliteration={settings.showTransliteration}
@@ -917,6 +927,18 @@ export default function SurahDetail() {
             )}
 
 
+
+
+
+            {/* AI Tafseer Modal */}
+            <VerseTafseerModal
+                visible={!!tafseerVerse}
+                onDismiss={() => setTafseerVerse(null)}
+                arabicText={tafseerVerse?.arabicText || ''}
+                translation={tafseerVerse?.translation || ''}
+                surahName={tafseerVerse?.surahName || ''}
+                verseNumber={tafseerVerse?.verseNumber || 0}
+            />
 
         </View>
     );

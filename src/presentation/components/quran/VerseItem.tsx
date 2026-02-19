@@ -21,6 +21,7 @@ interface VerseItemProps {
     onNote?: () => void;
     onRecord?: () => void;
     onShare?: () => void;
+    onExplain?: () => void;
     onLongPress?: () => void;
     isPlaying?: boolean;
     hasNote?: boolean;
@@ -37,6 +38,7 @@ export const VerseItem = ({
     onNote,
     onRecord,
     onShare,
+    onExplain,
     onLongPress,
     isPlaying,
     hasNote,
@@ -170,6 +172,18 @@ export const VerseItem = ({
                                 onPress={() => {
                                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                                     onShare();
+                                }}
+                                style={styles.controlButton}
+                            />
+                        )}
+                        {onExplain && (
+                            <IconButton
+                                icon="lightbulb-outline"
+                                iconColor={theme.colors.onSurfaceVariant}
+                                size={22}
+                                onPress={() => {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                    onExplain();
                                 }}
                                 style={styles.controlButton}
                             />
