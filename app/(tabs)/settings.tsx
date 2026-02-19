@@ -124,8 +124,8 @@ export default function SettingsScreen() {
                 onPress: async () => {
                     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
                     await logout();
-                    // Navigate to index — it detects user=null and redirects to login
-                    router.replace('/');
+                    // Navigate directly to login screen
+                    router.replace('/(auth)/login');
                 },
             },
         ]);
