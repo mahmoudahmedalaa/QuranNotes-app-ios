@@ -26,6 +26,7 @@ interface VerseItemProps {
     hasNote?: boolean;
     isStudyMode?: boolean;
     isHighlighted?: boolean; // For Follow Along feature
+    showTransliteration?: boolean; // Show Latin script pronunciation
 }
 
 export const VerseItem = ({
@@ -41,9 +42,11 @@ export const VerseItem = ({
     hasNote,
     isStudyMode,
     isHighlighted,
+    showTransliteration,
 }: VerseItemProps) => {
     const theme = useTheme();
     const [isPeeking, setIsPeeking] = React.useState(false);
+    const showTranslit = showTransliteration && verse.transliteration;
 
     const handleLongPress = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -191,6 +194,13 @@ export const VerseItem = ({
                     </MotiView>
                 </Pressable>
 
+                {/* Transliteration (Latin pronunciation) */}
+                {showTranslit && (
+                    <Text style={[styles.transliterationText, { color: theme.colors.secondary }]}>
+                        {verse.transliteration}
+                    </Text>
+                )}
+
                 {/* Translation */}
                 {verse.translation && (
                     <Text
@@ -262,6 +272,14 @@ const styles = StyleSheet.create({
         fontSize: 15,
         lineHeight: 24,
         textAlign: 'left',
+    },
+    transliterationText: {
+        fontSize: 15,
+        lineHeight: 22,
+        textAlign: 'left',
+        fontStyle: 'italic',
+        marginBottom: Spacing.sm,
+        opacity: 0.85,
     },
     divider: {
         height: 1,

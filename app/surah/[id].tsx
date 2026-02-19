@@ -11,6 +11,7 @@ import { useAudioRecorder } from '../../src/presentation/hooks/useAudioRecorder'
 import { VerseItem } from '../../src/presentation/components/quran/VerseItem';
 import { useNotes } from '../../src/presentation/hooks/useNotes';
 import { useVoiceFollowAlong } from '../../src/presentation/hooks/useVoiceFollowAlong';
+import { useSettings } from '../../src/infrastructure/settings/SettingsContext';
 import { WaveBackground } from '../../src/presentation/components/animated/WaveBackground';
 import { NoorMascot } from '../../src/presentation/components/mascot/NoorMascot';
 import { StickyAudioPlayer } from '../../src/presentation/components/quran/StickyAudioPlayer';
@@ -23,8 +24,7 @@ import { FollowAlongSession } from '../../src/domain/entities/FollowAlongSession
 import { Verse } from '../../src/domain/entities/Quran';
 import { ReadingPositionService, ReadingPosition } from '../../src/infrastructure/reading/ReadingPositionService';
 import { ShareCardGenerator, ShareCardHandle, VerseShareData } from '../../src/presentation/components/sharing/ShareCardGenerator';
-import { MemorizationMode } from '../../src/presentation/components/memorization/MemorizationMode';
-import { useMemorization } from '../../src/infrastructure/memorization/MemorizationContext';
+
 
 
 import {
@@ -45,6 +45,7 @@ export default function SurahDetail() {
     const scrollY = useRef(new Animated.Value(0)).current;
 
     const { surah, loading, error, loadSurah } = useQuran();
+    const { settings } = useSettings();
     const { playingVerse, isPlaying, playFromVerse, pause, resume, stop, lastCompletedPlayback } = useAudio();
     const { isRecording, startRecording, stopRecording } = useAudioRecorder();
     const { notes } = useNotes();
@@ -56,7 +57,7 @@ export default function SurahDetail() {
     const [lastRecordingUri, setLastRecordingUri] = useState<string | null>(null);
     const [recordingVerseId, setRecordingVerseId] = useState<number | undefined>();
     const [isStudyMode, setIsStudyMode] = useState(false);
-    const [isMemorizationMode, setIsMemorizationMode] = useState(false);
+
     const [followAlongModalVisible, setFollowAlongModalVisible] = useState(false);
     const [completedFollowAlongSession, setCompletedFollowAlongSession] = useState<FollowAlongSession | null>(null);
     const flatListRef = useRef<any>(null);
@@ -83,8 +84,8 @@ export default function SurahDetail() {
     const [shareVerseData, setShareVerseData] = useState<VerseShareData | null>(null);
 
     useEffect(() => {
-        if (id) loadSurah(Number(id));
-    }, [id]);
+        if (id) loadSurah(Number(id), settings.translationEdition, settings.showTransliteration);
+    }, [id, settings.translationEdition, settings.showTransliteration]);
 
     // ── Compute whether we need boosted rendering for a high verse target ──
     const hasHighVerseTarget = useMemo(() => {
@@ -491,6 +492,7 @@ export default function SurahDetail() {
                         onShare={() => handleShareVerse(item)}
                         isStudyMode={isStudyMode}
                         isHighlighted={followAlong.matchedVerseId === item.number}
+                        showTransliteration={settings.showTransliteration}
                     />
                 )}
                 contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 20 }]}
@@ -658,14 +660,26 @@ export default function SurahDetail() {
                                         }}
                                     />
                                     <IconButton
-                                        icon="brain"
+                                        icon={followAlong.isActive ? 'ear' : 'ear-outline'}
                                         mode="contained-tonal"
-                                        containerColor={theme.colors.surfaceVariant}
-                                        iconColor={'#6C5CE7'}
+                                        containerColor={
+                                            followAlong.isActive
+                                                ? '#10B98130'
+                                                : theme.colors.surfaceVariant
+                                        }
+                                        iconColor={
+                                            followAlong.isActive
+                                                ? '#10B981'
+                                                : theme.colors.onSurfaceVariant
+                                        }
                                         size={22}
                                         onPress={() => {
                                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                                            setIsMemorizationMode(true);
+                                            if (followAlong.isActive) {
+                                                handleFollowAlongStop();
+                                            } else {
+                                                followAlong.startSession();
+                                            }
                                         }}
                                     />
                                 </View>
@@ -735,12 +749,18 @@ export default function SurahDetail() {
                         style={styles.stickyActionIcon}
                     />
                     <IconButton
-                        icon="brain"
-                        iconColor="#6C5CE7"
+                        icon={followAlong.isActive ? 'ear' : 'ear-outline'}
+                        iconColor={
+                            followAlong.isActive ? '#10B981' : theme.colors.onSurfaceVariant
+                        }
                         size={20}
                         onPress={() => {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                            setIsMemorizationMode(true);
+                            if (followAlong.isActive) {
+                                handleFollowAlongStop();
+                            } else {
+                                followAlong.startSession();
+                            }
                         }}
                         style={styles.stickyActionIcon}
                     />
@@ -896,18 +916,7 @@ export default function SurahDetail() {
                 />
             )}
 
-            {/* Memorization Mode — fullscreen overlay */}
-            {isMemorizationMode && surah && (
-                <View style={StyleSheet.absoluteFill}>
-                    <MemorizationMode
-                        verses={surah.verses}
-                        surahNumber={surah.number}
-                        surahName={surah.englishName}
-                        surahNameArabic={surah.name}
-                        onClose={() => setIsMemorizationMode(false)}
-                    />
-                </View>
-            )}
+
 
         </View>
     );

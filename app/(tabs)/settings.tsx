@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import { useSettings } from '../../src/infrastructure/settings/SettingsContext';
 import { ReciterPicker } from '../../src/presentation/components/common/ReciterPicker';
 import { getReciterById } from '../../src/domain/entities/Reciter';
+import { getEditionById, getAvailableLanguages, TranslationEdition } from '../../src/domain/entities/TranslationEdition';
 import {
     Spacing,
     BorderRadius,
@@ -46,6 +47,11 @@ export default function SettingsScreen() {
     const { debugResetAll, debugUseOneCredit, freeUsesRemaining } = useMood();
     const { user, loading, logout, deleteAccount, deleteAccountWithPassword } = useAuth();
     const [reciterPickerVisible, setReciterPickerVisible] = useState(false);
+    const [translationPickerExpanded, setTranslationPickerExpanded] = useState(false);
+
+    // Derived translation data
+    const currentEdition = getEditionById(settings.translationEdition);
+    const availableLanguages = getAvailableLanguages();
 
     // Notification state
     const [reminderEnabled, setReminderEnabled] = useState(settings.dailyReminderEnabled);
@@ -429,6 +435,143 @@ export default function SettingsScreen() {
                         </Pressable>
                     </View>
 
+                    {/* Reading / Translation Section */}
+                    <View style={styles.section}>
+                        <Text
+                            style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>
+                            READING
+                        </Text>
+
+                        {/* Translation Language Picker — expandable */}
+                        <View
+                            style={[
+                                styles.expandableCard,
+                                { backgroundColor: theme.colors.surface, marginBottom: Spacing.sm },
+                                Shadows.sm,
+                            ]}>
+                            <Pressable
+                                style={styles.expandableHeader}
+                                onPress={() => {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                                    setTranslationPickerExpanded(!translationPickerExpanded);
+                                }}>
+                                <View
+                                    style={[
+                                        styles.iconContainer,
+                                        { backgroundColor: theme.colors.primaryContainer },
+                                    ]}>
+                                    <Ionicons
+                                        name="globe-outline"
+                                        size={18}
+                                        color={theme.colors.primary}
+                                    />
+                                </View>
+                                <View style={styles.cardContent}>
+                                    <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
+                                        Translation Language
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            styles.cardSubtitle,
+                                            { color: theme.colors.onSurfaceVariant },
+                                        ]}>
+                                        {currentEdition ? `${currentEdition.flag} ${currentEdition.languageName} · ${currentEdition.name}` : 'English · Saheeh International'}
+                                    </Text>
+                                </View>
+                                <Ionicons
+                                    name={translationPickerExpanded ? 'chevron-up' : 'chevron-down'}
+                                    size={20}
+                                    color={theme.colors.onSurfaceVariant}
+                                />
+                            </Pressable>
+
+                            {translationPickerExpanded && (
+                                <View style={styles.expandedContent}>
+                                    <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant }]} />
+                                    {availableLanguages.map((lang) => (
+                                        <View key={lang.language}>
+                                            {lang.editions.map((edition) => {
+                                                const isActive = settings.translationEdition === edition.identifier;
+                                                return (
+                                                    <Pressable
+                                                        key={edition.identifier}
+                                                        style={({ pressed }) => [
+                                                            styles.prayerRow,
+                                                            isActive && { backgroundColor: theme.colors.primaryContainer },
+                                                            pressed && { opacity: 0.7 },
+                                                        ]}
+                                                        onPress={() => {
+                                                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                                            updateSettings({ translationEdition: edition.identifier });
+                                                            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                                                            setTranslationPickerExpanded(false);
+                                                        }}>
+                                                        <Text style={styles.prayerEmoji}>{edition.flag}</Text>
+                                                        <Text style={[styles.prayerLabel, { color: theme.colors.onSurface }]}>
+                                                            {edition.languageName}
+                                                        </Text>
+                                                        <Text style={[styles.prayerTime, { color: theme.colors.onSurfaceVariant }]}>
+                                                            {edition.name}
+                                                        </Text>
+                                                        {isActive && (
+                                                            <Ionicons
+                                                                name="checkmark-circle"
+                                                                size={20}
+                                                                color={theme.colors.primary}
+                                                                style={{ marginLeft: Spacing.xs }}
+                                                            />
+                                                        )}
+                                                    </Pressable>
+                                                );
+                                            })}
+                                        </View>
+                                    ))}
+                                </View>
+                            )}
+                        </View>
+
+                        {/* Transliteration Toggle */}
+                        <View
+                            style={[
+                                styles.card,
+                                { backgroundColor: theme.colors.surface },
+                                Shadows.sm,
+                            ]}>
+                            <View
+                                style={[
+                                    styles.iconContainer,
+                                    { backgroundColor: theme.colors.secondaryContainer },
+                                ]}>
+                                <Ionicons
+                                    name="text-outline"
+                                    size={18}
+                                    color={theme.colors.secondary}
+                                />
+                            </View>
+                            <View style={styles.cardContent}>
+                                <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
+                                    Transliteration
+                                </Text>
+                                <Text
+                                    style={[
+                                        styles.cardSubtitle,
+                                        { color: theme.colors.onSurfaceVariant },
+                                    ]}>
+                                    Show Arabic pronunciation in Latin script
+                                </Text>
+                            </View>
+                            <RNSwitch
+                                value={settings.showTransliteration}
+                                onValueChange={(value) => {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                    updateSettings({ showTransliteration: value });
+                                }}
+                                trackColor={{ false: '#48484A', true: theme.colors.primary }}
+                                thumbColor={settings.showTransliteration ? '#FFF' : '#F4F4F4'}
+                            />
+                        </View>
+                    </View>
                     {/* Notifications Section */}
                     <View style={styles.section}>
                         <Text
