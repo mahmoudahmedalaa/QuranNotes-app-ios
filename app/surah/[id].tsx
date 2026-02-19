@@ -22,6 +22,7 @@ import { FollowAlongSession } from '../../src/domain/entities/FollowAlongSession
 
 import { Verse } from '../../src/domain/entities/Quran';
 import { ReadingPositionService, ReadingPosition } from '../../src/infrastructure/reading/ReadingPositionService';
+import { ShareCardGenerator, ShareCardHandle, VerseShareData } from '../../src/presentation/components/sharing/ShareCardGenerator';
 
 
 import {
@@ -73,6 +74,10 @@ export default function SurahDetail() {
     const [savedPosition, setSavedPosition] = useState<ReadingPosition | null>(null);
     const [showResumeBanner, setShowResumeBanner] = useState(false);
     const [showReturnToAudio, setShowReturnToAudio] = useState(false);
+
+    // ── Share state ──
+    const shareCardRef = useRef<ShareCardHandle>(null);
+    const [shareVerseData, setShareVerseData] = useState<VerseShareData | null>(null);
 
     useEffect(() => {
         if (id) loadSurah(Number(id));
@@ -403,6 +408,22 @@ export default function SurahDetail() {
         }
     };
 
+    // ── Share a verse ──
+    const handleShareVerse = useCallback((verse: Verse) => {
+        if (!surah) return;
+        setShareVerseData({
+            surahName: surah.englishName,
+            surahNameArabic: surah.name,
+            verseNumber: verse.number,
+            arabicText: verse.text,
+            englishText: verse.translation,
+        });
+        // Wait for render, then capture
+        setTimeout(() => {
+            shareCardRef.current?.capture();
+        }, 100);
+    }, [surah]);
+
     if (loading) {
         return (
             <WaveBackground variant="spiritual" intensity="subtle">
@@ -464,6 +485,7 @@ export default function SurahDetail() {
                             })
                         }
                         onRecord={() => handleRecordVerse(item.number)}
+                        onShare={() => handleShareVerse(item)}
                         isStudyMode={isStudyMode}
                         isHighlighted={followAlong.matchedVerseId === item.number}
                     />
@@ -840,6 +862,15 @@ export default function SurahDetail() {
                     </MotiView>
                 )}
             </AnimatePresence>
+
+            {/* Share Card Generator — rendered offscreen for capture */}
+            {shareVerseData && (
+                <ShareCardGenerator
+                    ref={shareCardRef}
+                    type="verse"
+                    verseData={shareVerseData}
+                />
+            )}
 
         </View>
     );
