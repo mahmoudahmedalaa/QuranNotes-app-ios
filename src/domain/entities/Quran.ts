@@ -1,7 +1,8 @@
 export interface Verse {
     number: number; // Verse number in surah
     text: string; // Arabic Uthmani
-    translation: string; // English
+    translation: string; // User's chosen language
+    transliteration?: string; // Latin script pronunciation (optional)
     surahNumber: number;
     juz: number;
     page: number;
