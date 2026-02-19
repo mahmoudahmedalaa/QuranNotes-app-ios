@@ -9,8 +9,6 @@ PODS:
     - GoogleUtilities/Environment (~> 8.0)
     - GoogleUtilities/UserDefaults (~> 8.0)
     - PromisesObjC (~> 2.4)
-  - BVLinearGradient (2.8.3):
-    - React-Core
   - EXApplication (7.0.8):
     - ExpoModulesCore
   - EXAV (16.0.8):
@@ -229,8 +227,6 @@ PODS:
     - ExpoModulesCore
   - ExpoBlur (15.0.8):
     - ExpoModulesCore
-  - ExpoCrypto (15.0.8):
-    - ExpoModulesCore
   - ExpoDevice (8.0.10):
     - ExpoModulesCore
   - ExpoFileSystem (19.0.21):
@@ -273,7 +269,7 @@ PODS:
     - Yoga
   - ExpoSharing (14.0.8):
     - ExpoModulesCore
-  - ExpoWebBrowser (15.0.10):
+  - ExpoSpeechRecognition (0.2.15):
     - ExpoModulesCore
   - EXUpdatesInterface (2.0.0):
     - ExpoModulesCore
@@ -2382,7 +2378,6 @@ PODS:
   - Yoga (0.0.0)
 
 DEPENDENCIES:
-  - BVLinearGradient (from `../node_modules/react-native-linear-gradient`)
   - EXApplication (from `../node_modules/expo-application/ios`)
   - EXAV (from `../node_modules/expo-av/ios`)
   - EXConstants (from `../node_modules/expo-constants/ios`)
@@ -2398,7 +2393,6 @@ DEPENDENCIES:
   - ExpoAppleAuthentication (from `../node_modules/expo-apple-authentication/ios`)
   - ExpoAsset (from `../node_modules/expo-asset/ios`)
   - ExpoBlur (from `../node_modules/expo-blur/ios`)
-  - ExpoCrypto (from `../node_modules/expo-crypto/ios`)
   - ExpoDevice (from `../node_modules/expo-device/ios`)
   - ExpoFileSystem (from `../node_modules/expo-file-system/ios`)
   - ExpoFont (from `../node_modules/expo-font/ios`)
@@ -2409,7 +2403,7 @@ DEPENDENCIES:
   - ExpoLinking (from `../node_modules/expo-linking/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - ExpoSharing (from `../node_modules/expo-sharing/ios`)
-  - ExpoWebBrowser (from `../node_modules/expo-web-browser/ios`)
+  - "ExpoSpeechRecognition (from `../node_modules/@jamsch/expo-speech-recognition/ios`)"
   - EXUpdatesInterface (from `../node_modules/expo-updates-interface/ios`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
@@ -2506,8 +2500,6 @@ SPEC REPOS:
     - SwiftAudioEx
 
 EXTERNAL SOURCES:
-  BVLinearGradient:
-    :path: "../node_modules/react-native-linear-gradient"
   EXApplication:
     :path: "../node_modules/expo-application/ios"
   EXAV:
@@ -2538,8 +2530,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-asset/ios"
   ExpoBlur:
     :path: "../node_modules/expo-blur/ios"
-  ExpoCrypto:
-    :path: "../node_modules/expo-crypto/ios"
   ExpoDevice:
     :path: "../node_modules/expo-device/ios"
   ExpoFileSystem:
@@ -2560,8 +2550,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-modules-core"
   ExpoSharing:
     :path: "../node_modules/expo-sharing/ios"
-  ExpoWebBrowser:
-    :path: "../node_modules/expo-web-browser/ios"
+  ExpoSpeechRecognition:
+    :path: "../node_modules/@jamsch/expo-speech-recognition/ios"
   EXUpdatesInterface:
     :path: "../node_modules/expo-updates-interface/ios"
   FBLazyVector:
@@ -2727,7 +2717,6 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   AppAuth: 1c1a8afa7e12f2ec3a294d9882dfa5ab7d3cb063
   AppCheckCore: cc8fd0a3a230ddd401f326489c99990b013f0c4f
-  BVLinearGradient: cb006ba232a1f3e4f341bb62c42d1098c284da70
   EXApplication: 1e98d4b1dccdf30627f92917f4b2c5a53c330e5f
   EXAV: b60fcf142fae6684d295bc28cd7cfcb3335570ea
   EXConstants: fce59a631a06c4151602843667f7cfe35f81e271
@@ -2743,7 +2732,6 @@ SPEC CHECKSUMS:
   ExpoAppleAuthentication: 9413ae9a5e631a424cc04c1b13b0694dbab7d594
   ExpoAsset: f867e55ceb428aab99e1e8c082b5aee7c159ea18
   ExpoBlur: b90747a3f22a8b6ceffd9cb0dc41a4184efdc656
-  ExpoCrypto: b6105ebaa15d6b38a811e71e43b52cd934945322
   ExpoDevice: 6327c3c200816795708885adf540d26ecab83d1a
   ExpoFileSystem: 858a44267a3e6e9057e0888ad7c7cfbf55d52063
   ExpoFont: f543ce20a228dd702813668b1a07b46f51878d47
@@ -2754,7 +2742,7 @@ SPEC CHECKSUMS:
   ExpoLinking: 8f0aaf69aa56f832913030503b6263dc6f647f37
   ExpoModulesCore: f3da4f1ab5a8375d0beafab763739dbee8446583
   ExpoSharing: 0d983394ed4a80334bab5a0d5384f75710feb7e8
-  ExpoWebBrowser: 17b064c621789e41d4816c95c93f429b84971f52
+  ExpoSpeechRecognition: 1be520aff1d1bf8fd584a321ced0d30cde06235a
   EXUpdatesInterface: 5adf50cb41e079c861da6d9b4b954c3db9a50734
   FBLazyVector: e95a291ad2dadb88e42b06e0c5fb8262de53ec12
   GoogleSignIn: fcee2257188d5eda57a5e2b6a715550ffff9206d
