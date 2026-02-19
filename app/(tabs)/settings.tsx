@@ -104,17 +104,6 @@ export default function SettingsScreen() {
         }
     };
 
-    const handleTestNotification = async () => {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        const granted = await NotificationService.requestPermissions();
-        if (granted) {
-            await NotificationService.sendTestNotification();
-            Alert.alert('Sent! 🔔', 'A preview notification will appear in ~3 seconds.');
-        } else {
-            Alert.alert('Permissions Required', 'Please enable notifications in your device settings.');
-        }
-    };
-
     const handleSignOut = async () => {
         Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
             { text: 'Cancel', style: 'cancel' },
@@ -600,44 +589,7 @@ export default function SettingsScreen() {
                                     )}
                                 </View>
 
-                                {/* Preview Notification */}
-                                <Pressable
-                                    style={({ pressed }) => [
-                                        styles.card,
-                                        { backgroundColor: theme.colors.surface },
-                                        Shadows.sm,
-                                        pressed && styles.cardPressed,
-                                    ]}
-                                    onPress={handleTestNotification}>
-                                    <View
-                                        style={[
-                                            styles.iconContainer,
-                                            { backgroundColor: theme.colors.secondaryContainer },
-                                        ]}>
-                                        <Ionicons
-                                            name="send"
-                                            size={18}
-                                            color={theme.colors.secondary}
-                                        />
-                                    </View>
-                                    <View style={styles.cardContent}>
-                                        <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
-                                            Preview Notification
-                                        </Text>
-                                        <Text
-                                            style={[
-                                                styles.cardSubtitle,
-                                                { color: theme.colors.onSurfaceVariant },
-                                            ]}>
-                                            Send a test in 3 seconds
-                                        </Text>
-                                    </View>
-                                    <Ionicons
-                                        name="chevron-forward"
-                                        size={20}
-                                        color={theme.colors.onSurfaceVariant}
-                                    />
-                                </Pressable>
+
                             </>
                         )}
                     </View>
