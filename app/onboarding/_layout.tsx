@@ -20,6 +20,9 @@ export default function OnboardingLayout() {
             <Stack.Screen name="reminders" />
             <Stack.Screen name="adhkar" />
             <Stack.Screen name="languages" />
+            <Stack.Screen name="prayer-times" />
+            <Stack.Screen name="topics" />
+            <Stack.Screen name="ai-tafseer" />
             <Stack.Screen name="premium" />
         </Stack>
     );

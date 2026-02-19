@@ -29,7 +29,7 @@ export default function OnboardingLanguages() {
     const handleContinue = () => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         goToStep(12);
-        router.push('/onboarding/premium');
+        router.push('/onboarding/prayer-times' as any);
     };
 
     const handleSelectEdition = (identifier: string) => {
