@@ -63,13 +63,13 @@ export default function OnboardingReminders() {
         }
 
         goToStep(10);
-        router.push('/onboarding/premium');
+        router.push('/onboarding/adhkar');
     };
 
     const handleSkip = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         goToStep(10);
-        router.push('/onboarding/premium');
+        router.push('/onboarding/adhkar');
     };
 
     return (

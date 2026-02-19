@@ -18,6 +18,8 @@ export default function OnboardingLayout() {
             <Stack.Screen name="library-tour" />
             <Stack.Screen name="folders" />
             <Stack.Screen name="reminders" />
+            <Stack.Screen name="adhkar" />
+            <Stack.Screen name="languages" />
             <Stack.Screen name="premium" />
         </Stack>
     );
