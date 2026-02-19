@@ -5,10 +5,13 @@ export class LocalQuranRepository {
     private readonly STORAGE_KEY = 'quran_cache_';
     private readonly LIST_KEY = 'quran_list_cache';
 
-    async getSurah(surahNumber: number): Promise<Surah> {
+    async getSurah(surahNumber: number, editionKey?: string): Promise<Surah> {
+        const key = editionKey
+            ? `${this.STORAGE_KEY}${editionKey}_${surahNumber}`
+            : `${this.STORAGE_KEY}${surahNumber}`;
         let data: string | null = null;
         try {
-            data = await AsyncStorage.getItem(`${this.STORAGE_KEY}${surahNumber}`);
+            data = await AsyncStorage.getItem(key);
         } catch (e) {
             console.error('Error reading local surah', e);
             throw e;
@@ -18,9 +21,12 @@ export class LocalQuranRepository {
         return JSON.parse(data);
     }
 
-    async saveSurah(surah: Surah): Promise<void> {
+    async saveSurah(surah: Surah, editionKey?: string): Promise<void> {
+        const key = editionKey
+            ? `${this.STORAGE_KEY}${editionKey}_${surah.number}`
+            : `${this.STORAGE_KEY}${surah.number}`;
         try {
-            await AsyncStorage.setItem(`${this.STORAGE_KEY}${surah.number}`, JSON.stringify(surah));
+            await AsyncStorage.setItem(key, JSON.stringify(surah));
         } catch (e) {
             console.error('Error saving local surah', e);
         }

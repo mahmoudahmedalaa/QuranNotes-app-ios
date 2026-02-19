@@ -20,11 +20,11 @@ export const useQuran = () => {
     const getAllSurahsUseCase = useMemo(() => new GetAllSurahsUseCase(quranRepo), [quranRepo]);
 
     const loadSurah = useCallback(
-        async (surahNumber: number) => {
+        async (surahNumber: number, translationEdition?: string, includeTransliteration?: boolean) => {
             setLoading(true);
             setError(null);
             try {
-                const result = await getSurahUseCase.execute(surahNumber);
+                const result = await getSurahUseCase.execute(surahNumber, translationEdition, includeTransliteration);
                 setSurah(result);
                 return result;
             } catch (err) {

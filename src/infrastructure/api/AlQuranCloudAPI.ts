@@ -67,23 +67,35 @@ export class AlQuranCloudAPI {
         }
     }
 
-    async getSurah(surahNumber: number): Promise<Surah> {
+    async getSurah(
+        surahNumber: number,
+        translationEdition: string = 'en.sahih',
+        includeTransliteration: boolean = false,
+    ): Promise<Surah> {
         try {
+            // Build editions: Arabic + translation + optional transliteration
+            const editions = ['quran-uthmani', translationEdition];
+            if (includeTransliteration) {
+                editions.push('en.transliteration');
+            }
+
             const response = await fetch(
-                `${this.BASE_URL}/surah/${surahNumber}/editions/quran-uthmani,en.sahih`,
+                `${this.BASE_URL}/surah/${surahNumber}/editions/${editions.join(',')}`,
             );
             const json = await response.json();
 
             if (json.code !== 200) throw new Error(`Failed to fetch surah ${surahNumber}`);
 
             const arabicData = json.data[0];
-            const englishData = json.data[1];
+            const translationData = json.data[1];
+            const transliterationData = includeTransliteration ? json.data[2] : null;
 
             const verses: Verse[] = arabicData.ayahs.map(
                 (ayah: ApiVerseResponse, index: number) => ({
                     number: ayah.numberInSurah,
                     text: ayah.text,
-                    translation: englishData.ayahs[index].text,
+                    translation: translationData.ayahs[index].text,
+                    transliteration: transliterationData?.ayahs[index]?.text,
                     surahNumber: surahNumber,
                     juz: ayah.juz,
                     page: ayah.page,

@@ -31,19 +31,16 @@ interface ApiSurahListItem {
 }
 
 export class QuranMapper {
-    static toDomain(apiResponse: { data: ApiEdition[] }): Surah {
-        // Al-Quran Cloud API returns data in "data" object
-        // We expect a response with edits (uthmani + translation)
-
-        // This mapper assumes we are handling the specific response structure for "editions/quran-uthmani,en.sahih"
-
+    static toDomain(apiResponse: { data: ApiEdition[] }, includeTransliteration: boolean = false): Surah {
         const ArabicEdition = apiResponse.data[0];
-        const EnglishEdition = apiResponse.data[1];
+        const TranslationEdition = apiResponse.data[1];
+        const TransliterationEdition = includeTransliteration ? apiResponse.data[2] : null;
 
         const verses: Verse[] = ArabicEdition.ayahs.map((ayah: ApiAyah, index: number) => ({
             number: ayah.numberInSurah,
             text: ayah.text,
-            translation: EnglishEdition.ayahs[index].text,
+            translation: TranslationEdition.ayahs[index].text,
+            transliteration: TransliterationEdition?.ayahs[index]?.text,
             surahNumber: ArabicEdition.number,
             juz: ayah.juz,
             page: ayah.page,
