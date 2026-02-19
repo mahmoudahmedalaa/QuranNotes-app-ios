@@ -1,5 +1,5 @@
-import { useEffect, useState, useMemo } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import { useEffect, useState, useMemo, useCallback } from 'react';
+import { View, FlatList, StyleSheet, Alert } from 'react-native';
 import {
     Text,
     useTheme,
@@ -19,6 +19,7 @@ import { Note } from '../../src/domain/entities/Note';
 import { Spacing } from '../../src/presentation/theme/DesignSystem';
 import { ModernDropdown } from '../../src/presentation/components/common/ModernDropdown';
 import { FolderManagementDialog } from '../../src/presentation/components/common/FolderManagementDialog';
+import { ExportService, ExportFormat } from '../../src/infrastructure/export/ExportService';
 
 export default function NotesScreen() {
     const router = useRouter();
@@ -42,6 +43,20 @@ export default function NotesScreen() {
             return matchesSearch && matchesFolder;
         });
     }, [notes, searchQuery, selectedFolders]);
+
+    const handleExport = useCallback(async () => {
+        if (filteredNotes.length === 0) {
+            Alert.alert('No Notes', 'There are no notes to export.');
+            return;
+        }
+        try {
+            await ExportService.exportNotes(filteredNotes, 'text');
+        } catch (error: any) {
+            if (error.message !== 'User did not share') {
+                Alert.alert('Export Failed', error.message || 'Something went wrong.');
+            }
+        }
+    }, [filteredNotes]);
 
     const folderOptions = folders.map(f => ({ label: f.name, value: f.id }));
 
@@ -114,6 +129,12 @@ export default function NotesScreen() {
                     <Text style={[styles.title, { color: theme.colors.primary, marginBottom: 0 }]}>
                         My Reflections
                     </Text>
+                    <IconButton
+                        icon="download-outline"
+                        mode="contained-tonal"
+                        onPress={handleExport}
+                        size={24}
+                    />
                     <IconButton
                         icon="folder-plus"
                         mode="contained-tonal"

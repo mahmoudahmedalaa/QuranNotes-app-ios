@@ -20,6 +20,8 @@ import MoodCheckInCard from '../../src/presentation/components/mood/MoodCheckInC
 import { ReadingPositionService, ReadingPosition } from '../../src/infrastructure/reading/ReadingPositionService';
 import { useKhatma } from '../../src/infrastructure/khatma/KhatmaContext';
 import { useAudio } from '../../src/infrastructure/audio/AudioContext';
+import { useAdhkar } from '../../src/infrastructure/adhkar/AdhkarContext';
+import { AdhkarScreen } from '../../src/presentation/screens/AdhkarScreen';
 
 export default function Index() {
     const { loading, error, surahList, loadSurahList } = useQuran();
@@ -32,6 +34,11 @@ export default function Index() {
     const [loadingMessage, setLoadingMessage] = useState('');
     const [loadingAttribution, setLoadingAttribution] = useState('');
     const [globalPosition, setGlobalPosition] = useState<ReadingPosition | null>(null);
+    const [showAdhkar, setShowAdhkar] = useState(false);
+    const { getCompletionPercentage } = useAdhkar();
+    const currentHour = new Date().getHours();
+    const adhkarPeriod = currentHour < 15 ? 'morning' : 'evening';
+    const adhkarPct = getCompletionPercentage(adhkarPeriod as any);
 
     // Refresh global position when home screen gains focus OR audio stops.
     // Hide card while audio is active — the GlobalMiniPlayer handles that.
@@ -207,6 +214,44 @@ export default function Index() {
 
                     <MoodCheckInCard />
 
+                    {/* Adhkar Quick Access Card */}
+                    <MotiView
+                        from={{ opacity: 0, translateY: 15 }}
+                        animate={{ opacity: 1, translateY: 0 }}
+                        transition={{ type: 'spring', damping: 18, delay: 180 }}
+                        style={{ paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}
+                    >
+                        <Pressable
+                            onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                setShowAdhkar(true);
+                            }}
+                            style={({ pressed }) => [
+                                styles.continueCard,
+                                { backgroundColor: theme.colors.surface },
+                                Shadows.md,
+                                pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                            ]}
+                        >
+                            <View style={[styles.continueIcon, {
+                                backgroundColor: adhkarPeriod === 'morning' ? '#FEF3C720' : '#312E8120'
+                            }]}>
+                                <Text style={{ fontSize: 22 }}>
+                                    {adhkarPeriod === 'morning' ? '☀️' : '🌙'}
+                                </Text>
+                            </View>
+                            <View style={styles.continueTextGroup}>
+                                <Text style={[styles.continueTitle, { color: theme.colors.onSurface }]} numberOfLines={1}>
+                                    {adhkarPeriod === 'morning' ? 'Morning Adhkar' : 'Evening Adhkar'}
+                                </Text>
+                                <Text style={[styles.continueSubtitle, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
+                                    {adhkarPct > 0 ? `${adhkarPct}% complete` : 'Tap to begin'}
+                                </Text>
+                            </View>
+                            <Ionicons name="chevron-forward" size={20} color={theme.colors.onSurfaceVariant} />
+                        </Pressable>
+                    </MotiView>
+
                     {/* Continue Reading Card */}
                     {globalPosition && !completedSurahs.includes(globalPosition.surah) && (
                         <MotiView
@@ -267,6 +312,13 @@ export default function Index() {
                     />
                 </SafeAreaView>
             </WaveBackground>
+
+            {/* Adhkar fullscreen modal */}
+            {showAdhkar && (
+                <View style={StyleSheet.absoluteFill}>
+                    <AdhkarScreen onClose={() => setShowAdhkar(false)} />
+                </View>
+            )}
         </View>
     );
 }

@@ -23,6 +23,8 @@ import { FollowAlongSession } from '../../src/domain/entities/FollowAlongSession
 import { Verse } from '../../src/domain/entities/Quran';
 import { ReadingPositionService, ReadingPosition } from '../../src/infrastructure/reading/ReadingPositionService';
 import { ShareCardGenerator, ShareCardHandle, VerseShareData } from '../../src/presentation/components/sharing/ShareCardGenerator';
+import { MemorizationMode } from '../../src/presentation/components/memorization/MemorizationMode';
+import { useMemorization } from '../../src/infrastructure/memorization/MemorizationContext';
 
 
 import {
@@ -54,6 +56,7 @@ export default function SurahDetail() {
     const [lastRecordingUri, setLastRecordingUri] = useState<string | null>(null);
     const [recordingVerseId, setRecordingVerseId] = useState<number | undefined>();
     const [isStudyMode, setIsStudyMode] = useState(false);
+    const [isMemorizationMode, setIsMemorizationMode] = useState(false);
     const [followAlongModalVisible, setFollowAlongModalVisible] = useState(false);
     const [completedFollowAlongSession, setCompletedFollowAlongSession] = useState<FollowAlongSession | null>(null);
     const flatListRef = useRef<any>(null);
@@ -654,6 +657,17 @@ export default function SurahDetail() {
                                             setIsStudyMode(!isStudyMode);
                                         }}
                                     />
+                                    <IconButton
+                                        icon="brain"
+                                        mode="contained-tonal"
+                                        containerColor={theme.colors.surfaceVariant}
+                                        iconColor={'#6C5CE7'}
+                                        size={22}
+                                        onPress={() => {
+                                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                            setIsMemorizationMode(true);
+                                        }}
+                                    />
                                 </View>
 
                             </Animated.View>
@@ -717,6 +731,16 @@ export default function SurahDetail() {
                         onPress={() => {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                             setIsStudyMode(!isStudyMode);
+                        }}
+                        style={styles.stickyActionIcon}
+                    />
+                    <IconButton
+                        icon="brain"
+                        iconColor="#6C5CE7"
+                        size={20}
+                        onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                            setIsMemorizationMode(true);
                         }}
                         style={styles.stickyActionIcon}
                     />
@@ -870,6 +894,19 @@ export default function SurahDetail() {
                     type="verse"
                     verseData={shareVerseData}
                 />
+            )}
+
+            {/* Memorization Mode — fullscreen overlay */}
+            {isMemorizationMode && surah && (
+                <View style={StyleSheet.absoluteFill}>
+                    <MemorizationMode
+                        verses={surah.verses}
+                        surahNumber={surah.number}
+                        surahName={surah.englishName}
+                        surahNameArabic={surah.name}
+                        onClose={() => setIsMemorizationMode(false)}
+                    />
+                </View>
             )}
 
         </View>
