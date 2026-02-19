@@ -17,13 +17,13 @@ import { MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 
 const lightColors = {
     // Backgrounds (layered depth)
-    background: '#F8FAFB', // Soft off-white
+    background: '#FAF5FF', // Soft lavender
     surface: '#FFFFFF', // Pure white cards
-    surfaceVariant: '#F0F4F8', // Subtle gray for sections
+    surfaceVariant: '#F3EEFF', // Subtle lavender for sections
 
     // Primary accent (used sparingly)
     primary: '#5B7FFF', // Soft blue-violet
-    primaryContainer: '#E8EDFF', // Light primary wash
+    primaryContainer: '#EDE5FF', // Light primary wash (lavender)
     onPrimary: '#FFFFFF',
     onPrimaryContainer: '#1A365D',
 
@@ -251,7 +251,7 @@ export const BorderRadius = {
 
 export const Gradients = {
     // Background gradients
-    sereneSky: ['#E8EDFF', '#F8FAFB'] as const,
+    sereneSky: ['#F3E8FF', '#FAF5FF'] as const,
     calmSunset: ['#FDF6E3', '#F8FAFB'] as const,
 
     // Hero gradients
