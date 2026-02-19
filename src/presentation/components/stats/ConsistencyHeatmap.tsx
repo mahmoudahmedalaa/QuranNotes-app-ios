@@ -146,7 +146,7 @@ export const ConsistencyHeatmap: React.FC<ConsistencyHeatmapProps> = ({ data }) 
                                     <View style={[
                                         styles.dayCircle,
                                         active && !isTodayCell && { backgroundColor: ACCENT.greenLight },
-                                        isTodayCell && { backgroundColor: `${theme.colors.primary}20`, borderWidth: 1.5, borderColor: theme.colors.primary },
+                                        isTodayCell && { borderWidth: 2, borderColor: theme.colors.primary },
                                         isFuture && { opacity: 0.3 },
                                     ]}>
                                         <Text style={[
@@ -173,6 +173,10 @@ export const ConsistencyHeatmap: React.FC<ConsistencyHeatmapProps> = ({ data }) 
                 <View style={styles.legendItem}>
                     <View style={[styles.legendDot, { backgroundColor: ACCENT.green }]} />
                     <Text style={[styles.legendText, { color: theme.colors.onSurfaceVariant }]}>Read that day</Text>
+                </View>
+                <View style={styles.legendItem}>
+                    <View style={[styles.legendDot, { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: theme.colors.primary }]} />
+                    <Text style={[styles.legendText, { color: theme.colors.onSurfaceVariant }]}>Today</Text>
                 </View>
             </View>
         </View>
