@@ -8,6 +8,7 @@ import { useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { JuzInfo } from '../../../data/khatmaData';
 import { Spacing, BorderRadius, Shadows } from '../../theme/DesignSystem';
@@ -121,22 +122,25 @@ export const JuzCard: React.FC<JuzCardProps> = ({
                         <Pressable
                             onPress={handleContinueReading}
                             style={({ pressed }) => [
-                                styles.continueButton,
-                                {
-                                    backgroundColor: theme.colors.primary,
-                                },
-                                Shadows.primary,
+                                styles.continueButtonWrapper,
                                 pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
                             ]}
                         >
-                            <MaterialCommunityIcons
-                                name="book-open-page-variant"
-                                size={18}
-                                color="#FFF"
-                            />
-                            <Text style={styles.continueButtonText}>
-                                {lastReadSurahNumber ? 'Continue Reading' : 'Start Reading'}
-                            </Text>
+                            <LinearGradient
+                                colors={['#5B7FFF', '#7B5FFF']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={styles.continueButton}
+                            >
+                                <MaterialCommunityIcons
+                                    name="book-open-page-variant"
+                                    size={18}
+                                    color="#FFF"
+                                />
+                                <Text style={styles.continueButtonText}>
+                                    {lastReadSurahNumber ? 'Continue Reading' : 'Start Reading'}
+                                </Text>
+                            </LinearGradient>
                         </Pressable>
                     )}
 
@@ -154,25 +158,23 @@ export const JuzCard: React.FC<JuzCardProps> = ({
                             styles.toggleButton,
                             {
                                 backgroundColor: isCompleted
-                                    ? theme.colors.surfaceVariant
-                                    : theme.colors.primaryContainer,
+                                    ? 'rgba(0,0,0,0.05)'
+                                    : 'rgba(56, 161, 105, 0.08)',
                                 flex: isCompleted ? 1 : 0,
                             },
                             pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] },
                         ]}
                     >
                         <Ionicons
-                            name={isCompleted ? 'close-circle-outline' : 'checkmark-circle-outline'}
+                            name={isCompleted ? 'close-circle-outline' : 'checkmark-circle'}
                             size={18}
-                            color={isCompleted ? theme.colors.onSurfaceVariant : theme.colors.primary}
+                            color={isCompleted ? '#888' : '#38A169'}
                         />
                         <Text
                             style={[
                                 styles.toggleButtonText,
                                 {
-                                    color: isCompleted
-                                        ? theme.colors.onSurfaceVariant
-                                        : theme.colors.primary,
+                                    color: isCompleted ? '#888' : '#38A169',
                                 },
                             ]}
                         >
@@ -246,12 +248,20 @@ const styles = StyleSheet.create({
         gap: Spacing.sm,
         marginTop: Spacing.md,
     },
-    continueButton: {
+    continueButtonWrapper: {
         flex: 1,
+        borderRadius: BorderRadius.full,
+        shadowColor: '#5B7FFF',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 6,
+    },
+    continueButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 12,
+        paddingVertical: 13,
         borderRadius: BorderRadius.full,
         gap: 8,
     },
@@ -259,6 +269,7 @@ const styles = StyleSheet.create({
         color: '#FFF',
         fontWeight: '700',
         fontSize: 15,
+        letterSpacing: 0.3,
     },
     toggleButton: {
         flexDirection: 'row',

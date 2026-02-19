@@ -8,6 +8,7 @@ import { View, Text, StyleSheet, Pressable, LayoutAnimation, Platform, UIManager
 import { useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { ReadingPositionService, ReadingPosition } from '../../../infrastructure/reading/ReadingPositionService';
@@ -178,25 +179,37 @@ const SurahCard: React.FC<SurahCardProps> = ({
                         <Pressable
                             onPress={onContinueReading}
                             style={({ pressed }) => [
-                                styles.primaryAction,
-                                { backgroundColor: accentColor },
+                                styles.primaryActionWrapper,
                                 pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
                             ]}
                         >
-                            <Ionicons name="play" size={15} color="#FFF" />
-                            <Text style={styles.primaryActionText}>Continue</Text>
+                            <LinearGradient
+                                colors={['#5B7FFF', '#7B5FFF']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={styles.primaryAction}
+                            >
+                                <Ionicons name="play" size={15} color="#FFF" />
+                                <Text style={styles.primaryActionText}>Continue</Text>
+                            </LinearGradient>
                         </Pressable>
                     ) : (
                         <Pressable
                             onPress={onStartReading}
                             style={({ pressed }) => [
-                                styles.primaryAction,
-                                { backgroundColor: accentColor },
+                                styles.primaryActionWrapper,
                                 pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
                             ]}
                         >
-                            <Ionicons name="book-outline" size={15} color="#FFF" />
-                            <Text style={styles.primaryActionText}>Start Reading</Text>
+                            <LinearGradient
+                                colors={['#5B7FFF', '#7B5FFF']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={styles.primaryAction}
+                            >
+                                <Ionicons name="book-outline" size={15} color="#FFF" />
+                                <Text style={styles.primaryActionText}>Start Reading</Text>
+                            </LinearGradient>
                         </Pressable>
                     )}
 
@@ -204,11 +217,10 @@ const SurahCard: React.FC<SurahCardProps> = ({
                         onPress={onMarkComplete}
                         style={({ pressed }) => [
                             styles.secondaryAction,
-                            { borderColor: ACCENT.green },
                             pressed && { opacity: 0.7, transform: [{ scale: 0.97 }] },
                         ]}
                     >
-                        <MaterialCommunityIcons name="check" size={15} color={ACCENT.green} />
+                        <Ionicons name="checkmark-circle" size={16} color={ACCENT.green} />
                         <Text style={[styles.secondaryActionText, { color: ACCENT.green }]}>
                             Complete
                         </Text>
@@ -538,12 +550,20 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         gap: 10,
     },
-    primaryAction: {
+    primaryActionWrapper: {
         flex: 1,
+        borderRadius: BorderRadius.full,
+        shadowColor: '#5B7FFF',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 6,
+    },
+    primaryAction: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 12,
+        paddingVertical: 13,
         borderRadius: BorderRadius.full,
         gap: 8,
     },
@@ -551,15 +571,16 @@ const styles = StyleSheet.create({
         color: '#FFF',
         ...Typography.bodyMedium,
         fontWeight: '700',
+        letterSpacing: 0.3,
     },
     secondaryAction: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: 12,
-        paddingHorizontal: 16,
+        paddingHorizontal: 18,
         borderRadius: BorderRadius.full,
-        borderWidth: 1.5,
+        backgroundColor: 'rgba(56, 161, 105, 0.08)',
         gap: 6,
     },
     secondaryActionText: {
