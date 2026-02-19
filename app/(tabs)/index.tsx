@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Modal } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
@@ -314,11 +314,14 @@ export default function Index() {
             </WaveBackground>
 
             {/* Adhkar fullscreen modal */}
-            {showAdhkar && (
-                <View style={StyleSheet.absoluteFill}>
-                    <AdhkarScreen onClose={() => setShowAdhkar(false)} />
-                </View>
-            )}
+            <Modal
+                visible={showAdhkar}
+                animationType="slide"
+                presentationStyle="fullScreen"
+                onRequestClose={() => setShowAdhkar(false)}
+            >
+                <AdhkarScreen onClose={() => setShowAdhkar(false)} />
+            </Modal>
         </View>
     );
 }

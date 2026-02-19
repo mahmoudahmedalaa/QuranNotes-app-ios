@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import {
     View,
     Text,
@@ -7,7 +7,7 @@ import {
     Dimensions,
 } from 'react-native';
 import { useTheme, ProgressBar } from 'react-native-paper';
-import { MotiView, AnimatePresence } from 'moti';
+import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -58,11 +58,11 @@ export const AdhkarScreen = ({ onClose }: AdhkarScreenProps) => {
     // Colors based on period
     const isMorning = period === 'morning';
     const gradientColors = isMorning
-        ? ['#FEF3C7', '#FDE68A', '#F59E0B'] as const
+        ? ['#FFFBEB', '#FEF3C7', '#FDE68A'] as const
         : ['#1E1B4B', '#312E81', '#4338CA'] as const;
-    const textColor = isMorning ? '#78350F' : '#FFFFFF';
-    const subtextColor = isMorning ? '#92400E' : '#C7D2FE';
-    const accentColor = isMorning ? '#78350F' : '#A5B4FC';
+    const textColor = isMorning ? '#451A03' : '#FFFFFF';
+    const subtextColor = isMorning ? '#78350F' : '#C7D2FE';
+    const accentColor = isMorning ? '#92400E' : '#A5B4FC';
 
     // Get remaining count for current dhikr
     const getRemainingForDhikr = useCallback((dhikr: Dhikr): number => {
@@ -74,8 +74,9 @@ export const AdhkarScreen = ({ onClose }: AdhkarScreenProps) => {
     // Count how many dhikr are fully completed
     const completedDhikrCount = dhikrList.filter(d => getRemainingForDhikr(d) === 0).length;
 
-    // Estimate session time (~15 seconds per dhikr item)
-    const estimatedMinutes = Math.max(1, Math.ceil(totalDhikr * 0.25));
+    // Estimate session time based on total taps (~1.5 sec per tap + 5 sec reading per dhikr)
+    const totalTaps = dhikrList.reduce((sum, d) => sum + d.repeatCount, 0);
+    const estimatedMinutes = Math.max(1, Math.ceil((totalTaps * 1.5 + totalDhikr * 5) / 60));
 
     // Handle tap on current dhikr
     const handleTap = useCallback(async () => {
@@ -133,6 +134,21 @@ export const AdhkarScreen = ({ onClose }: AdhkarScreenProps) => {
             setCurrentIndex(prev => prev - 1);
         }
     }, [currentIndex]);
+
+    // Generate celebration particles once (MUST be before any early return)
+    const celebrationParticles = useMemo(() => {
+        return Array.from({ length: 30 }, (_, i) => ({
+            id: i,
+            x: Math.random() * SCREEN_WIDTH,
+            y: Math.random() * Dimensions.get('window').height,
+            size: Math.random() * 8 + 3,
+            delay: Math.random() * 2000,
+            duration: Math.random() * 3000 + 4000,
+            color: isMorning
+                ? ['#F59E0B', '#FBBF24', '#FDE68A', '#D97706'][Math.floor(Math.random() * 4)]
+                : ['#A5B4FC', '#818CF8', '#C4B5FD', '#E0E7FF'][Math.floor(Math.random() * 4)],
+        }));
+    }, [isMorning]);
 
     // ═══════════════════════════════════════════════════════════════════
     // INTRO PHASE
@@ -277,67 +293,162 @@ export const AdhkarScreen = ({ onClose }: AdhkarScreenProps) => {
         );
     }
 
-    // ═══════════════════════════════════════════════════════════════════
-    // COMPLETION PHASE
-    // ═══════════════════════════════════════════════════════════════════
+
     if (phase === 'complete') {
         return (
-            <LinearGradient colors={gradientColors} style={styles.container}>
+            <LinearGradient
+                colors={isMorning
+                    ? ['#FEF3C7', '#FDE68A', '#FBBF24'] as const
+                    : ['#0F0A2E', '#1E1B4B', '#312E81'] as const}
+                style={styles.container}
+            >
+                {/* Floating celebration particles */}
+                <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                    {celebrationParticles.map(p => (
+                        <MotiView
+                            key={p.id}
+                            from={{ opacity: 0, translateY: 0, scale: 0.3 }}
+                            animate={{
+                                opacity: [0, 0.7, 0.7, 0],
+                                translateY: -120,
+                                scale: [0.3, 1, 0.5],
+                            }}
+                            transition={{
+                                type: 'timing',
+                                duration: p.duration,
+                                delay: p.delay,
+                                loop: true,
+                            }}
+                            style={{
+                                position: 'absolute',
+                                left: p.x,
+                                top: p.y,
+                                width: p.size,
+                                height: p.size,
+                                borderRadius: p.size / 2,
+                                backgroundColor: p.color,
+                            }}
+                        />
+                    ))}
+                </View>
+
                 <View style={styles.completeContent}>
+                    {/* Radiant glow circle */}
                     <MotiView
-                        from={{ opacity: 0, scale: 0.5 }}
+                        from={{ opacity: 0, scale: 0.3 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ type: 'spring', damping: 12 }}
+                        style={styles.glowCircleOuter}
                     >
-                        <Text style={styles.completeEmoji}>✅</Text>
+                        <MotiView
+                            from={{ opacity: 0.3 }}
+                            animate={{ opacity: [0.3, 0.6, 0.3] }}
+                            transition={{ type: 'timing', duration: 2000, loop: true }}
+                            style={[styles.glowCircle, {
+                                backgroundColor: isMorning ? '#F59E0B25' : '#818CF825',
+                            }]}
+                        >
+                            <View style={[styles.glowCircleInner, {
+                                backgroundColor: isMorning ? '#F59E0B15' : '#818CF815',
+                            }]}>
+                                <Ionicons
+                                    name="checkmark-circle"
+                                    size={64}
+                                    color={isMorning ? '#D97706' : '#A5B4FC'}
+                                />
+                            </View>
+                        </MotiView>
                     </MotiView>
 
+                    {/* Arabic praise */}
                     <MotiView
                         from={{ opacity: 0, translateY: 20 }}
                         animate={{ opacity: 1, translateY: 0 }}
                         transition={{ type: 'spring', damping: 18, delay: 200 }}
                     >
-                        <Text style={[styles.completeTitle, { color: textColor }]}>
-                            Session Complete
+                        <Text style={[styles.completeArabic, { color: textColor }]}>
+                            تَقَبَّلَ اللهُ
                         </Text>
-                        <Text style={[styles.completeSubtitle, { color: subtextColor }]}>
-                            May Allah accept your dhikr and grant you His protection and blessings.
+                        <Text style={[styles.completeTitle, { color: textColor }]}>
+                            May Allah Accept
                         </Text>
                     </MotiView>
 
-                    {streak > 0 && (
-                        <MotiView
-                            from={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ type: 'spring', damping: 15, delay: 400 }}
-                            style={[styles.streakCard, { backgroundColor: `${textColor}15` }]}
-                        >
-                            <Text style={styles.streakEmoji}>🔥</Text>
-                            <Text style={[styles.streakText, { color: textColor }]}>
-                                {streak} day streak
-                            </Text>
-                        </MotiView>
-                    )}
+                    <MotiView
+                        from={{ opacity: 0, translateY: 15 }}
+                        animate={{ opacity: 1, translateY: 0 }}
+                        transition={{ type: 'spring', damping: 18, delay: 350 }}
+                    >
+                        <Text style={[styles.completeSubtitle, { color: subtextColor }]}>
+                            Your {isMorning ? 'morning' : 'evening'} adhkar are complete.{' '}
+                            May Allah grant you His protection and blessings.
+                        </Text>
+                    </MotiView>
 
+                    {/* Stats summary card */}
                     <MotiView
                         from={{ opacity: 0, translateY: 20 }}
                         animate={{ opacity: 1, translateY: 0 }}
-                        transition={{ type: 'spring', damping: 18, delay: 500 }}
+                        transition={{ type: 'spring', damping: 18, delay: 450 }}
+                        style={[styles.statsCard, { backgroundColor: `${textColor}10` }]}
+                    >
+                        <View style={styles.statsRow}>
+                            <View style={styles.statBlock}>
+                                <Text style={[styles.statValue, { color: textColor }]}>
+                                    {totalDhikr}
+                                </Text>
+                                <Text style={[styles.statCaption, { color: subtextColor }]}>
+                                    Adhkar
+                                </Text>
+                            </View>
+                            <View style={[styles.statDivider, { backgroundColor: `${textColor}20` }]} />
+                            <View style={styles.statBlock}>
+                                <Text style={[styles.statValue, { color: textColor }]}>
+                                    {totalTaps}
+                                </Text>
+                                <Text style={[styles.statCaption, { color: subtextColor }]}>
+                                    Recitations
+                                </Text>
+                            </View>
+                            <View style={[styles.statDivider, { backgroundColor: `${textColor}20` }]} />
+                            <View style={styles.statBlock}>
+                                <Text style={[styles.statValue, { color: textColor }]}>
+                                    {streak > 0 ? `${streak} 🔥` : '—'}
+                                </Text>
+                                <Text style={[styles.statCaption, { color: subtextColor }]}>
+                                    Streak
+                                </Text>
+                            </View>
+                        </View>
+                    </MotiView>
+
+                    {/* Gradient Done button */}
+                    <MotiView
+                        from={{ opacity: 0, translateY: 20 }}
+                        animate={{ opacity: 1, translateY: 0 }}
+                        transition={{ type: 'spring', damping: 18, delay: 600 }}
+                        style={{ width: '100%', paddingHorizontal: Spacing.xl }}
                     >
                         <Pressable
                             onPress={() => {
-                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                                 onClose();
                             }}
                             style={({ pressed }) => [
-                                styles.beginButton,
-                                { backgroundColor: textColor, marginTop: Spacing.xl },
                                 pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                             ]}
                         >
-                            <Text style={[styles.beginButtonText, { color: isMorning ? '#FEF3C7' : '#312E81' }]}>
-                                Done
-                            </Text>
+                            <LinearGradient
+                                colors={isMorning
+                                    ? ['#D97706', '#B45309'] as const
+                                    : ['#6366F1', '#4338CA'] as const}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={styles.doneGradientButton}
+                            >
+                                <Text style={styles.doneButtonText}>Done</Text>
+                                <Ionicons name="checkmark" size={20} color="#FFFFFF" />
+                            </LinearGradient>
                         </Pressable>
                     </MotiView>
                 </View>
@@ -386,78 +497,75 @@ export const AdhkarScreen = ({ onClose }: AdhkarScreenProps) => {
             />
 
             {/* Main dhikr card — TAP ANYWHERE */}
-            <AnimatePresence exitBeforeEnter>
-                <MotiView
-                    key={`dhikr-${currentDhikr.id}-${currentIndex}`}
-                    from={{ opacity: 0, translateX: 50 }}
-                    animate={{ opacity: 1, translateX: 0 }}
-                    exit={{ opacity: 0, translateX: -50 }}
-                    transition={{ type: 'spring', damping: 20 }}
-                    style={styles.activeCardWrapper}
+            <MotiView
+                key={`dhikr-${currentDhikr.id}-${currentIndex}`}
+                from={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ type: 'timing', duration: 250 }}
+                style={styles.activeCardWrapper}
+            >
+                <Pressable
+                    onPress={handleTap}
+                    style={({ pressed }) => [
+                        styles.activeCard,
+                        { backgroundColor: theme.colors.surface },
+                        Shadows.lg,
+                        pressed && !isDhikrComplete && { opacity: 0.95, transform: [{ scale: 0.98 }] },
+                    ]}
                 >
-                    <Pressable
-                        onPress={handleTap}
-                        style={({ pressed }) => [
-                            styles.activeCard,
-                            { backgroundColor: theme.colors.surface },
-                            Shadows.lg,
-                            pressed && !isDhikrComplete && { opacity: 0.95, transform: [{ scale: 0.98 }] },
-                        ]}
-                    >
-                        {/* Category + source badge */}
-                        <View style={styles.cardTopRow}>
-                            <View style={[styles.categoryBadge, { backgroundColor: catColor.bg }]}>
-                                <Ionicons name={catColor.icon as any} size={12} color={catColor.text} />
-                                <Text style={[styles.categoryText, { color: catColor.text }]}>
-                                    {currentDhikr.category}
+                    {/* Category + source badge */}
+                    <View style={styles.cardTopRow}>
+                        <View style={[styles.categoryBadge, { backgroundColor: catColor.bg }]}>
+                            <Ionicons name={catColor.icon as any} size={12} color={catColor.text} />
+                            <Text style={[styles.categoryText, { color: catColor.text }]}>
+                                {currentDhikr.category}
+                            </Text>
+                        </View>
+                        <Text style={[styles.sourceText, { color: theme.colors.onSurfaceVariant }]}>
+                            {currentDhikr.source}
+                        </Text>
+                    </View>
+
+                    {/* Arabic text */}
+                    <Text style={[styles.arabicText, {
+                        color: theme.colors.onSurface,
+                        opacity: isDhikrComplete ? 0.4 : 1,
+                    }]}>
+                        {currentDhikr.arabic}
+                    </Text>
+
+                    {/* Translation */}
+                    <Text style={[styles.translationText, { color: theme.colors.onSurfaceVariant }]}>
+                        {currentDhikr.translation}
+                    </Text>
+
+                    {/* Counter */}
+                    <View style={styles.counterSection}>
+                        {isDhikrComplete ? (
+                            <View style={styles.completeBadge}>
+                                <Ionicons name="checkmark-circle" size={32} color="#10B981" />
+                                <Text style={styles.completeLabel}>Done</Text>
+                            </View>
+                        ) : (
+                            <View style={styles.countdownContainer}>
+                                <Text style={[styles.countdownNumber, { color: theme.colors.primary }]}>
+                                    {remaining}
+                                </Text>
+                                <Text style={[styles.countdownLabel, { color: theme.colors.onSurfaceVariant }]}>
+                                    {remaining === 1 ? 'tap remaining' : 'taps remaining'}
                                 </Text>
                             </View>
-                            <Text style={[styles.sourceText, { color: theme.colors.onSurfaceVariant }]}>
-                                {currentDhikr.source}
-                            </Text>
-                        </View>
-
-                        {/* Arabic text */}
-                        <Text style={[styles.arabicText, {
-                            color: theme.colors.onSurface,
-                            opacity: isDhikrComplete ? 0.4 : 1,
-                        }]}>
-                            {currentDhikr.arabic}
-                        </Text>
-
-                        {/* Translation */}
-                        <Text style={[styles.translationText, { color: theme.colors.onSurfaceVariant }]}>
-                            {currentDhikr.translation}
-                        </Text>
-
-                        {/* Counter */}
-                        <View style={styles.counterSection}>
-                            {isDhikrComplete ? (
-                                <View style={styles.completeBadge}>
-                                    <Ionicons name="checkmark-circle" size={32} color="#10B981" />
-                                    <Text style={styles.completeLabel}>Done</Text>
-                                </View>
-                            ) : (
-                                <View style={styles.countdownContainer}>
-                                    <Text style={[styles.countdownNumber, { color: theme.colors.primary }]}>
-                                        {remaining}
-                                    </Text>
-                                    <Text style={[styles.countdownLabel, { color: theme.colors.onSurfaceVariant }]}>
-                                        {remaining === 1 ? 'tap remaining' : 'taps remaining'}
-                                    </Text>
-                                </View>
-                            )}
-                        </View>
-
-                        {/* Tap hint */}
-                        {!isDhikrComplete && (
-                            <Text style={[styles.tapHint, { color: theme.colors.onSurfaceVariant }]}>
-                                Tap anywhere to count
-                            </Text>
                         )}
-                    </Pressable>
-                </MotiView>
-            </AnimatePresence>
+                    </View>
+
+                    {/* Tap hint */}
+                    {!isDhikrComplete && (
+                        <Text style={[styles.tapHint, { color: theme.colors.onSurfaceVariant }]}>
+                            Tap anywhere to count
+                        </Text>
+                    )}
+                </Pressable>
+            </MotiView>
 
             {/* Navigation arrows at bottom */}
             <View style={styles.navRow}>
@@ -768,36 +876,83 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: Spacing.xl,
     },
-    completeEmoji: {
-        fontSize: 72,
-        textAlign: 'center',
+    glowCircleOuter: {
         marginBottom: Spacing.lg,
     },
+    glowCircle: {
+        width: 140,
+        height: 140,
+        borderRadius: 70,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    glowCircleInner: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    completeArabic: {
+        fontSize: 36,
+        fontWeight: '700',
+        textAlign: 'center',
+        marginBottom: Spacing.xs,
+    },
     completeTitle: {
-        fontSize: 28,
+        fontSize: 24,
         fontWeight: '800',
         textAlign: 'center',
         marginBottom: Spacing.md,
     },
     completeSubtitle: {
-        fontSize: 16,
-        lineHeight: 24,
+        fontSize: 15,
+        lineHeight: 22,
         textAlign: 'center',
+        marginBottom: Spacing.lg,
     },
-    streakCard: {
+    statsCard: {
+        width: '100%',
+        borderRadius: BorderRadius.xl,
+        paddingVertical: Spacing.lg,
+        paddingHorizontal: Spacing.md,
+        marginBottom: Spacing.xl,
+    },
+    statsRow: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-around',
+    },
+    statBlock: {
+        alignItems: 'center',
+        flex: 1,
+    },
+    statValue: {
+        fontSize: 22,
+        fontWeight: '800',
+    },
+    statCaption: {
+        fontSize: 11,
+        fontWeight: '600',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+        marginTop: 4,
+    },
+    statDivider: {
+        width: 1,
+        height: 32,
+    },
+    doneGradientButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
         gap: Spacing.sm,
-        paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.md,
-        borderRadius: BorderRadius.full,
-        marginTop: Spacing.xl,
+        paddingVertical: 16,
+        borderRadius: BorderRadius.lg,
     },
-    streakEmoji: {
-        fontSize: 24,
-    },
-    streakText: {
+    doneButtonText: {
         fontSize: 18,
         fontWeight: '700',
+        color: '#FFFFFF',
     },
 });

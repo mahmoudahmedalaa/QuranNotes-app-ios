@@ -58,9 +58,15 @@
           "color": "#ffffff"
         }
       ],
-      "expo-web-browser",
       "@react-native-google-signin/google-signin",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "@jamsch/expo-speech-recognition",
+        {
+          "microphonePermission": "Allow QuranNotes to use the microphone for voice follow-along recitation",
+          "speechRecognitionPermission": "Allow QuranNotes to use speech recognition for voice follow-along"
+        }
+      ]
     ],
     "scheme": [
       "qurannotes",
