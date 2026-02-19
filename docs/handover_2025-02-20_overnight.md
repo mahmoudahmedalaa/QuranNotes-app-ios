@@ -11,6 +11,12 @@ You are an autonomous AI that will work overnight while the user sleeps. You mus
 5. **Use the workflows** — read `.agent/workflows/ralph-loop.md` for self-correction protocol
 6. **Read `.agent/skills/mobile-ui-design/SKILL.md`** before any UI work
 
+### 🏆 QUALITY PRINCIPLES — NON-NEGOTIABLE
+- **ALWAYS choose the best approach**, never the easiest. If native Swift/SwiftUI is better than a JS workaround, use native. If a proper library exists, use it instead of a hack.
+- **Never take shortcuts.** This must be a true million-dollar quality app. Every screen, every animation, every interaction must feel premium.
+- **Don't be lazy.** If a feature requires more effort to do properly, invest that effort. The user does NOT want minimum viable — they want maximum quality.
+- **Simplify where possible**, but never at the expense of quality. Clean code ≠ cutting corners.
+
 ---
 
 ## 1. Session Summary — What's Been Done
@@ -476,12 +482,13 @@ Widget icon and color assets.
 5. Enable App Groups for BOTH the main app target and the widget target
 6. Set the App Group to `group.com.mahmoudahmedalaa.qurannotes`
 
-**ALTERNATIVE (if Xcode manipulation is too complex):**
-If you can't reliably modify the Xcode project from the command line, implement just the **React Native data bridge** (`WidgetDataService.ts`) AND create the **enhanced in-app home screen cards** (DailyVerseCard, KhatmaProgressWidget) as beautiful in-app alternatives. Then leave a clear README for the user to add the native widget target in Xcode manually.
+**DO NOT SKIP the native WidgetKit implementation.** This is the user's highest-priority feature. If you encounter issues with the Xcode project manipulation, troubleshoot and solve them — don't fall back to a README. The user is counting on this being done properly.
 
-#### Step 4a: In-App Widget Cards (ALWAYS implement these regardless)
+If the native widget extension file structure causes prebuild issues, create the Swift files and Xcode project modifications manually. Study the `ios/QuranNotes.xcodeproj/project.pbxproj` to understand the target structure.
 
-Even with native widgets, the app needs great home screen cards. Create these:
+#### Step 4a: In-App Home Screen Cards (implement these IN ADDITION to native widgets)
+
+The app also needs great in-app home screen cards alongside the native widgets:
 
 ##### `src/presentation/components/home/DailyVerseCard.tsx`
 - Beautiful card showing today's verse
