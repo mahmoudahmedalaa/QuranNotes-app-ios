@@ -14,6 +14,8 @@ interface AppSettings {
     dailyReminderEnabled: boolean;
     reminderHour: number;
     reminderMinute: number;
+    streakReminderEnabled: boolean;
+    khatmaReminderEnabled: boolean;
     debugSimulateRamadan: boolean;
     debugRamadanDay: number;
 }
@@ -26,6 +28,8 @@ const DEFAULT_SETTINGS: AppSettings = {
     dailyReminderEnabled: false,
     reminderHour: 6,
     reminderMinute: 0,
+    streakReminderEnabled: true,
+    khatmaReminderEnabled: true,
     debugSimulateRamadan: false,
     debugRamadanDay: 5,
 };
@@ -120,6 +124,8 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
                     dailyReminderEnabled: parsed.dailyReminderEnabled ?? DEFAULT_SETTINGS.dailyReminderEnabled,
                     reminderHour: parsed.reminderHour ?? DEFAULT_SETTINGS.reminderHour,
                     reminderMinute: parsed.reminderMinute ?? DEFAULT_SETTINGS.reminderMinute,
+                    streakReminderEnabled: parsed.streakReminderEnabled ?? DEFAULT_SETTINGS.streakReminderEnabled,
+                    khatmaReminderEnabled: parsed.khatmaReminderEnabled ?? DEFAULT_SETTINGS.khatmaReminderEnabled,
                     debugSimulateRamadan: parsed.debugSimulateRamadan ?? DEFAULT_SETTINGS.debugSimulateRamadan,
                     debugRamadanDay: parsed.debugRamadanDay ?? DEFAULT_SETTINGS.debugRamadanDay,
                 };

@@ -49,6 +49,8 @@ export default function SettingsScreen() {
 
     // Notification state
     const [reminderEnabled, setReminderEnabled] = useState(settings.dailyReminderEnabled);
+    const [streakReminderEnabled, setStreakReminderEnabled] = useState(settings.streakReminderEnabled);
+    const [khatmaReminderEnabled, setKhatmaReminderEnabled] = useState(settings.khatmaReminderEnabled);
     const [timePickerExpanded, setTimePickerExpanded] = useState(false);
     const [selectedChip, setSelectedChip] = useState<string>(() => {
         const h = settings.reminderHour;
@@ -65,10 +67,12 @@ export default function SettingsScreen() {
     // Sync state with settings on load
     useEffect(() => {
         setReminderEnabled(settings.dailyReminderEnabled);
+        setStreakReminderEnabled(settings.streakReminderEnabled);
+        setKhatmaReminderEnabled(settings.khatmaReminderEnabled);
         const d = new Date();
         d.setHours(settings.reminderHour, settings.reminderMinute, 0, 0);
         setReminderTime(d);
-    }, [settings.dailyReminderEnabled, settings.reminderHour, settings.reminderMinute]);
+    }, [settings.dailyReminderEnabled, settings.reminderHour, settings.reminderMinute, settings.streakReminderEnabled, settings.khatmaReminderEnabled]);
 
     const handleReminderToggle = async (value: boolean) => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -87,7 +91,35 @@ export default function SettingsScreen() {
             }
         } else {
             await NotificationService.cancelDailyReminder();
+            await NotificationService.cancelStreakReminder();
+            await NotificationService.cancelKhatmaNudge();
             await updateSettings({ dailyReminderEnabled: false });
+            setStreakReminderEnabled(false);
+            setKhatmaReminderEnabled(false);
+        }
+    };
+
+    const handleStreakToggle = async (value: boolean) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setStreakReminderEnabled(value);
+        await updateSettings({ streakReminderEnabled: value });
+        if (value) {
+            // Schedule with default streak of 3 — will be updated by StreakContext on next app open
+            await NotificationService.scheduleStreakReminder(3, settings.reminderHour + 2, settings.reminderMinute);
+        } else {
+            await NotificationService.cancelStreakReminder();
+        }
+    };
+
+    const handleKhatmaToggle = async (value: boolean) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setKhatmaReminderEnabled(value);
+        await updateSettings({ khatmaReminderEnabled: value });
+        if (value) {
+            const juzRemaining = 30 - completedJuz.length;
+            await NotificationService.scheduleKhatmaNudge(juzRemaining, settings.reminderHour + 3, settings.reminderMinute);
+        } else {
+            await NotificationService.cancelKhatmaNudge();
         }
     };
 
@@ -588,7 +620,81 @@ export default function SettingsScreen() {
                                         </View>
                                     )}
                                 </View>
+                                {/* Streak Alerts */}
+                                <View
+                                    style={[
+                                        styles.card,
+                                        { backgroundColor: theme.colors.surface, marginBottom: Spacing.sm },
+                                        Shadows.sm,
+                                    ]}>
+                                    <View
+                                        style={[
+                                            styles.iconContainer,
+                                            { backgroundColor: '#FF634720' },
+                                        ]}>
+                                        <Ionicons
+                                            name="flame"
+                                            size={18}
+                                            color="#FF6347"
+                                        />
+                                    </View>
+                                    <View style={styles.cardContent}>
+                                        <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
+                                            Streak Alerts
+                                        </Text>
+                                        <Text
+                                            style={[
+                                                styles.cardSubtitle,
+                                                { color: theme.colors.onSurfaceVariant },
+                                            ]}>
+                                            Protect your reading streak
+                                        </Text>
+                                    </View>
+                                    <RNSwitch
+                                        value={streakReminderEnabled}
+                                        onValueChange={handleStreakToggle}
+                                        trackColor={{ false: '#48484A', true: '#FF6347' }}
+                                        thumbColor={streakReminderEnabled ? '#FFF' : '#F4F4F4'}
+                                    />
+                                </View>
 
+                                {/* Khatma Nudges */}
+                                <View
+                                    style={[
+                                        styles.card,
+                                        { backgroundColor: theme.colors.surface, marginBottom: Spacing.sm },
+                                        Shadows.sm,
+                                    ]}>
+                                    <View
+                                        style={[
+                                            styles.iconContainer,
+                                            { backgroundColor: '#4CAF5020' },
+                                        ]}>
+                                        <Ionicons
+                                            name="book"
+                                            size={18}
+                                            color="#4CAF50"
+                                        />
+                                    </View>
+                                    <View style={styles.cardContent}>
+                                        <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
+                                            Khatma Nudges
+                                        </Text>
+                                        <Text
+                                            style={[
+                                                styles.cardSubtitle,
+                                                { color: theme.colors.onSurfaceVariant },
+                                            ]}>
+                                            Reminders to keep your Khatma going
+                                        </Text>
+                                    </View>
+                                    <RNSwitch
+                                        value={khatmaReminderEnabled}
+                                        onValueChange={handleKhatmaToggle}
+                                        trackColor={{ false: '#48484A', true: '#4CAF50' }}
+                                        thumbColor={khatmaReminderEnabled ? '#FFF' : '#F4F4F4'}
+                                    />
+                                </View>
 
                             </>
                         )}
