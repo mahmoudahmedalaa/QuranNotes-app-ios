@@ -18,6 +18,7 @@ import * as Haptics from 'expo-haptics';
 import { StreakCounter } from '../../src/presentation/components/stats/StreakCounter';
 import MoodCheckInCard from '../../src/presentation/components/mood/MoodCheckInCard';
 import { ReadingPositionService, ReadingPosition } from '../../src/infrastructure/reading/ReadingPositionService';
+import { useKhatma } from '../../src/infrastructure/khatma/KhatmaContext';
 import { useAudio } from '../../src/infrastructure/audio/AudioContext';
 
 export default function Index() {
@@ -25,6 +26,7 @@ export default function Index() {
     const router = useRouter();
     const theme = useTheme();
     const { playingVerse } = useAudio();
+    const { completedSurahs } = useKhatma();
     const [pickerVisible, setPickerVisible] = useState(false);
     const [minLoading, setMinLoading] = useState(true);
     const [loadingMessage, setLoadingMessage] = useState('');
@@ -206,7 +208,7 @@ export default function Index() {
                     <MoodCheckInCard />
 
                     {/* Continue Reading Card */}
-                    {globalPosition && (
+                    {globalPosition && !completedSurahs.includes(globalPosition.surah) && (
                         <MotiView
                             from={{ opacity: 0, translateY: 15 }}
                             animate={{ opacity: 1, translateY: 0 }}
