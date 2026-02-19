@@ -44,19 +44,23 @@ export default function LoginScreen() {
             const currentUser = firebase.auth().currentUser;
 
             if (currentUser && !currentUser.emailVerified) {
-                // Sign out unverified user
-                await firebase.auth().signOut();
+                // Allow Apple review account to bypass email verification
+                const isReviewAccount = currentUser.email?.toLowerCase() === 'mahmoudahmedalaa+review@gmail.com';
+                if (!isReviewAccount) {
+                    // Sign out unverified user
+                    await firebase.auth().signOut();
 
-                // Show toast notification
-                const Toast = require('react-native-toast-message').default;
-                Toast.show({
-                    type: 'info',
-                    text1: 'Email Not Verified',
-                    text2: 'Please verify your email before signing in. Check spam/junk folder.',
-                    visibilityTime: 5000,
-                    position: 'top',
-                });
-                return;
+                    // Show toast notification
+                    const Toast = require('react-native-toast-message').default;
+                    Toast.show({
+                        type: 'info',
+                        text1: 'Email Not Verified',
+                        text2: 'Please verify your email before signing in. Check spam/junk folder.',
+                        visibilityTime: 5000,
+                        position: 'top',
+                    });
+                    return;
+                }
             }
 
             // Let index.tsx handle routing — OnboardingContext uses per-user state

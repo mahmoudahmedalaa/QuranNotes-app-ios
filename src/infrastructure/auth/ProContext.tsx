@@ -1,5 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { revenueCatService } from '../payments/RevenueCatService';
+import { useAuth } from './AuthContext';
+
+// Apple App Store review account — always granted Pro access
+const REVIEW_ACCOUNT_EMAIL = 'mahmoudahmedalaa+review@gmail.com';
 
 // REAL PRO CONTEXT (RevenueCat)
 
@@ -24,10 +28,19 @@ export const usePro = () => useContext(ProContext);
 export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isPro, setIsPro] = useState(false);
     const [loading, setLoading] = useState(true); // Start loading until RevenueCat checked
+    const { user } = useAuth();
+
+    // Check if this is the Apple review account
+    const isReviewAccount = user?.email?.toLowerCase() === REVIEW_ACCOUNT_EMAIL;
 
     const checkStatus = async () => {
         setLoading(true);
         try {
+            // Auto-grant Pro for Apple review account
+            if (isReviewAccount) {
+                setIsPro(true);
+                return;
+            }
             const customerInfo = await revenueCatService.getCustomerInfo();
             const isProStatus = revenueCatService.isPro(customerInfo);
             setIsPro(isProStatus);
@@ -38,10 +51,10 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     };
 
-    // Check RevenueCat status on app startup
+    // Check RevenueCat status on app startup and when user changes
     useEffect(() => {
         checkStatus();
-    }, []);
+    }, [user]);
 
     const restorePurchases = async () => {
         setLoading(true);
