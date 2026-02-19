@@ -18,6 +18,9 @@ interface AppSettings {
     reminderMinute: number;
     streakReminderEnabled: boolean;
     khatmaReminderEnabled: boolean;
+    prayerMethod: number;
+    prayerNotifications: boolean;
+    prayerLocation: string;
     debugSimulateRamadan: boolean;
     debugRamadanDay: number;
 }
@@ -34,6 +37,9 @@ const DEFAULT_SETTINGS: AppSettings = {
     reminderMinute: 0,
     streakReminderEnabled: true,
     khatmaReminderEnabled: true,
+    prayerMethod: 4,
+    prayerNotifications: false,
+    prayerLocation: '',
     debugSimulateRamadan: false,
     debugRamadanDay: 5,
 };
@@ -132,6 +138,9 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
                     reminderMinute: parsed.reminderMinute ?? DEFAULT_SETTINGS.reminderMinute,
                     streakReminderEnabled: parsed.streakReminderEnabled ?? DEFAULT_SETTINGS.streakReminderEnabled,
                     khatmaReminderEnabled: parsed.khatmaReminderEnabled ?? DEFAULT_SETTINGS.khatmaReminderEnabled,
+                    prayerMethod: parsed.prayerMethod ?? DEFAULT_SETTINGS.prayerMethod,
+                    prayerNotifications: parsed.prayerNotifications ?? DEFAULT_SETTINGS.prayerNotifications,
+                    prayerLocation: parsed.prayerLocation ?? DEFAULT_SETTINGS.prayerLocation,
                     debugSimulateRamadan: parsed.debugSimulateRamadan ?? DEFAULT_SETTINGS.debugSimulateRamadan,
                     debugRamadanDay: parsed.debugRamadanDay ?? DEFAULT_SETTINGS.debugRamadanDay,
                 };
