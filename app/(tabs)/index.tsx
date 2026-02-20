@@ -84,7 +84,7 @@ export default function DashboardScreen() {
     const showContinueReading = globalPosition && !completedSurahs.includes(globalPosition.surah);
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <SafeAreaView style={styles.safeArea} edges={['top']}>
                 <StatusBar style={theme.dark ? 'light' : 'dark'} />
 
