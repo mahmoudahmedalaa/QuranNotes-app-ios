@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { Text, useTheme, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -87,11 +87,12 @@ export default function OnboardingPrayerTimes() {
                 </MotiView>
 
                 {/* Feature Cards */}
-                <MotiView
-                    from={{ opacity: 0, translateY: 20 }}
-                    animate={{ opacity: 1, translateY: 0 }}
-                    transition={{ type: 'spring', delay: 300 }}
-                    style={styles.content}>
+                <ScrollView
+                    style={styles.content}
+                    contentContainerStyle={styles.contentInner}
+                    showsVerticalScrollIndicator={false}
+                    bounces={false}
+                >
                     <View
                         style={[
                             styles.card,
@@ -125,7 +126,7 @@ export default function OnboardingPrayerTimes() {
                             </MotiView>
                         ))}
                     </View>
-                </MotiView>
+                </ScrollView>
 
                 {/* Action Buttons */}
                 <MotiView
@@ -175,7 +176,8 @@ const styles = StyleSheet.create({
     },
     title: { fontSize: 28, fontWeight: '800', letterSpacing: -0.5, marginBottom: Spacing.xs },
     subtitle: { fontSize: 15, textAlign: 'center', lineHeight: 22, paddingHorizontal: Spacing.md },
-    content: { flex: 1, paddingTop: Spacing.xl },
+    content: { flex: 1, paddingTop: Spacing.lg },
+    contentInner: { paddingBottom: Spacing.md },
     card: { borderRadius: BorderRadius.xl, padding: Spacing.md },
     featureRow: {
         flexDirection: 'row',
