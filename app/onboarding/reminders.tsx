@@ -62,14 +62,14 @@ export default function OnboardingReminders() {
             }
         }
 
-        goToStep(10);
-        router.push('/onboarding/adhkar');
+        goToStep(6);
+        router.push('/onboarding/premium');
     };
 
     const handleSkip = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        goToStep(10);
-        router.push('/onboarding/adhkar');
+        goToStep(6);
+        router.push('/onboarding/premium');
     };
 
     return (
@@ -79,16 +79,17 @@ export default function OnboardingReminders() {
             <SafeAreaView style={styles.safeArea}>
                 {/* Progress Indicator */}
                 <View style={styles.progressContainer}>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(step => (
+                    {Array.from({ length: 6 }).map((_, i) => (
                         <View
-                            key={step}
+                            key={i}
                             style={[
                                 styles.progressDot,
                                 {
                                     backgroundColor:
-                                        step <= 9
+                                        i < 5
                                             ? theme.colors.primary
                                             : theme.colors.surfaceVariant,
+                                    width: i === 4 ? 20 : 8,
                                 },
                             ]}
                         />

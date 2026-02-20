@@ -8,22 +8,14 @@ export default function OnboardingLayout() {
                 animation: 'fade',
                 gestureEnabled: false, // Prevent back gesture during onboarding
             }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="pick-surah" />
-            <Stack.Screen name="listen" />
-            <Stack.Screen name="reciter" />
-            <Stack.Screen name="record" />
-            <Stack.Screen name="follow-along" />
-            <Stack.Screen name="note" />
-            <Stack.Screen name="library-tour" />
-            <Stack.Screen name="folders" />
-            <Stack.Screen name="reminders" />
-            <Stack.Screen name="adhkar" />
-            <Stack.Screen name="languages" />
-            <Stack.Screen name="prayer-times" />
-            <Stack.Screen name="topics" />
-            <Stack.Screen name="ai-tafseer" />
-            <Stack.Screen name="premium" />
+            {/* 6-screen flow */}
+            <Stack.Screen name="index" />        {/* 1. Welcome */}
+            <Stack.Screen name="pick-surah" />   {/* entry → listen */}
+            <Stack.Screen name="listen" />        {/* 2. Listen & Explore (surah + audio + reciter) */}
+            <Stack.Screen name="record" />        {/* 3. Capture & Organize (record + notes + folders + library) */}
+            <Stack.Screen name="widgets" />       {/* 4. Widgets education */}
+            <Stack.Screen name="reminders" />     {/* 5. Notifications */}
+            <Stack.Screen name="premium" />       {/* 6. Premium paywall */}
         </Stack>
     );
 }
