@@ -2,170 +2,143 @@ import WidgetKit
 import SwiftUI
 
 // ═══════════════════════════════════════════════════════════════════
-// Khatma Progress Widget — Small
-// Beautiful progress ring with time-adaptive styling
+// Khatma Widget — Progress Ring (Small)
+// Same containerBackground pattern + shared TimePalette
 // ═══════════════════════════════════════════════════════════════════
 
 struct KhatmaEntry: TimelineEntry {
     let date: Date
     let khatma: KhatmaData?
-    let timeOfDay: TimeOfDay
+    let palette: TimePalette
 }
 
 struct KhatmaProvider: TimelineProvider {
     func placeholder(in context: Context) -> KhatmaEntry {
-        KhatmaEntry(date: Date(), khatma: KhatmaData(completedJuz: 5, totalJuz: 30, completedSurahs: 20), timeOfDay: .current())
+        KhatmaEntry(
+            date: Date(),
+            khatma: KhatmaData(completedJuz: 12, completedSurahs: 0, totalJuz: 30),
+            palette: .current()
+        )
     }
-    
+
     func getSnapshot(in context: Context, completion: @escaping (KhatmaEntry) -> Void) {
         completion(KhatmaEntry(
             date: Date(),
             khatma: WidgetDataStore.shared.getKhatma(),
-            timeOfDay: .current()
+            palette: .current()
         ))
     }
-    
+
     func getTimeline(in context: Context, completion: @escaping (Timeline<KhatmaEntry>) -> Void) {
         let khatma = WidgetDataStore.shared.getKhatma()
         var entries: [KhatmaEntry] = []
         let now = Date()
-        
-        for hourOffset in 0..<6 {
-            let date = Calendar.current.date(byAdding: .hour, value: hourOffset, to: now)!
-            let hour = Calendar.current.component(.hour, from: date)
-            let tod: TimeOfDay = {
-                switch hour {
-                case 4..<6:   return .fajr
-                case 6..<12:  return .morning
-                case 12..<16: return .afternoon
-                case 16..<18: return .asr
-                case 18..<20: return .maghrib
-                default:      return .isha
-                }
-            }()
-            entries.append(KhatmaEntry(date: date, khatma: khatma, timeOfDay: tod))
+
+        for offset in 0..<6 {
+            if let date = Calendar.current.date(byAdding: .hour, value: offset, to: now) {
+                let hour = Calendar.current.component(.hour, from: date)
+                entries.append(KhatmaEntry(date: date, khatma: khatma, palette: TimePalette.forHour(hour)))
+            }
         }
-        
-        let nextUpdate = Calendar.current.date(byAdding: .hour, value: 6, to: now)!
-        completion(Timeline(entries: entries, policy: .after(nextUpdate)))
+
+        let reload = Calendar.current.date(byAdding: .hour, value: 6, to: now) ?? now
+        completion(Timeline(entries: entries, policy: .after(reload)))
     }
 }
 
-struct KhatmaSmallView: View {
+// ── View ──────────────────────────────────────────────────────────
+
+struct KhatmaWidgetView: View {
     let entry: KhatmaEntry
-    
-    private var progress: Double {
-        guard let k = entry.khatma, k.totalJuz > 0 else { return 0 }
-        return Double(k.completedJuz) / Double(k.totalJuz)
-    }
-    
-    private var isComplete: Bool {
-        guard let k = entry.khatma else { return false }
-        return k.completedJuz >= k.totalJuz
-    }
-    
+
     var body: some View {
-        let tod = entry.timeOfDay
-        
-        if let khatma = entry.khatma {
-            ZStack {
-                // Time-adaptive gradient
-                LinearGradient(
-                    colors: tod.gradientColors,
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                
-                // Soft glow behind ring
-                RadialGradient(
-                    colors: [tod.accentColor.opacity(0.1), Color.clear],
-                    center: .center,
-                    startRadius: 0,
-                    endRadius: 70
-                )
-                
-                VStack(spacing: 5) {
+        ZStack {
+            // Top glow
+            EllipticalGradient(
+                colors: [entry.palette.accent.opacity(0.28), entry.palette.accent.opacity(0)],
+                center: .top,
+                startRadiusFraction: 0,
+                endRadiusFraction: 0.5
+            )
+
+            if let khatma = entry.khatma {
+                let progress = Double(khatma.completedJuz) / Double(khatma.totalJuz)
+                let isComplete = khatma.completedJuz >= khatma.totalJuz
+
+                VStack(spacing: 4) {
                     // Progress ring
                     ZStack {
-                        // Background track
+                        // Track ring
                         Circle()
-                            .stroke(Color.white.opacity(0.08), lineWidth: 6)
-                            .frame(width: 62, height: 62)
-                        
-                        // Progress arc with gradient
+                            .stroke(.white.opacity(0.1), lineWidth: 5)
+                            .frame(width: 60, height: 60)
+
+                        // Progress arc with angular gradient
                         Circle()
                             .trim(from: 0, to: progress)
                             .stroke(
                                 AngularGradient(
-                                    colors: [
-                                        tod.accentColor.opacity(0.6),
-                                        tod.accentColor,
-                                        tod.accentColor.opacity(0.8),
-                                    ],
-                                    center: .center
+                                    gradient: Gradient(colors: [
+                                        entry.palette.accent,
+                                        entry.palette.accent.opacity(0.6)
+                                    ]),
+                                    center: .center,
+                                    startAngle: .degrees(-90),
+                                    endAngle: .degrees(270)
                                 ),
-                                style: StrokeStyle(lineWidth: 6, lineCap: .round)
+                                style: StrokeStyle(lineWidth: 5, lineCap: .round)
                             )
+                            .frame(width: 60, height: 60)
                             .rotationEffect(.degrees(-90))
-                            .frame(width: 62, height: 62)
-                            .shadow(color: tod.accentColor.opacity(0.4), radius: 4)
-                        
+                            // Glow shadow on the arc
+                            .shadow(color: entry.palette.accent.opacity(0.5), radius: 4, x: 0, y: 0)
+
                         // Center content
                         VStack(spacing: 0) {
                             if isComplete {
-                                Image(systemName: "checkmark.seal.fill")
-                                    .font(.system(size: 20))
-                                    .foregroundColor(tod.accentColor)
+                                Image(systemName: "star.fill")
+                                    .font(.system(size: 18))
+                                    .foregroundColor(entry.palette.accent)
                             } else {
                                 Text("\(khatma.completedJuz)")
-                                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                                    .font(.system(size: 16, weight: .black, design: .rounded))
                                     .foregroundColor(.white)
                                 Text("of \(khatma.totalJuz)")
-                                    .font(.system(size: 8, weight: .medium))
-                                    .foregroundColor(tod.subtextColor)
+                                    .font(.system(size: 7, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.5))
                             }
                         }
                     }
-                    
+
                     // Label
-                    Text("Khatma")
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                    Text(isComplete ? "Complete!" : "Khatma")
+                        .font(.system(size: 13, weight: .bold))
                         .foregroundColor(.white)
-                    
-                    // Status
-                    Text(isComplete
-                         ? "Complete! ✨"
-                         : "\(khatma.totalJuz - khatma.completedJuz) Juz remaining")
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundColor(tod.subtextColor)
-                }
-                .padding(8)
-                
-                // Branding
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        Image(systemName: "book.fill")
-                            .font(.system(size: 5))
-                            .foregroundColor(tod.subtextColor.opacity(0.5))
+
+                    // Progress sub-label or completion badge
+                    if isComplete {
+                        HStack(spacing: 2) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 8))
+                            Text("30/30 Juz")
+                                .font(.system(size: 9, weight: .semibold))
+                        }
+                        .foregroundColor(entry.palette.accent)
+                    } else {
+                        let remaining = khatma.totalJuz - khatma.completedJuz
+                        Text("\(remaining) remaining")
+                            .font(.system(size: 10))
+                            .foregroundColor(.white.opacity(0.55))
                     }
                 }
-                .padding(8)
-            }
-        } else {
-            ZStack {
-                LinearGradient(colors: tod.gradientColors, startPoint: .topLeading, endPoint: .bottomTrailing)
-                VStack(spacing: 8) {
-                    ZStack {
-                        Circle().fill(tod.accentColor.opacity(0.12)).frame(width: 44, height: 44)
-                        Image(systemName: "book.circle.fill")
-                            .font(.system(size: 24))
-                            .foregroundColor(tod.accentColor)
-                    }
-                    Text("Open app to\ntrack Khatma")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(tod.subtextColor)
+            } else {
+                VStack(spacing: 6) {
+                    Image(systemName: "book.closed.fill")
+                        .font(.system(size: 24))
+                        .foregroundColor(entry.palette.accent)
+                    Text("Start your\nKhatma")
+                        .font(.system(size: 11))
+                        .foregroundColor(.white.opacity(0.65))
                         .multilineTextAlignment(.center)
                 }
             }
@@ -173,20 +146,39 @@ struct KhatmaSmallView: View {
     }
 }
 
+// ── Widget ────────────────────────────────────────────────────────
+
 struct KhatmaWidget: Widget {
     let kind = "KhatmaWidget"
-    
+
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: KhatmaProvider()) { entry in
-            if #available(iOS 17.0, *) {
-                KhatmaSmallView(entry: entry)
-                    .containerBackground(.clear, for: .widget)
-            } else {
-                KhatmaSmallView(entry: entry)
-            }
+            let gradient = LinearGradient(
+                colors: entry.palette.gradientColors,
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            KhatmaWidgetContent(entry: entry, gradient: gradient)
         }
         .configurationDisplayName("Khatma Progress")
-        .description("Your Quran completion journey at a glance")
+        .description("Your Quran completion progress, adapts beautifully to time of day")
         .supportedFamilies([.systemSmall])
+    }
+}
+
+private struct KhatmaWidgetContent: View {
+    let entry: KhatmaEntry
+    let gradient: LinearGradient
+
+    var body: some View {
+        if #available(iOS 17.0, *) {
+            KhatmaWidgetView(entry: entry)
+                .containerBackground(gradient, for: .widget)
+        } else {
+            ZStack {
+                gradient
+                KhatmaWidgetView(entry: entry)
+            }
+        }
     }
 }

@@ -106,7 +106,7 @@ export default function OnboardingWidgets() {
                             <Text style={styles.wTranslation}>Sufficient for us is Allah</Text>
                             <View style={styles.wFooter}>
                                 <Text style={styles.wRef}>Ali Imran · 173</Text>
-                                <Text style={styles.wBrand}>QuranNotes</Text>
+                                <Text style={styles.wBrand}>QuranNotes App</Text>
                             </View>
                         </WidgetMockup>
 
@@ -148,7 +148,7 @@ export default function OnboardingWidgets() {
                             Long-press your home screen → tap{' '}
                             <Text style={{ fontWeight: '700', color: theme.colors.onSurface }}>+</Text>
                             {' '}(top left) → search{' '}
-                            <Text style={{ fontWeight: '700', color: theme.colors.primary }}>QuranNotes</Text>
+                            <Text style={{ fontWeight: '700', color: theme.colors.primary }}>QuranNotes App</Text>
                         </Text>
                     </MotiView>
                 </View>

@@ -20,7 +20,7 @@ export default function OnboardingWelcome() {
     const handleBegin = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         goToStep(2);
-        router.push('/onboarding/pick-surah');
+        router.push('/onboarding/listen');
     };
 
     return (
