@@ -21,7 +21,8 @@ const TAB_ICONS: Record<string, {
     active: string;
     inactive: string;
 }> = {
-    index: { library: 'ionicons', active: 'book', inactive: 'book-outline' },
+    index: { library: 'ionicons', active: 'home', inactive: 'home-outline' },
+    read: { library: 'ionicons', active: 'book', inactive: 'book-outline' },
     library: { library: 'ionicons', active: 'library', inactive: 'library-outline' },
     khatma: { library: 'material', active: 'book-open-page-variant', inactive: 'book-open-page-variant-outline' },
     insights: { library: 'ionicons', active: 'stats-chart', inactive: 'stats-chart-outline' },

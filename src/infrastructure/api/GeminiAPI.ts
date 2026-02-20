@@ -1,5 +1,5 @@
 /**
- * GeminiAPI — Calls the Google Gemini API for verse explanations.
+ * AI Explanation API — Calls OpenAI API for verse explanations.
  * Includes AsyncStorage caching to avoid redundant API calls.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -7,17 +7,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const CACHE_PREFIX = 'tafseer_';
 
 export class GeminiAPI {
-    private static API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || '';
-    private static BASE_URL =
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+    private static API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY || '';
+    private static BASE_URL = 'https://api.openai.com/v1/chat/completions';
+    private static MODEL = 'gpt-4o-mini';
 
-    /** Whether the Gemini API is configured */
+    /** Whether the AI API is configured */
     static get isConfigured(): boolean {
         return this.API_KEY.length > 0;
     }
 
     /**
-     * Explain a Quranic verse using Gemini AI.
+     * Explain a Quranic verse using AI.
      * Caches the result in AsyncStorage keyed by surah+verse.
      */
     static async explainVerse(
@@ -52,36 +52,41 @@ Provide a clear, concise explanation (3-5 paragraphs) covering:
 
 Keep the tone warm, accessible, and respectful. Use simple language. Include relevant hadith references if applicable. Do NOT include the Arabic text or translation in your response — just the explanation.`;
 
-        console.log(`[GeminiAPI] Calling with key: ${this.API_KEY.substring(0, 8)}...${this.API_KEY.substring(this.API_KEY.length - 4)}`);
+        console.log(`[AI API] Calling OpenAI ${this.MODEL}`);
 
-        const response = await fetch(`${this.BASE_URL}?key=${this.API_KEY}`, {
+        const response = await fetch(this.BASE_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${this.API_KEY}`,
+            },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 1024,
-                },
+                model: this.MODEL,
+                messages: [
+                    { role: 'system', content: 'You are a knowledgeable Islamic scholar providing tafseer of Quranic verses.' },
+                    { role: 'user', content: prompt },
+                ],
+                temperature: 0.7,
+                max_tokens: 1024,
             }),
         });
 
         if (!response.ok) {
             const errorBody = await response.text();
-            console.warn(`[GeminiAPI] Error ${response.status}:`, errorBody);
+            console.warn(`[AI API] Error ${response.status}:`, errorBody);
 
             if (response.status === 429) {
-                throw new Error('AI quota exceeded. The free tier limit has been reached. Please try again later or enable billing on Google Cloud.');
+                throw new Error('AI quota exceeded. Please try again later.');
             }
-            if (response.status === 403) {
-                throw new Error('API key is invalid or has been revoked. Please check your Gemini API key.');
+            if (response.status === 401) {
+                throw new Error('API key is invalid. Please check your OpenAI API key.');
             }
-            throw new Error(`Gemini API error: ${response.status}`);
+            throw new Error(`AI API error: ${response.status}`);
         }
 
         const data = await response.json();
         const text =
-            data.candidates?.[0]?.content?.parts?.[0]?.text ||
+            data.choices?.[0]?.message?.content ||
             'Unable to generate explanation. Please try again.';
 
         // Cache the result
