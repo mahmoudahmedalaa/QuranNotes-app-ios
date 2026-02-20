@@ -34,13 +34,15 @@ function getAllVerses(): TopicVerse[] {
     return QURAN_TOPICS.flatMap(t => t.verses);
 }
 
-/** Get time-of-day gradient */
-function getTimeGradient(): readonly [string, string] {
+/** Get time-of-day gradient — brand-aligned, vivid, always looks rich */
+function getTimeGradient(): readonly [string, string, string] {
     const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) return ['#F59E0B20', '#FCD34D10'] as const; // Morning - golden
-    if (hour >= 12 && hour < 17) return ['#F9731620', '#FBBF2410'] as const; // Afternoon - amber
-    if (hour >= 17 && hour < 21) return ['#8B5CF620', '#A855F710'] as const; // Evening - purple
-    return ['#1E3A5F30', '#0F1B2D20'] as const; // Night - navy
+    if (hour >= 4 && hour < 6) return ['#1A1B3A', '#2D1B69', '#5B3A8C'] as const;   // Fajr — deep purple dawn
+    if (hour >= 6 && hour < 12) return ['#1E3A8A', '#1D4ED8', '#5B7FFF'] as const;   // Morning — brand blue
+    if (hour >= 12 && hour < 16) return ['#1E3A5F', '#155E75', '#0E7490'] as const;   // Afternoon — deep teal
+    if (hour >= 16 && hour < 18) return ['#7C2D12', '#9A3412', '#D4853C'] as const;   // Asr — warm amber
+    if (hour >= 18 && hour < 20) return ['#3B0764', '#6B21A8', '#9333EA'] as const;   // Maghrib — brand purple
+    return ['#0F172A', '#1E293B', '#2D3A5F'] as const;                                 // Isha — deep navy (brand dark)
 }
 
 /** Get today's date key */
@@ -135,10 +137,10 @@ export const DailyVerseCard: React.FC = () => {
                     pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
                 ]}
             >
-                <View style={[styles.card, { backgroundColor: theme.colors.surface }, Shadows.md]}>
+                <View style={[styles.card, Shadows.md]}>
                     <LinearGradient
                         colors={gradientColors}
-                        style={styles.gradientOverlay}
+                        style={[styles.gradientOverlay, { borderRadius: BorderRadius.lg }]}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                     />
@@ -153,13 +155,13 @@ export const DailyVerseCard: React.FC = () => {
                                 icon="refresh"
                                 size={18}
                                 onPress={handleRefresh}
-                                iconColor={theme.colors.onSurfaceVariant}
+                                iconColor="rgba(255,255,255,0.6)"
                                 style={styles.refreshButton}
                             />
                             <MaterialCommunityIcons
                                 name={expanded ? 'chevron-up' : 'chevron-down'}
                                 size={20}
-                                color={theme.colors.onSurfaceVariant}
+                                color="rgba(255,255,255,0.6)"
                             />
                         </View>
                     </View>
@@ -170,12 +172,12 @@ export const DailyVerseCard: React.FC = () => {
                             <MaterialCommunityIcons
                                 name="book-open-variant"
                                 size={14}
-                                color={theme.colors.onSurfaceVariant}
+                                color="rgba(255,255,255,0.5)"
                             />
-                            <Text style={[styles.referenceText, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
+                            <Text style={[styles.referenceText, { color: 'rgba(255,255,255,0.6)' }]} numberOfLines={1}>
                                 {verse.surahName} · Verse {verse.verse}
                             </Text>
-                            <Text style={[styles.translationText, { color: theme.colors.onSurfaceVariant, marginBottom: 0, flex: 1 }]} numberOfLines={1}>
+                            <Text style={[styles.translationText, { color: 'rgba(255,255,255,0.75)', marginBottom: 0, flex: 1 }]} numberOfLines={1}>
                                 {verse.translation}
                             </Text>
                         </View>
@@ -184,10 +186,10 @@ export const DailyVerseCard: React.FC = () => {
                     {/* Expanded: Arabic + translation + reference */}
                     {expanded && (
                         <>
-                            <Text style={[styles.arabicText, { color: theme.colors.onSurface }]}>
+                            <Text style={[styles.arabicText, { color: '#FFFFFF' }]}>
                                 {verse.arabicSnippet}
                             </Text>
-                            <Text style={[styles.translationText, { color: theme.colors.onSurfaceVariant }]}>
+                            <Text style={[styles.translationText, { color: 'rgba(255,255,255,0.8)' }]}>
                                 {verse.translation}
                             </Text>
                             <Pressable onPress={handlePress}>
@@ -195,15 +197,15 @@ export const DailyVerseCard: React.FC = () => {
                                     <MaterialCommunityIcons
                                         name="book-open-variant"
                                         size={14}
-                                        color={theme.colors.onSurfaceVariant}
+                                        color="rgba(255,255,255,0.5)"
                                     />
-                                    <Text style={[styles.referenceText, { color: theme.colors.onSurfaceVariant }]}>
+                                    <Text style={[styles.referenceText, { color: 'rgba(255,255,255,0.6)' }]}>
                                         {verse.surahName} · Verse {verse.verse}
                                     </Text>
                                     <MaterialCommunityIcons
                                         name="chevron-right"
                                         size={16}
-                                        color={theme.colors.onSurfaceVariant}
+                                        color="rgba(255,255,255,0.5)"
                                     />
                                 </View>
                             </Pressable>
