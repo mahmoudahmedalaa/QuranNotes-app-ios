@@ -56,7 +56,7 @@ class RevenueCatService {
             return offerings.current;
         } catch (e: unknown) {
             const err = e as { message?: string; code?: string; userInfo?: unknown };
-            if (__DEV__) console.error('[RevenueCat] Error fetching offerings:', err.message, err.code, err.userInfo);
+            if (__DEV__) console.warn('[RevenueCat] Error fetching offerings:', err.message, err.code, err.userInfo);
             return null;
         }
     }
@@ -93,7 +93,7 @@ class RevenueCatService {
             if (err.code === 4) cleanMessage = 'Invalid purchase configuration.'; // InvalidPurchaseError
             if (err.code === 10) cleanMessage = 'Network error. Please check your connection.'; // NetworkError
 
-            if (__DEV__) console.error('[RevenueCat] Return user-friendly error:', cleanMessage);
+            if (__DEV__) console.warn('[RevenueCat] Return user-friendly error:', cleanMessage);
             return { success: false, userCancelled: false, error: cleanMessage };
         }
     }
@@ -103,7 +103,7 @@ class RevenueCatService {
             const customerInfo = await Purchases.restorePurchases();
             return this.isPro(customerInfo);
         } catch (e) {
-            console.error('Restore error:', e);
+            console.warn('Restore error:', e);
             return false;
         }
     }
