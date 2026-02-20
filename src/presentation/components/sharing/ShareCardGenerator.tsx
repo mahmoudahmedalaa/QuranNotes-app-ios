@@ -130,11 +130,12 @@ const VerseCard = ({ data }: { data: VerseShareData }) => (
             <View style={styles.dividerLine} />
         </View>
 
-        {/* Branding */}
+        {/* Branding — prominent with tagline */}
         <View style={styles.brandRow}>
             <View style={styles.brandDot} />
             <Text style={styles.brandText}>QuranNotes</Text>
         </View>
+        <Text style={styles.brandTagline}>Read · Reflect · Remember</Text>
     </LinearGradient>
 );
 
@@ -319,6 +320,13 @@ const styles = StyleSheet.create({
         letterSpacing: 2,
         textTransform: 'uppercase',
         fontWeight: '600',
+    },
+    brandTagline: {
+        fontSize: 11,
+        color: '#5B7FFF',
+        letterSpacing: 1,
+        fontWeight: '500',
+        marginTop: 4,
     },
     cornerOrnamentLeft: {
         position: 'absolute',

@@ -14,6 +14,7 @@ import * as Haptics from 'expo-haptics';
 import { StreakCounter } from '../../src/presentation/components/stats/StreakCounter';
 import MoodCheckInCard from '../../src/presentation/components/mood/MoodCheckInCard';
 import { PrayerTimesCard } from '../../src/presentation/components/prayer/PrayerTimesCard';
+import { usePrayer } from '../../src/infrastructure/prayer/PrayerContext';
 import { DailyVerseCard } from '../../src/presentation/components/home/DailyVerseCard';
 import { ReadingPositionService, ReadingPosition } from '../../src/infrastructure/reading/ReadingPositionService';
 import { useKhatma } from '../../src/infrastructure/khatma/KhatmaContext';
@@ -38,11 +39,25 @@ export default function DashboardScreen() {
     const theme = useTheme();
     const { playingVerse } = useAudio();
     const { completedSurahs, completedJuz } = useKhatma();
+    const { nextPrayer } = usePrayer();
     const [globalPosition, setGlobalPosition] = useState<ReadingPosition | null>(null);
     const [showAdhkar, setShowAdhkar] = useState(false);
     const { getCompletionPercentage } = useAdhkar();
-    const currentHour = new Date().getHours();
-    const adhkarPeriod = currentHour < 15 ? 'morning' : 'evening';
+
+    // Smart Adhkar timing: Morning = Fajr until Dhuhr, Evening = after Dhuhr
+    // If prayer data available, use it; otherwise fall back to time-based heuristic
+    const getAdhkarPeriod = (): 'morning' | 'evening' => {
+        if (nextPrayer) {
+            // If next prayer is Dhuhr, Fajr, or Sunrise → we're in morning window
+            const morningPrayers = ['Fajr', 'Sunrise', 'Dhuhr'];
+            if (morningPrayers.includes(nextPrayer.name)) return 'morning';
+            return 'evening';
+        }
+        // Fallback: 5 AM–12 PM = morning, rest = evening
+        const h = new Date().getHours();
+        return h >= 5 && h < 12 ? 'morning' : 'evening';
+    };
+    const adhkarPeriod = getAdhkarPeriod();
     const adhkarPct = getCompletionPercentage(adhkarPeriod as any);
 
     // Khatma progress
@@ -242,7 +257,10 @@ export default function DashboardScreen() {
                             <Text style={[styles.tileLabel, { color: theme.colors.onSurface }]}>
                                 {adhkarPeriod === 'morning' ? 'Morning' : 'Evening'}
                             </Text>
-                            <Text style={[styles.tileSub, { color: theme.colors.onSurfaceVariant }]}>
+                            <Text style={[styles.tileSub, { color: theme.colors.onSurface, fontWeight: '600' }]}>
+                                Adhkar
+                            </Text>
+                            <Text style={[styles.tileSub2, { color: theme.colors.onSurfaceVariant }]}>
                                 {adhkarPct > 0 ? `${adhkarPct}% done` : 'Tap to begin'}
                             </Text>
                         </Pressable>
@@ -368,6 +386,7 @@ const styles = StyleSheet.create({
     tileEmoji: { fontSize: 28 },
 
     // ── Tile text ──
-    tileLabel: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
+    tileLabel: { fontSize: 15, fontWeight: '700', marginBottom: 1 },
     tileSub: { fontSize: 12, textAlign: 'center' },
+    tileSub2: { fontSize: 11, textAlign: 'center', marginTop: 2 },
 });
