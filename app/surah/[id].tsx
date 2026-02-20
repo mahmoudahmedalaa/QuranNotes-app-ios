@@ -670,7 +670,7 @@ export default function SurahDetail() {
                                         }}
                                     />
                                     <IconButton
-                                        icon={followAlong.isActive ? 'microphone' : 'microphone-outline'}
+                                        icon={followAlong.isActive ? 'account-voice' : 'account-voice-off'}
                                         mode="contained-tonal"
                                         containerColor={
                                             followAlong.isActive
