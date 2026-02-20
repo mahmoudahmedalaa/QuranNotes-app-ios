@@ -8,6 +8,7 @@ import * as Location from 'expo-location';
 import { PrayerTimesData, PrayerTime } from '../../domain/entities/PrayerTimes';
 import { AladhanAPI } from '../api/AladhanAPI';
 import { useSettings } from '../settings/SettingsContext';
+import { WidgetBridge } from '../../../modules/widget-bridge/src';
 
 interface PrayerContextType {
     /** Current prayer times data */
@@ -190,6 +191,17 @@ export const PrayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         () => formatCountdown(secondsToNext),
         [secondsToNext],
     );
+
+    // Sync prayer data to iOS widget
+    useEffect(() => {
+        if (nextPrayer && nextPrayer.time) {
+            WidgetBridge.setNextPrayer({
+                name: nextPrayer.name,
+                time: nextPrayer.time,
+                timestamp: Date.now() / 1000 + secondsToNext,
+            });
+        }
+    }, [nextPrayer, secondsToNext]);
 
     const value = useMemo(() => ({
         prayerTimes,

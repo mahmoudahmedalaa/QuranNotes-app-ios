@@ -13,8 +13,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QURAN_TOPICS, TopicVerse } from '../../../domain/entities/QuranTopics';
 import { Spacing, BorderRadius, Shadows } from '../../theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
+import { WidgetBridge } from '../../../../modules/widget-bridge/src';
 
 const STORAGE_KEY = 'daily_verse_data';
+
+/** Sync verse data to iOS widget */
+function syncVerseToWidget(v: TopicVerse) {
+    WidgetBridge.setDailyVerse({
+        arabicText: v.arabicSnippet,
+        translation: v.translation,
+        surahName: v.surahName,
+        surahNameArabic: '',
+        verseNumber: v.verse,
+        surahNumber: v.surah,
+    });
+}
 
 /** Get all verses from all topics as a flat array */
 function getAllVerses(): TopicVerse[] {
@@ -49,6 +62,7 @@ export const DailyVerseCard: React.FC = () => {
                 const parsed = JSON.parse(stored);
                 if (parsed.date === todayKey()) {
                     setVerse(parsed.verse);
+                    syncVerseToWidget(parsed.verse);
                     setLoading(false);
                     return;
                 }
@@ -58,19 +72,22 @@ export const DailyVerseCard: React.FC = () => {
             const allVerses = getAllVerses();
             const randomVerse = allVerses[Math.floor(Math.random() * allVerses.length)];
             setVerse(randomVerse);
+            syncVerseToWidget(randomVerse);
             await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({
                 date: todayKey(),
                 verse: randomVerse,
             }));
         } catch (e) {
             // Fallback to a well-known verse
-            setVerse({
+            const fallbackVerse: TopicVerse = {
                 surah: 13,
                 verse: 28,
                 surahName: "Ar-Ra'd",
                 arabicSnippet: 'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ',
                 translation: 'Unquestionably, by the remembrance of Allah hearts are assured.',
-            });
+            };
+            setVerse(fallbackVerse);
+            syncVerseToWidget(fallbackVerse);
         } finally {
             setLoading(false);
         }
@@ -85,6 +102,7 @@ export const DailyVerseCard: React.FC = () => {
         const allVerses = getAllVerses();
         const randomVerse = allVerses[Math.floor(Math.random() * allVerses.length)];
         setVerse(randomVerse);
+        syncVerseToWidget(randomVerse);
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({
             date: todayKey(),
             verse: randomVerse,

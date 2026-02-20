@@ -21,12 +21,17 @@
       "buildNumber": "48",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Allow QuranNotes to use the microphone for speech recognition",
+        "NSMicrophoneUsageDescription": "Allow QuranNotes to use the microphone for voice follow-along recitation",
         "NSSpeechRecognitionUsageDescription": "Allow QuranNotes to use speech recognition for voice follow-along",
         "NSPhotoLibraryUsageDescription": "Allow QuranNotes to access your photo library to select a profile picture",
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": [
           "audio"
+        ]
+      },
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.com.mahmoudahmedalaa.qurannotes"
         ]
       }
     },
@@ -37,7 +42,8 @@
       },
       "package": "com.mahmoudahmedalaa.qurannotes",
       "permissions": [
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ]
     },
     "web": {
@@ -66,7 +72,8 @@
           "microphonePermission": "Allow QuranNotes to use the microphone for voice follow-along recitation",
           "speechRecognitionPermission": "Allow QuranNotes to use speech recognition for voice follow-along"
         }
-      ]
+      ],
+      "@bacons/apple-targets"
     ],
     "scheme": [
       "qurannotes",

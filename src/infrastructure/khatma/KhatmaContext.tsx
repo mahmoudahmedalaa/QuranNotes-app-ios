@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { JUZ_DATA } from '../../data/khatmaData';
 import { useAuth } from '../auth/AuthContext';
 import { usePro } from '../auth/ProContext';
+import { WidgetBridge } from '../../../modules/widget-bridge/src';
 
 // First N Juz are free, then premium required
 const FREE_JUZ_LIMIT = 2;
@@ -413,6 +414,15 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
         return total;
     }, [completedJuz]);
+
+    // Sync khatma data to iOS widget
+    useEffect(() => {
+        WidgetBridge.setKhatma({
+            completedJuz: completedJuz.length,
+            totalJuz: 30,
+            completedSurahs: state.completedSurahs.length,
+        });
+    }, [completedJuz.length, state.completedSurahs.length]);
 
     // Juz-based premium gate: free for first 2 Juz, then premium required
     const { isPro, loading: proLoading } = usePro();
