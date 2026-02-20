@@ -45,7 +45,7 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             const isProStatus = revenueCatService.isPro(customerInfo);
             setIsPro(isProStatus);
         } catch (e) {
-            console.error('Error checking pro status:', e);
+            console.warn('Error checking pro status:', e);
         } finally {
             setLoading(false);
         }
@@ -62,7 +62,7 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             const isProStatus = await revenueCatService.restorePurchases();
             setIsPro(isProStatus);
         } catch (e) {
-            console.error('Error restoring purchases:', e);
+            console.warn('Error restoring purchases:', e);
         } finally {
             setLoading(false);
         }
