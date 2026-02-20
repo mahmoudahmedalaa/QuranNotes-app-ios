@@ -16,7 +16,10 @@ import { StatusBar } from 'expo-status-bar';
 import { useRouter, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { StreakCounter } from '../../src/presentation/components/stats/StreakCounter';
+import MoodCheckInCard from '../../src/presentation/components/mood/MoodCheckInCard';
 import { PrayerTimesCard } from '../../src/presentation/components/prayer/PrayerTimesCard';
+import { DailyVerseCard } from '../../src/presentation/components/home/DailyVerseCard';
+import { KhatmaProgressRing } from '../../src/presentation/components/home/KhatmaProgressRing';
 import { ReadingPositionService, ReadingPosition } from '../../src/infrastructure/reading/ReadingPositionService';
 import { useKhatma } from '../../src/infrastructure/khatma/KhatmaContext';
 import { useAudio } from '../../src/infrastructure/audio/AudioContext';
@@ -131,8 +134,17 @@ export default function Index() {
                 </MotiView>
             )}
 
-            {/* Prayer Times — compact, professional */}
+            {/* Prayer Times — compact, collapsible */}
             <PrayerTimesCard />
+
+            {/* Daily Verse — beautiful time-of-day gradient */}
+            <DailyVerseCard />
+
+            {/* Khatma Progress — ring + journey status */}
+            <KhatmaProgressRing />
+
+            {/* Mood Check-In — how are you feeling today? */}
+            <MoodCheckInCard />
 
             {/* Adhkar Quick Access — daily ritual */}
             <MotiView
