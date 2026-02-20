@@ -120,11 +120,7 @@ export const PrayerTimesCard: React.FC = () => {
 
                     {/* Expanded: All Prayers */}
                     {expanded && (
-                        <MotiView
-                            from={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' as unknown as number }}
-                            transition={{ type: 'timing', duration: 300 }}
-                        >
+                        <View>
                             <View style={[styles.divider, { backgroundColor: theme.colors.outlineVariant }]} />
                             {prayerTimes.prayers.map((prayer, index) => (
                                 <MotiView
@@ -168,7 +164,7 @@ export const PrayerTimesCard: React.FC = () => {
                                     </View>
                                 </MotiView>
                             ))}
-                        </MotiView>
+                        </View>
                     )}
                 </View>
             </Pressable>

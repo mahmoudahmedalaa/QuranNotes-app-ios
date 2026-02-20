@@ -66,8 +66,26 @@ export const PrayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             setLoading(true);
             setLocationError(null);
 
+            // Guard: check if Location native module is actually available
+            if (!Location || !Location.requestForegroundPermissionsAsync) {
+                setLocationError('Location services not available');
+                setLoading(false);
+                return;
+            }
+
             // Request location permissions
-            const { status } = await Location.requestForegroundPermissionsAsync();
+            let status: Location.PermissionStatus;
+            try {
+                const result = await Location.requestForegroundPermissionsAsync();
+                status = result.status;
+            } catch (permErr) {
+                // Native module not linked or unavailable
+                console.warn('[PrayerContext] Location module unavailable:', permErr);
+                setLocationError('Location not available');
+                setLoading(false);
+                return;
+            }
+
             if (status !== 'granted') {
                 setLocationError('Location permission not granted');
                 setLoading(false);
@@ -75,11 +93,20 @@ export const PrayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             }
 
             // Get current location
-            const location = await Location.getCurrentPositionAsync({
-                accuracy: Location.Accuracy.Balanced,
-            });
-
-            const { latitude, longitude } = location.coords;
+            let latitude: number;
+            let longitude: number;
+            try {
+                const location = await Location.getCurrentPositionAsync({
+                    accuracy: Location.Accuracy.Balanced,
+                });
+                latitude = location.coords.latitude;
+                longitude = location.coords.longitude;
+            } catch (locErr) {
+                console.warn('[PrayerContext] Failed to get position:', locErr);
+                setLocationError('Unable to determine location');
+                setLoading(false);
+                return;
+            }
 
             // Reverse geocode for city name
             let locationName = '';
@@ -111,9 +138,12 @@ export const PrayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     }, [prayerMethod]);
 
-    // Fetch on mount and when method changes
+    // Defer fetch to avoid blocking app startup
     useEffect(() => {
-        fetchPrayerTimes();
+        const timer = setTimeout(() => {
+            fetchPrayerTimes();
+        }, 2000); // 2s delay to let the app render first
+        return () => clearTimeout(timer);
     }, [fetchPrayerTimes]);
 
     // Countdown timer — ticks every 30 seconds for efficiency
