@@ -3,7 +3,7 @@
  * Glassmorphic dark card with gold accent header.
  */
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, Pressable, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Modal, Pressable, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
 import { useTheme, IconButton } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
@@ -12,6 +12,7 @@ import { Spacing, BorderRadius, Shadows } from '../../theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 const GOLD = '#D4A853';
+const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 interface VerseTafseerModalProps {
     visible: boolean;
@@ -158,7 +159,8 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.4)',
     },
     sheet: {
-        maxHeight: '80%',
+        minHeight: SCREEN_HEIGHT * 0.55,
+        maxHeight: SCREEN_HEIGHT * 0.8,
         borderTopLeftRadius: BorderRadius.xxl,
         borderTopRightRadius: BorderRadius.xxl,
         paddingBottom: Spacing.xl,
