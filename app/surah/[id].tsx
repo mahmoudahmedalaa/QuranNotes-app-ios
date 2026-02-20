@@ -494,12 +494,7 @@ export default function SurahDetail() {
                         }
                         onRecord={() => handleRecordVerse(item.number)}
                         onShare={() => handleShareVerse(item)}
-                        onExplain={() => setTafseerVerse({
-                            arabicText: item.text,
-                            translation: item.translation || '',
-                            surahName: surah.englishName,
-                            verseNumber: item.number,
-                        })}
+
                         isStudyMode={isStudyMode}
                         isHighlighted={followAlong.matchedVerseId === item.number}
                         showTransliteration={settings.showTransliteration}
@@ -669,29 +664,7 @@ export default function SurahDetail() {
                                             setIsStudyMode(!isStudyMode);
                                         }}
                                     />
-                                    <IconButton
-                                        icon={followAlong.isActive ? 'account-voice' : 'account-voice-off'}
-                                        mode="contained-tonal"
-                                        containerColor={
-                                            followAlong.isActive
-                                                ? '#10B98130'
-                                                : theme.colors.surfaceVariant
-                                        }
-                                        iconColor={
-                                            followAlong.isActive
-                                                ? '#10B981'
-                                                : theme.colors.onSurfaceVariant
-                                        }
-                                        size={22}
-                                        onPress={() => {
-                                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                                            if (followAlong.isActive) {
-                                                handleFollowAlongStop();
-                                            } else {
-                                                followAlong.startSession();
-                                            }
-                                        }}
-                                    />
+
                                 </View>
 
                             </Animated.View>
@@ -758,22 +731,7 @@ export default function SurahDetail() {
                         }}
                         style={styles.stickyActionIcon}
                     />
-                    <IconButton
-                        icon={followAlong.isActive ? 'ear' : 'ear-outline'}
-                        iconColor={
-                            followAlong.isActive ? '#10B981' : theme.colors.onSurfaceVariant
-                        }
-                        size={20}
-                        onPress={() => {
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                            if (followAlong.isActive) {
-                                handleFollowAlongStop();
-                            } else {
-                                followAlong.startSession();
-                            }
-                        }}
-                        style={styles.stickyActionIcon}
-                    />
+
                     <IconButton
                         icon="play"
                         iconColor={theme.colors.primary}
@@ -930,15 +888,7 @@ export default function SurahDetail() {
 
 
 
-            {/* AI Tafseer Modal */}
-            <VerseTafseerModal
-                visible={!!tafseerVerse}
-                onDismiss={() => setTafseerVerse(null)}
-                arabicText={tafseerVerse?.arabicText || ''}
-                translation={tafseerVerse?.translation || ''}
-                surahName={tafseerVerse?.surahName || ''}
-                verseNumber={tafseerVerse?.verseNumber || 0}
-            />
+
 
         </View>
     );
