@@ -197,7 +197,10 @@ export default function DashboardScreen() {
                             ]}
                         >
                             <LinearGradient
-                                colors={['#D4A85310', '#D4A85305']}
+                                colors={theme.dark
+                                    ? ['#D4A85308', '#D4A85303']
+                                    : ['#D4A85310', '#D4A85305']
+                                }
                                 style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
                             />
                             {/* Ring */}
@@ -243,9 +246,13 @@ export default function DashboardScreen() {
                             ]}
                         >
                             <LinearGradient
-                                colors={adhkarPeriod === 'morning'
-                                    ? ['#FEF3C718', '#FCD34D08']
-                                    : ['#312E8118', '#6366F108']
+                                colors={theme.dark
+                                    ? (adhkarPeriod === 'morning'
+                                        ? ['#FEF3C708', '#FCD34D03']
+                                        : ['#312E8108', '#6366F103'])
+                                    : (adhkarPeriod === 'morning'
+                                        ? ['#FEF3C718', '#FCD34D08']
+                                        : ['#312E8118', '#6366F108'])
                                 }
                                 style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
                             />

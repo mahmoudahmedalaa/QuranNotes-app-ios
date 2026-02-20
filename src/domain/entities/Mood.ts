@@ -42,18 +42,18 @@ export interface MoodConfig {
 }
 
 export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
-    grateful: { emoji: '🤲', label: 'Grateful', color: '#FEF3C7', darkColor: '#78350F' },
-    anxious: { emoji: '😰', label: 'Anxious', color: '#DBEAFE', darkColor: '#1E3A5F' },
-    sad: { emoji: '😢', label: 'Sad', color: '#E0E7FF', darkColor: '#312E81' },
-    hopeful: { emoji: '🌱', label: 'Hopeful', color: '#D1FAE5', darkColor: '#064E3B' },
-    strong: { emoji: '💪', label: 'Strong', color: '#FCE7F3', darkColor: '#831843' },
-    frustrated: { emoji: '😤', label: 'Frustrated', color: '#FEE2E2', darkColor: '#7F1D1D' },
-    lost: { emoji: '🤔', label: 'Lost', color: '#F3E8FF', darkColor: '#581C87' },
-    heartbroken: { emoji: '💔', label: 'Heartbroken', color: '#FFE4E6', darkColor: '#881337' },
-    confused: { emoji: '🤷', label: 'Confused', color: '#CFFAFE', darkColor: '#164E63' },
-    peaceful: { emoji: '😌', label: 'Peaceful', color: '#ECFDF5', darkColor: '#065F46' },
-    lonely: { emoji: '😔', label: 'Lonely', color: '#EDE9FE', darkColor: '#4C1D95' },
-    inspired: { emoji: '🌟', label: 'Inspired', color: '#FFF7ED', darkColor: '#7C2D12' },
+    grateful: { emoji: '🤲', label: 'Grateful', color: '#FEF3C7', darkColor: '#2A2518' },
+    anxious: { emoji: '😰', label: 'Anxious', color: '#DBEAFE', darkColor: '#1A2535' },
+    sad: { emoji: '😢', label: 'Sad', color: '#E0E7FF', darkColor: '#1E1D35' },
+    hopeful: { emoji: '🌱', label: 'Hopeful', color: '#D1FAE5', darkColor: '#162520' },
+    strong: { emoji: '💪', label: 'Strong', color: '#FCE7F3', darkColor: '#2A1825' },
+    frustrated: { emoji: '😤', label: 'Frustrated', color: '#FEE2E2', darkColor: '#2A1A1A' },
+    lost: { emoji: '🤔', label: 'Lost', color: '#F3E8FF', darkColor: '#221A30' },
+    heartbroken: { emoji: '💔', label: 'Heartbroken', color: '#FFE4E6', darkColor: '#2A1820' },
+    confused: { emoji: '🤷', label: 'Confused', color: '#CFFAFE', darkColor: '#162228' },
+    peaceful: { emoji: '😌', label: 'Peaceful', color: '#ECFDF5', darkColor: '#16221E' },
+    lonely: { emoji: '😔', label: 'Lonely', color: '#EDE9FE', darkColor: '#1E1A2D' },
+    inspired: { emoji: '🌟', label: 'Inspired', color: '#FFF7ED', darkColor: '#261E18' },
 };
 
 export const MOOD_LIST: MoodType[] = [
