@@ -157,8 +157,11 @@ export function useVoiceFollowAlong(
     }, [verses, matchedVerseId]);
 
     const handleError = useCallback((error: string) => {
-        console.error('Voice recognition error:', error);
-        Alert.alert('Recognition Error', error);
+        console.warn('Voice recognition error:', error);
+        // Don't show alert for "not available" — expected on simulator
+        if (!error.includes('not available')) {
+            Alert.alert('Recognition Error', error);
+        }
         stopSession();
     }, []);
 

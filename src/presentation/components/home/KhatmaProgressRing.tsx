@@ -14,8 +14,8 @@ import * as Haptics from 'expo-haptics';
 
 const GOLD = '#D4A853';
 const GOLD_DIM = '#D4A85330';
-const RING_SIZE = 80;
-const STROKE_WIDTH = 6;
+const RING_SIZE = 64;
+const STROKE_WIDTH = 5;
 const RADIUS = (RING_SIZE - STROKE_WIDTH) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
@@ -111,9 +111,9 @@ const styles = StyleSheet.create({
     card: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: Spacing.md,
+        padding: Spacing.sm,
         borderRadius: BorderRadius.lg,
-        gap: Spacing.md,
+        gap: Spacing.sm,
     },
     ringContainer: {
         width: RING_SIZE,
@@ -129,11 +129,11 @@ const styles = StyleSheet.create({
         alignItems: 'baseline',
     },
     completedCount: {
-        fontSize: 22,
+        fontSize: 18,
         fontWeight: '800',
     },
     totalLabel: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: '500',
     },
     infoGroup: {

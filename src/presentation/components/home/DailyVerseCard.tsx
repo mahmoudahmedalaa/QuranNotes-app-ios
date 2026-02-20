@@ -40,6 +40,7 @@ export const DailyVerseCard: React.FC = () => {
     const router = useRouter();
     const [verse, setVerse] = useState<TopicVerse | null>(null);
     const [loading, setLoading] = useState(true);
+    const [expanded, setExpanded] = useState(false);
 
     const loadOrPickVerse = useCallback(async () => {
         try {
@@ -108,7 +109,10 @@ export const DailyVerseCard: React.FC = () => {
             style={{ paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}
         >
             <Pressable
-                onPress={handlePress}
+                onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setExpanded(!expanded);
+                }}
                 style={({ pressed }) => [
                     pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
                 ]}
@@ -121,46 +125,72 @@ export const DailyVerseCard: React.FC = () => {
                         end={{ x: 1, y: 1 }}
                     />
 
-                    {/* Header */}
+                    {/* Header — always visible */}
                     <View style={styles.cardHeader}>
                         <View style={styles.labelRow}>
                             <Text style={[styles.label, { color: '#D4A853' }]}>✦ Verse of the Day</Text>
                         </View>
-                        <IconButton
-                            icon="refresh"
-                            size={18}
-                            onPress={handleRefresh}
-                            iconColor={theme.colors.onSurfaceVariant}
-                            style={styles.refreshButton}
-                        />
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            <IconButton
+                                icon="refresh"
+                                size={18}
+                                onPress={handleRefresh}
+                                iconColor={theme.colors.onSurfaceVariant}
+                                style={styles.refreshButton}
+                            />
+                            <MaterialCommunityIcons
+                                name={expanded ? 'chevron-up' : 'chevron-down'}
+                                size={20}
+                                color={theme.colors.onSurfaceVariant}
+                            />
+                        </View>
                     </View>
 
-                    {/* Arabic text */}
-                    <Text style={[styles.arabicText, { color: theme.colors.onSurface }]}>
-                        {verse.arabicSnippet}
-                    </Text>
+                    {/* Compact: just the reference */}
+                    {!expanded && (
+                        <View style={styles.referenceRow}>
+                            <MaterialCommunityIcons
+                                name="book-open-variant"
+                                size={14}
+                                color={theme.colors.onSurfaceVariant}
+                            />
+                            <Text style={[styles.referenceText, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
+                                {verse.surahName} · Verse {verse.verse}
+                            </Text>
+                            <Text style={[styles.translationText, { color: theme.colors.onSurfaceVariant, marginBottom: 0, flex: 1 }]} numberOfLines={1}>
+                                {verse.translation}
+                            </Text>
+                        </View>
+                    )}
 
-                    {/* Translation */}
-                    <Text style={[styles.translationText, { color: theme.colors.onSurfaceVariant }]}>
-                        {verse.translation}
-                    </Text>
-
-                    {/* Reference */}
-                    <View style={styles.referenceRow}>
-                        <MaterialCommunityIcons
-                            name="book-open-variant"
-                            size={14}
-                            color={theme.colors.onSurfaceVariant}
-                        />
-                        <Text style={[styles.referenceText, { color: theme.colors.onSurfaceVariant }]}>
-                            {verse.surahName} · Verse {verse.verse}
-                        </Text>
-                        <MaterialCommunityIcons
-                            name="chevron-right"
-                            size={16}
-                            color={theme.colors.onSurfaceVariant}
-                        />
-                    </View>
+                    {/* Expanded: Arabic + translation + reference */}
+                    {expanded && (
+                        <>
+                            <Text style={[styles.arabicText, { color: theme.colors.onSurface }]}>
+                                {verse.arabicSnippet}
+                            </Text>
+                            <Text style={[styles.translationText, { color: theme.colors.onSurfaceVariant }]}>
+                                {verse.translation}
+                            </Text>
+                            <Pressable onPress={handlePress}>
+                                <View style={styles.referenceRow}>
+                                    <MaterialCommunityIcons
+                                        name="book-open-variant"
+                                        size={14}
+                                        color={theme.colors.onSurfaceVariant}
+                                    />
+                                    <Text style={[styles.referenceText, { color: theme.colors.onSurfaceVariant }]}>
+                                        {verse.surahName} · Verse {verse.verse}
+                                    </Text>
+                                    <MaterialCommunityIcons
+                                        name="chevron-right"
+                                        size={16}
+                                        color={theme.colors.onSurfaceVariant}
+                                    />
+                                </View>
+                            </Pressable>
+                        </>
+                    )}
                 </View>
             </Pressable>
         </MotiView>
