@@ -17,9 +17,10 @@ import { AnimatedCard } from '../../components/animated/AnimatedCard';
 interface Props {
     surahs: Surah[];
     onSelect: (surahNumber: number) => void;
+    ListHeaderComponent?: React.ReactElement | null;
 }
 
-export const SurahList = ({ surahs, onSelect }: Props) => {
+export const SurahList = ({ surahs, onSelect, ListHeaderComponent }: Props) => {
     const theme = useTheme();
 
     const renderItem = useCallback(
@@ -72,12 +73,12 @@ export const SurahList = ({ surahs, onSelect }: Props) => {
 
     return (
         <FlatList
-            style={{ flex: 1 }}
             data={surahs}
             keyExtractor={item => item.number.toString()}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
             renderItem={renderItem}
+            ListHeaderComponent={ListHeaderComponent}
             initialNumToRender={15}
             maxToRenderPerBatch={10}
             windowSize={5}

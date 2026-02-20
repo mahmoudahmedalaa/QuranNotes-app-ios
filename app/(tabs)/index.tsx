@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable, Modal } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,10 +16,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useRouter, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { StreakCounter } from '../../src/presentation/components/stats/StreakCounter';
-import MoodCheckInCard from '../../src/presentation/components/mood/MoodCheckInCard';
 import { PrayerTimesCard } from '../../src/presentation/components/prayer/PrayerTimesCard';
-import { DailyVerseCard } from '../../src/presentation/components/home/DailyVerseCard';
-import { KhatmaProgressRing } from '../../src/presentation/components/home/KhatmaProgressRing';
 import { ReadingPositionService, ReadingPosition } from '../../src/infrastructure/reading/ReadingPositionService';
 import { useKhatma } from '../../src/infrastructure/khatma/KhatmaContext';
 import { useAudio } from '../../src/infrastructure/audio/AudioContext';
@@ -44,11 +41,9 @@ export default function Index() {
     const adhkarPct = getCompletionPercentage(adhkarPeriod as any);
 
     // Refresh global position when home screen gains focus OR audio stops.
-    // Hide card while audio is active — the GlobalMiniPlayer handles that.
     useFocusEffect(
         useCallback(() => {
             if (playingVerse) {
-                // Audio is active → hide card, mini player takes over
                 setGlobalPosition(null);
                 return;
             }
@@ -82,7 +77,6 @@ export default function Index() {
         };
         cycleMessage();
         const interval = setInterval(cycleMessage, 3500);
-        // Brief transition (0.8s) then dismiss — returning users want to get to reading quickly
         const timer = setTimeout(() => setMinLoading(false), 800);
         return () => {
             clearInterval(interval);
@@ -96,6 +90,106 @@ export default function Index() {
         router.push(`/surah/${number}`);
     };
 
+    // ── Cards injected above the Surah list (ListHeaderComponent) ──
+    const showContinueReading = globalPosition && !completedSurahs.includes(globalPosition.surah);
+
+    const ListHeader = useMemo(() => (
+        <View style={styles.headerSection}>
+            {/* Continue Reading — highest priority action */}
+            {showContinueReading && globalPosition && (
+                <MotiView
+                    from={{ opacity: 0, translateY: 10 }}
+                    animate={{ opacity: 1, translateY: 0 }}
+                    transition={{ type: 'spring', damping: 18, delay: 100 }}
+                    style={{ paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}
+                >
+                    <Pressable
+                        onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                            router.push(`/surah/${globalPosition.surah}?verse=${globalPosition.verse}&autoplay=true`);
+                        }}
+                        style={({ pressed }) => [
+                            styles.continueCard,
+                            { backgroundColor: theme.colors.surface },
+                            Shadows.md,
+                            pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                        ]}
+                    >
+                        <View style={[styles.continueIcon, { backgroundColor: `${theme.colors.primary}15` }]}>
+                            <MaterialCommunityIcons name="book-open-page-variant" size={22} color={theme.colors.primary} />
+                        </View>
+                        <View style={styles.continueTextGroup}>
+                            <Text style={[styles.continueTitle, { color: theme.colors.onSurface }]} numberOfLines={1}>
+                                Continue Reading
+                            </Text>
+                            <Text style={[styles.continueSubtitle, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
+                                {globalPosition.surahName || `Surah ${globalPosition.surah}`} · Verse {globalPosition.verse}
+                            </Text>
+                        </View>
+                        <MaterialCommunityIcons name="play-circle" size={32} color={theme.colors.primary} />
+                    </Pressable>
+                </MotiView>
+            )}
+
+            {/* Prayer Times — compact, professional */}
+            <PrayerTimesCard />
+
+            {/* Adhkar Quick Access — daily ritual */}
+            <MotiView
+                from={{ opacity: 0, translateY: 10 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ type: 'spring', damping: 18, delay: 140 }}
+                style={{ paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}
+            >
+                <Pressable
+                    onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                        setShowAdhkar(true);
+                    }}
+                    style={({ pressed }) => [
+                        styles.continueCard,
+                        { backgroundColor: theme.colors.surface },
+                        Shadows.md,
+                        pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                    ]}
+                >
+                    <View style={[styles.continueIcon, {
+                        backgroundColor: adhkarPeriod === 'morning' ? '#FEF3C720' : '#312E8120'
+                    }]}>
+                        <Text style={{ fontSize: 22 }}>
+                            {adhkarPeriod === 'morning' ? '☀️' : '🌙'}
+                        </Text>
+                    </View>
+                    <View style={styles.continueTextGroup}>
+                        <Text style={[styles.continueTitle, { color: theme.colors.onSurface }]} numberOfLines={1}>
+                            {adhkarPeriod === 'morning' ? 'Morning Adhkar' : 'Evening Adhkar'}
+                        </Text>
+                        <Text style={[styles.continueSubtitle, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
+                            {adhkarPct > 0 ? `${adhkarPct}% complete` : 'Tap to begin'}
+                        </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={theme.colors.onSurfaceVariant} />
+                </Pressable>
+            </MotiView>
+
+            {/* Surahs section label */}
+            <View style={styles.sectionLabel}>
+                <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+                    Surahs
+                </Text>
+                <Pressable
+                    onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        router.push('/search');
+                    }}
+                    hitSlop={12}
+                >
+                    <Ionicons name="search" size={20} color={theme.colors.onSurfaceVariant} />
+                </Pressable>
+            </View>
+        </View>
+    ), [showContinueReading, globalPosition, theme, adhkarPeriod, adhkarPct]);
+
     if (isAppLoading) {
         return (
             <WaveBackground variant="spiritual" intensity="subtle">
@@ -103,11 +197,11 @@ export default function Index() {
                 <View style={[styles.center, { flex: 1 }]}>
                     <NoorMascot size={120} mood="calm" />
                     <MotiView
-                        key={loadingMessage} // Key triggers re-animation on message change
+                        key={loadingMessage}
                         from={{ opacity: 0, translateY: 10 }}
                         animate={{ opacity: 1, translateY: 0 }}
                         exit={{ opacity: 0, translateY: -10 }}
-                        transition={{ type: 'timing', duration: 800 }} // Smooth, simple entry
+                        transition={{ type: 'timing', duration: 800 }}
                     >
                         <Text style={[styles.loadingText, { color: theme.colors.onSurface }]}>
                             {loadingMessage}
@@ -155,206 +249,82 @@ export default function Index() {
 
     return (
         <View style={styles.container}>
-            <WaveBackground variant="spiritual" intensity="medium">
-                <FloatingParticles count={20} />
-                <SafeAreaView style={styles.safeArea} edges={['top']}>
-                    <StatusBar style={theme.dark ? 'light' : 'dark'} />
+            <SafeAreaView style={styles.safeArea} edges={['top']}>
+                <StatusBar style={theme.dark ? 'light' : 'dark'} />
 
-                    {/* Premium Header */}
-                    <MotiView
-                        from={{ opacity: 0, translateY: -20 }}
-                        animate={{ opacity: 1, translateY: 0 }}
-                        transition={{ type: 'spring', damping: 18, delay: 100 }}
-                        style={styles.header}>
-                        <View style={styles.headerContent}>
-                            <View style={styles.headerRow}>
-                                <NoorMascot size={60} mood="happy" style={styles.headerMascot} />
-                                <View style={styles.headerTextGroup}>
-                                    <Text
-                                        style={[styles.greeting, { color: theme.colors.primary }]}>
-                                        Assalamualaikum
-                                    </Text>
-                                    <Text
-                                        style={[
-                                            styles.headerTitle,
-                                            { color: theme.colors.onBackground },
-                                        ]}>
-                                        Holy Quran
-                                    </Text>
-                                </View>
+                {/* Compact Header */}
+                <MotiView
+                    from={{ opacity: 0, translateY: -20 }}
+                    animate={{ opacity: 1, translateY: 0 }}
+                    transition={{ type: 'spring', damping: 18, delay: 50 }}
+                    style={styles.header}>
+                    <View style={styles.headerContent}>
+                        <View style={styles.headerRow}>
+                            <NoorMascot size={48} mood="happy" style={styles.headerMascot} />
+                            <View style={styles.headerTextGroup}>
+                                <Text
+                                    style={[styles.greeting, { color: theme.colors.primary }]}>
+                                    Assalamualaikum
+                                </Text>
+                                <Text
+                                    style={[
+                                        styles.headerTitle,
+                                        { color: theme.colors.onBackground },
+                                    ]}>
+                                    Holy Quran
+                                </Text>
                             </View>
                         </View>
+                    </View>
 
-                        <View style={styles.headerActions}>
-                            <AnimatedButton
-                                label="Jump"
-                                icon="book-outline"
-                                onPress={() => setPickerVisible(true)}
-                                variant="secondary"
-                                size="sm"
+                    <View style={styles.headerActions}>
+                        <AnimatedButton
+                            label="Jump"
+                            icon="book-outline"
+                            onPress={() => setPickerVisible(true)}
+                            variant="secondary"
+                            size="sm"
+                        />
+                        <Pressable
+                            onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                router.push('/(tabs)/settings');
+                            }}
+                            style={({ pressed }) => [
+                                styles.settingsButton,
+                                { backgroundColor: theme.colors.surfaceVariant },
+                                pressed && { opacity: 0.7, transform: [{ scale: 0.92 }] },
+                            ]}
+                        >
+                            <Ionicons
+                                name="settings-outline"
+                                size={20}
+                                color={theme.colors.onSurfaceVariant}
                             />
-                            <Pressable
-                                onPress={() => {
-                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                    router.push('/(tabs)/settings');
-                                }}
-                                style={({ pressed }) => [
-                                    styles.settingsButton,
-                                    { backgroundColor: theme.colors.surfaceVariant },
-                                    pressed && { opacity: 0.7, transform: [{ scale: 0.92 }] },
-                                ]}
-                            >
-                                <Ionicons
-                                    name="settings-outline"
-                                    size={20}
-                                    color={theme.colors.onSurfaceVariant}
-                                />
-                            </Pressable>
-                        </View>
-                    </MotiView>
-
-                    <StreakCounter />
-
-                    <PrayerTimesCard />
-
-                    <DailyVerseCard />
-
-                    <KhatmaProgressRing />
-
-                    <MoodCheckInCard />
-
-                    {/* Browse Topics Card */}
-                    <MotiView
-                        from={{ opacity: 0, translateY: 15 }}
-                        animate={{ opacity: 1, translateY: 0 }}
-                        transition={{ type: 'spring', damping: 18, delay: 160 }}
-                        style={{ paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}
-                    >
-                        <Pressable
-                            onPress={() => {
-                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                                router.push('/topic/patience' as any);
-                            }}
-                            style={({ pressed }) => [
-                                styles.continueCard,
-                                { backgroundColor: theme.colors.surface },
-                                Shadows.md,
-                                pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-                            ]}
-                        >
-                            <View style={[styles.continueIcon, { backgroundColor: '#5B7FFF15' }]}>
-                                <Text style={{ fontSize: 22 }}>📖</Text>
-                            </View>
-                            <View style={styles.continueTextGroup}>
-                                <Text style={[styles.continueTitle, { color: theme.colors.onSurface }]} numberOfLines={1}>
-                                    Browse by Topic
-                                </Text>
-                                <Text style={[styles.continueSubtitle, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
-                                    15 curated categories
-                                </Text>
-                            </View>
-                            <Ionicons name="chevron-forward" size={20} color={theme.colors.onSurfaceVariant} />
                         </Pressable>
-                    </MotiView>
+                    </View>
+                </MotiView>
 
-                    {/* Adhkar Quick Access Card */}
-                    <MotiView
-                        from={{ opacity: 0, translateY: 15 }}
-                        animate={{ opacity: 1, translateY: 0 }}
-                        transition={{ type: 'spring', damping: 18, delay: 180 }}
-                        style={{ paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}
-                    >
-                        <Pressable
-                            onPress={() => {
-                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                                setShowAdhkar(true);
-                            }}
-                            style={({ pressed }) => [
-                                styles.continueCard,
-                                { backgroundColor: theme.colors.surface },
-                                Shadows.md,
-                                pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-                            ]}
-                        >
-                            <View style={[styles.continueIcon, {
-                                backgroundColor: adhkarPeriod === 'morning' ? '#FEF3C720' : '#312E8120'
-                            }]}>
-                                <Text style={{ fontSize: 22 }}>
-                                    {adhkarPeriod === 'morning' ? '☀️' : '🌙'}
-                                </Text>
-                            </View>
-                            <View style={styles.continueTextGroup}>
-                                <Text style={[styles.continueTitle, { color: theme.colors.onSurface }]} numberOfLines={1}>
-                                    {adhkarPeriod === 'morning' ? 'Morning Adhkar' : 'Evening Adhkar'}
-                                </Text>
-                                <Text style={[styles.continueSubtitle, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
-                                    {adhkarPct > 0 ? `${adhkarPct}% complete` : 'Tap to begin'}
-                                </Text>
-                            </View>
-                            <Ionicons name="chevron-forward" size={20} color={theme.colors.onSurfaceVariant} />
-                        </Pressable>
-                    </MotiView>
+                <StreakCounter />
 
-                    {/* Continue Reading Card */}
-                    {globalPosition && !completedSurahs.includes(globalPosition.surah) && (
-                        <MotiView
-                            from={{ opacity: 0, translateY: 15 }}
-                            animate={{ opacity: 1, translateY: 0 }}
-                            transition={{ type: 'spring', damping: 18, delay: 150 }}
-                            style={{ paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}
-                        >
-                            <Pressable
-                                onPress={() => {
-                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                                    router.push(`/surah/${globalPosition.surah}?verse=${globalPosition.verse}&autoplay=true`);
-                                }}
-                                style={({ pressed }) => [
-                                    styles.continueCard,
-                                    { backgroundColor: theme.colors.surface },
-                                    Shadows.md,
-                                    pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-                                ]}
-                            >
-                                <View style={[styles.continueIcon, { backgroundColor: `${theme.colors.primary}15` }]}>
-                                    <MaterialCommunityIcons name="book-open-page-variant" size={22} color={theme.colors.primary} />
-                                </View>
-                                <View style={styles.continueTextGroup}>
-                                    <Text style={[styles.continueTitle, { color: theme.colors.onSurface }]} numberOfLines={1}>
-                                        Continue Reading
-                                    </Text>
-                                    <Text style={[styles.continueSubtitle, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
-                                        {globalPosition.surahName || `Surah ${globalPosition.surah}`} · Verse {globalPosition.verse}
-                                    </Text>
-                                </View>
-                                <MaterialCommunityIcons name="play-circle" size={32} color={theme.colors.primary} />
-                            </Pressable>
-                        </MotiView>
-                    )}
+                {/* Single scrollable list with cards as header */}
+                <SurahList
+                    surahs={surahList}
+                    onSelect={handleSelectSurah}
+                    ListHeaderComponent={ListHeader}
+                />
 
-                    {/* Content Area with subtle background */}
-                    <MotiView
-                        from={{ opacity: 0, translateY: 30 }}
-                        animate={{ opacity: 1, translateY: 0 }}
-                        transition={{ type: 'spring', damping: 18, delay: 200 }}
-                        style={[
-                            styles.listContainer,
-                            { backgroundColor: theme.colors.background },
-                        ]}>
-                        <SurahList surahs={surahList} onSelect={handleSelectSurah} />
-                    </MotiView>
-
-                    <SurahPicker
-                        visible={pickerVisible}
-                        onDismiss={() => setPickerVisible(false)}
-                        onSelect={handleSelectSurah}
-                        surahs={surahList.map(s => ({
-                            number: s.number,
-                            name: s.name,
-                            englishName: s.englishName,
-                        }))}
-                    />
-                </SafeAreaView>
-            </WaveBackground>
+                <SurahPicker
+                    visible={pickerVisible}
+                    onDismiss={() => setPickerVisible(false)}
+                    onSelect={handleSelectSurah}
+                    surahs={surahList.map(s => ({
+                        number: s.number,
+                        name: s.name,
+                        englishName: s.englishName,
+                    }))}
+                />
+            </SafeAreaView>
 
             {/* Adhkar fullscreen modal */}
             <Modal
@@ -408,7 +378,7 @@ const styles = StyleSheet.create({
     },
     header: {
         paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.lg,
+        paddingVertical: Spacing.md,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -421,29 +391,22 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     headerMascot: {
-        marginRight: Spacing.md,
+        marginRight: Spacing.sm,
     },
     headerTextGroup: {
         justifyContent: 'center',
     },
     greeting: {
-        fontSize: 13,
+        fontSize: 12,
         fontWeight: '600',
         letterSpacing: 0.5,
-        marginBottom: 4,
+        marginBottom: 2,
         textTransform: 'uppercase',
     },
     headerTitle: {
-        fontSize: 28,
+        fontSize: 24,
         fontWeight: '800',
         letterSpacing: -0.5,
-    },
-    listContainer: {
-        flex: 1,
-        borderTopLeftRadius: BorderRadius.xxl,
-        borderTopRightRadius: BorderRadius.xxl,
-        paddingTop: Spacing.md,
-        overflow: 'hidden',
     },
     headerActions: {
         flexDirection: 'row',
@@ -456,6 +419,9 @@ const styles = StyleSheet.create({
         borderRadius: 18,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    headerSection: {
+        paddingTop: Spacing.xs,
     },
     continueCard: {
         flexDirection: 'row',
@@ -481,5 +447,18 @@ const styles = StyleSheet.create({
     continueSubtitle: {
         fontSize: 13,
         marginTop: 2,
+    },
+    sectionLabel: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: Spacing.md,
+        paddingTop: Spacing.md,
+        paddingBottom: Spacing.xs,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        letterSpacing: -0.3,
     },
 });
