@@ -96,19 +96,6 @@ export default function ReadScreen() {
                         Quran
                     </Text>
                     <View style={styles.headerActions}>
-                        <Pressable
-                            onPress={() => {
-                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                router.push('/search');
-                            }}
-                            style={({ pressed }) => [
-                                styles.iconButton,
-                                { backgroundColor: theme.colors.surfaceVariant },
-                                pressed && { opacity: 0.7, transform: [{ scale: 0.92 }] },
-                            ]}
-                        >
-                            <Ionicons name="search" size={20} color={theme.colors.onSurfaceVariant} />
-                        </Pressable>
                         <AnimatedButton
                             label="Jump"
                             icon="book-outline"

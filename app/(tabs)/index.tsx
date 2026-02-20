@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, Pressable, Modal, ScrollView } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, Pressable, Modal, ScrollView, Dimensions } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
-import { WaveBackground } from '../../src/presentation/components/animated/WaveBackground';
-import { FloatingParticles } from '../../src/presentation/components/animated/FloatingParticles';
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Circle } from 'react-native-svg';
 import { NoorMascot } from '../../src/presentation/components/mascot/NoorMascot';
 import { Spacing, BorderRadius, Shadows } from '../../src/presentation/theme/DesignSystem';
 import { StatusBar } from 'expo-status-bar';
@@ -15,18 +15,29 @@ import { StreakCounter } from '../../src/presentation/components/stats/StreakCou
 import MoodCheckInCard from '../../src/presentation/components/mood/MoodCheckInCard';
 import { PrayerTimesCard } from '../../src/presentation/components/prayer/PrayerTimesCard';
 import { DailyVerseCard } from '../../src/presentation/components/home/DailyVerseCard';
-import { KhatmaProgressRing } from '../../src/presentation/components/home/KhatmaProgressRing';
 import { ReadingPositionService, ReadingPosition } from '../../src/infrastructure/reading/ReadingPositionService';
 import { useKhatma } from '../../src/infrastructure/khatma/KhatmaContext';
 import { useAudio } from '../../src/infrastructure/audio/AudioContext';
 import { useAdhkar } from '../../src/infrastructure/adhkar/AdhkarContext';
 import { AdhkarScreen } from '../../src/presentation/screens/AdhkarScreen';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const GRID_GAP = 10;
+const GRID_PAD = 16;
+const TILE_WIDTH = (SCREEN_WIDTH - GRID_PAD * 2 - GRID_GAP) / 2;
+
+// Khatma ring constants
+const RING_SIZE = 52;
+const STROKE_WIDTH = 4;
+const RADIUS = (RING_SIZE - STROKE_WIDTH) / 2;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+const GOLD = '#D4A853';
+
 export default function DashboardScreen() {
     const router = useRouter();
     const theme = useTheme();
     const { playingVerse } = useAudio();
-    const { completedSurahs } = useKhatma();
+    const { completedSurahs, completedJuz } = useKhatma();
     const [globalPosition, setGlobalPosition] = useState<ReadingPosition | null>(null);
     const [showAdhkar, setShowAdhkar] = useState(false);
     const { getCompletionPercentage } = useAdhkar();
@@ -34,7 +45,11 @@ export default function DashboardScreen() {
     const adhkarPeriod = currentHour < 15 ? 'morning' : 'evening';
     const adhkarPct = getCompletionPercentage(adhkarPeriod as any);
 
-    // Refresh global position when home screen gains focus OR audio stops.
+    // Khatma progress
+    const completedCount = completedJuz?.length || 0;
+    const progress = completedCount / 30;
+    const strokeDashoffset = CIRCUMFERENCE * (1 - progress);
+
     useFocusEffect(
         useCallback(() => {
             if (playingVerse) {
@@ -77,7 +92,6 @@ export default function DashboardScreen() {
                             </View>
                         </View>
                     </View>
-
                     <Pressable
                         onPress={() => {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -89,29 +103,25 @@ export default function DashboardScreen() {
                             pressed && { opacity: 0.7, transform: [{ scale: 0.92 }] },
                         ]}
                     >
-                        <Ionicons
-                            name="settings-outline"
-                            size={20}
-                            color={theme.colors.onSurfaceVariant}
-                        />
+                        <Ionicons name="settings-outline" size={20} color={theme.colors.onSurfaceVariant} />
                     </Pressable>
                 </MotiView>
 
                 <StreakCounter />
 
-                {/* Dashboard cards — scrollable */}
+                {/* Dashboard cards */}
                 <ScrollView
                     style={styles.scrollView}
                     contentContainerStyle={styles.scrollContent}
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* Continue Reading — highest priority action */}
+                    {/* ── Continue Reading ── Slim gradient bar */}
                     {showContinueReading && globalPosition && (
                         <MotiView
-                            from={{ opacity: 0, translateY: 10 }}
+                            from={{ opacity: 0, translateY: 8 }}
                             animate={{ opacity: 1, translateY: 0 }}
-                            transition={{ type: 'spring', damping: 18, delay: 100 }}
-                            style={{ paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}
+                            transition={{ type: 'spring', damping: 18, delay: 80 }}
+                            style={styles.gridPad}
                         >
                             <Pressable
                                 onPress={() => {
@@ -119,80 +129,130 @@ export default function DashboardScreen() {
                                     router.push(`/surah/${globalPosition.surah}?verse=${globalPosition.verse}&autoplay=true`);
                                 }}
                                 style={({ pressed }) => [
-                                    styles.actionCard,
-                                    { backgroundColor: theme.colors.surface },
-                                    Shadows.md,
+                                    styles.continueCard,
                                     pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
                                 ]}
                             >
-                                <View style={[styles.actionIcon, { backgroundColor: `${theme.colors.primary}15` }]}>
-                                    <MaterialCommunityIcons name="book-open-page-variant" size={22} color={theme.colors.primary} />
+                                <LinearGradient
+                                    colors={['#5B7FFF', '#7B5FFF']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                    style={StyleSheet.absoluteFill}
+                                />
+                                <View style={styles.continueLeft}>
+                                    <MaterialCommunityIcons name="book-open-page-variant" size={18} color="#FFFFFF" />
+                                    <View style={styles.continueTextGroup}>
+                                        <Text style={styles.continueTitle}>Continue Reading</Text>
+                                        <Text style={styles.continueSubtitle}>
+                                            {globalPosition.surahName || `Surah ${globalPosition.surah}`} · Verse {globalPosition.verse}
+                                        </Text>
+                                    </View>
                                 </View>
-                                <View style={styles.actionTextGroup}>
-                                    <Text style={[styles.actionTitle, { color: theme.colors.onSurface }]} numberOfLines={1}>
-                                        Continue Reading
-                                    </Text>
-                                    <Text style={[styles.actionSubtitle, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
-                                        {globalPosition.surahName || `Surah ${globalPosition.surah}`} · Verse {globalPosition.verse}
-                                    </Text>
+                                <View style={styles.playCircle}>
+                                    <Ionicons name="play" size={14} color="#5B7FFF" />
                                 </View>
-                                <MaterialCommunityIcons name="play-circle" size={32} color={theme.colors.primary} />
                             </Pressable>
                         </MotiView>
                     )}
 
-                    {/* Prayer Times — compact, collapsible */}
+                    {/* ── Prayer Times (full width, collapsible) ── */}
                     <PrayerTimesCard />
 
-                    {/* Daily Verse — collapsible */}
+                    {/* ── Daily Verse (full width, collapsible) ── */}
                     <DailyVerseCard />
 
-                    {/* Khatma Progress — ring + journey status */}
-                    <KhatmaProgressRing />
-
-                    {/* Mood Check-In */}
-                    <MoodCheckInCard />
-
-                    {/* Adhkar Quick Access */}
+                    {/* ── 2-Column Grid: Khatma + Adhkar ── */}
                     <MotiView
                         from={{ opacity: 0, translateY: 10 }}
                         animate={{ opacity: 1, translateY: 0 }}
                         transition={{ type: 'spring', damping: 18, delay: 140 }}
-                        style={{ paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}
+                        style={styles.gridRow}
                     >
+                        {/* Khatma Tile */}
+                        <Pressable
+                            onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                router.push('/(tabs)/khatma' as any);
+                            }}
+                            style={({ pressed }) => [
+                                styles.gridTile,
+                                { backgroundColor: theme.colors.surface },
+                                Shadows.md,
+                                pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
+                            ]}
+                        >
+                            <LinearGradient
+                                colors={['#D4A85310', '#D4A85305']}
+                                style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
+                            />
+                            {/* Ring */}
+                            <View style={styles.tileRingWrap}>
+                                <Svg width={RING_SIZE} height={RING_SIZE}>
+                                    <Circle
+                                        cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RADIUS}
+                                        stroke={theme.dark ? '#2D3A4F' : '#E2E8F0'}
+                                        strokeWidth={STROKE_WIDTH} fill="none"
+                                    />
+                                    <Circle
+                                        cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RADIUS}
+                                        stroke={GOLD} strokeWidth={STROKE_WIDTH} fill="none"
+                                        strokeLinecap="round"
+                                        strokeDasharray={CIRCUMFERENCE}
+                                        strokeDashoffset={strokeDashoffset}
+                                        rotation="-90"
+                                        origin={`${RING_SIZE / 2}, ${RING_SIZE / 2}`}
+                                    />
+                                </Svg>
+                                <View style={styles.tileRingCenter}>
+                                    <Text style={[styles.tileRingNum, { color: GOLD }]}>{completedCount}</Text>
+                                    <Text style={[styles.tileRingDenom, { color: theme.colors.onSurfaceVariant }]}>/30</Text>
+                                </View>
+                            </View>
+                            <Text style={[styles.tileLabel, { color: theme.colors.onSurface }]}>Khatma</Text>
+                            <Text style={[styles.tileSub, { color: theme.colors.onSurfaceVariant }]}>
+                                {completedCount === 0 ? 'Start journey' : `${30 - completedCount} remaining`}
+                            </Text>
+                        </Pressable>
+
+                        {/* Adhkar Tile */}
                         <Pressable
                             onPress={() => {
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                                 setShowAdhkar(true);
                             }}
                             style={({ pressed }) => [
-                                styles.actionCard,
+                                styles.gridTile,
                                 { backgroundColor: theme.colors.surface },
                                 Shadows.md,
-                                pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                                pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                             ]}
                         >
-                            <View style={[styles.actionIcon, {
-                                backgroundColor: adhkarPeriod === 'morning' ? '#FEF3C720' : '#312E8120'
-                            }]}>
-                                <Text style={{ fontSize: 22 }}>
+                            <LinearGradient
+                                colors={adhkarPeriod === 'morning'
+                                    ? ['#FEF3C718', '#FCD34D08']
+                                    : ['#312E8118', '#6366F108']
+                                }
+                                style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
+                            />
+                            <View style={styles.tileEmojiWrap}>
+                                <Text style={styles.tileEmoji}>
                                     {adhkarPeriod === 'morning' ? '☀️' : '🌙'}
                                 </Text>
                             </View>
-                            <View style={styles.actionTextGroup}>
-                                <Text style={[styles.actionTitle, { color: theme.colors.onSurface }]} numberOfLines={1}>
-                                    {adhkarPeriod === 'morning' ? 'Morning Adhkar' : 'Evening Adhkar'}
-                                </Text>
-                                <Text style={[styles.actionSubtitle, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
-                                    {adhkarPct > 0 ? `${adhkarPct}% complete` : 'Tap to begin'}
-                                </Text>
-                            </View>
-                            <Ionicons name="chevron-forward" size={20} color={theme.colors.onSurfaceVariant} />
+                            <Text style={[styles.tileLabel, { color: theme.colors.onSurface }]}>
+                                {adhkarPeriod === 'morning' ? 'Morning' : 'Evening'}
+                            </Text>
+                            <Text style={[styles.tileSub, { color: theme.colors.onSurfaceVariant }]}>
+                                {adhkarPct > 0 ? `${adhkarPct}% done` : 'Tap to begin'}
+                            </Text>
                         </Pressable>
                     </MotiView>
 
+                    {/* ── Mood Check-In ── */}
+                    <MoodCheckInCard />
+
                     {/* Bottom padding for tab bar */}
-                    <View style={{ height: 100 }} />
+                    <View style={{ height: 120 }} />
                 </ScrollView>
             </SafeAreaView>
 
@@ -210,18 +270,12 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    safeArea: {
-        flex: 1,
-    },
-    scrollView: {
-        flex: 1,
-    },
-    scrollContent: {
-        paddingTop: Spacing.xs,
-    },
+    container: { flex: 1 },
+    safeArea: { flex: 1 },
+    scrollView: { flex: 1 },
+    scrollContent: { paddingTop: Spacing.xs },
+
+    // ── Header ──
     header: {
         paddingHorizontal: Spacing.lg,
         paddingVertical: Spacing.md,
@@ -229,61 +283,91 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
     },
-    headerContent: {
-        flex: 1,
-    },
-    headerRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    headerMascot: {
-        marginRight: Spacing.sm,
-    },
-    headerTextGroup: {
-        justifyContent: 'center',
-    },
+    headerContent: { flex: 1 },
+    headerRow: { flexDirection: 'row', alignItems: 'center' },
+    headerMascot: { marginRight: Spacing.sm },
+    headerTextGroup: { justifyContent: 'center' },
     greeting: {
-        fontSize: 12,
-        fontWeight: '600',
-        letterSpacing: 0.5,
-        marginBottom: 2,
-        textTransform: 'uppercase',
+        fontSize: 12, fontWeight: '600', letterSpacing: 0.5,
+        marginBottom: 2, textTransform: 'uppercase',
     },
-    headerTitle: {
-        fontSize: 24,
-        fontWeight: '800',
-        letterSpacing: -0.5,
-    },
+    headerTitle: { fontSize: 24, fontWeight: '800', letterSpacing: -0.5 },
     settingsButton: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        alignItems: 'center',
-        justifyContent: 'center',
+        width: 36, height: 36, borderRadius: 18,
+        alignItems: 'center', justifyContent: 'center',
     },
-    actionCard: {
+
+    // ── Continue Reading ── Slim gradient bar
+    gridPad: { paddingHorizontal: GRID_PAD, marginBottom: GRID_GAP },
+    continueCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: Spacing.md,
+        justifyContent: 'space-between',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
         borderRadius: BorderRadius.lg,
-        gap: Spacing.sm,
+        overflow: 'hidden',
     },
-    actionIcon: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
+    continueLeft: {
+        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-    },
-    actionTextGroup: {
+        gap: 10,
         flex: 1,
     },
-    actionTitle: {
-        fontSize: 15,
-        fontWeight: '700',
+    continueTextGroup: { flex: 1 },
+    continueTitle: {
+        fontSize: 14, fontWeight: '700', color: '#FFFFFF',
     },
-    actionSubtitle: {
-        fontSize: 13,
-        marginTop: 2,
+    continueSubtitle: {
+        fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 1,
     },
+    playCircle: {
+        width: 28, height: 28, borderRadius: 14,
+        backgroundColor: '#FFFFFF',
+        alignItems: 'center', justifyContent: 'center',
+        marginLeft: 8,
+    },
+
+    // ── 2-Column Grid ──
+    gridRow: {
+        flexDirection: 'row',
+        paddingHorizontal: GRID_PAD,
+        gap: GRID_GAP,
+        marginBottom: GRID_GAP,
+    },
+    gridTile: {
+        flex: 1,
+        borderRadius: BorderRadius.lg,
+        padding: Spacing.md,
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: 140,
+        overflow: 'hidden',
+    },
+
+    // ── Khatma Tile ──
+    tileRingWrap: {
+        width: RING_SIZE, height: RING_SIZE,
+        alignItems: 'center', justifyContent: 'center',
+        marginBottom: 8,
+    },
+    tileRingCenter: {
+        position: 'absolute',
+        flexDirection: 'row',
+        alignItems: 'baseline',
+    },
+    tileRingNum: { fontSize: 16, fontWeight: '800' },
+    tileRingDenom: { fontSize: 10, fontWeight: '500' },
+
+    // ── Adhkar Tile ──
+    tileEmojiWrap: {
+        width: 48, height: 48, borderRadius: 24,
+        alignItems: 'center', justifyContent: 'center',
+        marginBottom: 8,
+    },
+    tileEmoji: { fontSize: 28 },
+
+    // ── Tile text ──
+    tileLabel: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
+    tileSub: { fontSize: 12, textAlign: 'center' },
 });
