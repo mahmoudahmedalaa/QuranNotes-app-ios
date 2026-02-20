@@ -52,6 +52,10 @@ export const VerseTafseerModal: React.FC<VerseTafseerModalProps> = ({
                 const message = err?.message || 'Unable to generate explanation.';
                 if (message === 'GEMINI_API_KEY_NOT_CONFIGURED') {
                     setError('AI explanations are not available. Please configure the API key.');
+                } else if (message.includes('quota')) {
+                    setError(message);
+                } else if (message.includes('API key')) {
+                    setError(message);
                 } else {
                     setError('Unable to generate explanation. Please try again.');
                 }

@@ -52,6 +52,8 @@ Provide a clear, concise explanation (3-5 paragraphs) covering:
 
 Keep the tone warm, accessible, and respectful. Use simple language. Include relevant hadith references if applicable. Do NOT include the Arabic text or translation in your response — just the explanation.`;
 
+        console.log(`[GeminiAPI] Calling with key: ${this.API_KEY.substring(0, 8)}...${this.API_KEY.substring(this.API_KEY.length - 4)}`);
+
         const response = await fetch(`${this.BASE_URL}?key=${this.API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -65,6 +67,15 @@ Keep the tone warm, accessible, and respectful. Use simple language. Include rel
         });
 
         if (!response.ok) {
+            const errorBody = await response.text();
+            console.warn(`[GeminiAPI] Error ${response.status}:`, errorBody);
+
+            if (response.status === 429) {
+                throw new Error('AI quota exceeded. The free tier limit has been reached. Please try again later or enable billing on Google Cloud.');
+            }
+            if (response.status === 403) {
+                throw new Error('API key is invalid or has been revoked. Please check your Gemini API key.');
+            }
             throw new Error(`Gemini API error: ${response.status}`);
         }
 
