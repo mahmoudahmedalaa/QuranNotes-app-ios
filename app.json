@@ -18,6 +18,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mahmoudahmedalaa.qurannotes",
+      "appleTeamId": "2S42RLH67Y",
       "buildNumber": "48",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
