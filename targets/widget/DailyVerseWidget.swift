@@ -108,30 +108,25 @@ struct DailyVerseWidgetView: View {
 
         // ── Lock screen: rectangular bar ──────────────────────────
         case .accessoryRectangular:
-            HStack(alignment: .center, spacing: 10) {
-                Image(systemName: "book.closed.fill")
-                    .font(.system(size: 22))
-                    .widgetAccentable()
+            VStack(alignment: .leading, spacing: 3) {
+                if let verse = entry.verse {
+                    // Verse translation — front and centre, as many lines as fit
+                    Text(verse.translation)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.primary)
+                        .lineLimit(3)
+                        .minimumScaleFactor(0.85)
+                        .fixedSize(horizontal: false, vertical: true)
 
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Verse of the Day")
+                    // Reference below — small and unobtrusive
+                    Text("— \(verse.surahName) · \(verse.verseNumber)")
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(.secondary)
-                    if let verse = entry.verse {
-                        Text("\(verse.surahName) · \(verse.verseNumber)")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(.primary)
-                        Text(verse.translation)
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    } else {
-                        Text("Open QuranNotes")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.secondary)
-                    }
+                } else {
+                    Label("Open QuranNotes", systemImage: "book.closed.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
                 }
-                Spacer()
             }
 
         // ── Lock screen: inline (above clock) ─────────────────────
