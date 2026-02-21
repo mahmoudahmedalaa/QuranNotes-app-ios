@@ -34,16 +34,24 @@ function getAllVerses(): TopicVerse[] {
     return QURAN_TOPICS.flatMap(t => t.verses);
 }
 
-/** Get time-of-day gradient — brand-aligned, vivid, always looks rich */
-function getTimeGradient(): readonly [string, string, string] {
+/** Get time-of-day gradient — different palettes for light vs dark */
+function getTimeGradient(isDark: boolean): readonly [string, string, string] {
     const hour = new Date().getHours();
-    if (hour >= 4 && hour < 6) return ['#1A1B3A', '#2D1B69', '#5B3A8C'] as const;   // Fajr — deep purple dawn
-    if (hour >= 6 && hour < 12) return ['#1E3A8A', '#1D4ED8', '#5B7FFF'] as const;   // Morning — brand blue
-    if (hour >= 12 && hour < 16) return ['#1E3A5F', '#155E75', '#0E7490'] as const;   // Afternoon — deep teal
-    if (hour >= 16 && hour < 18) return ['#7C2D12', '#9A3412', '#D4853C'] as const;   // Asr — warm amber
-    if (hour >= 18 && hour < 20) return ['#3B0764', '#6B21A8', '#9333EA'] as const;   // Maghrib — brand purple
-    return ['#0F172A', '#1E293B', '#2D3A5F'] as const;                                 // Isha — deep navy (brand dark)
+
+    if (isDark) {
+        // Dark mode — rich, moody brand colors (unchanged, user happy with these)
+        if (hour >= 4 && hour < 6) return ['#1A1B3A', '#2D1B69', '#5B3A8C'] as const;   // Fajr
+        if (hour >= 6 && hour < 12) return ['#1E3A8A', '#1D4ED8', '#5B7FFF'] as const;   // Morning
+        if (hour >= 12 && hour < 16) return ['#1E3A5F', '#155E75', '#0E7490'] as const;   // Afternoon
+        if (hour >= 16 && hour < 18) return ['#7C2D12', '#9A3412', '#D4853C'] as const;   // Asr
+        if (hour >= 18 && hour < 20) return ['#3B0764', '#6B21A8', '#9333EA'] as const;   // Maghrib
+        return ['#0F172A', '#1E293B', '#2D3A5F'] as const;                                // Isha
+    }
+
+    // Light mode — consistent brand faint-purple (app identity colour)
+    return ['#C4B5FD', '#8B5CF6', '#5B7FFF'] as const;
 }
+
 
 /** Get today's date key */
 function todayKey(): string {
@@ -119,7 +127,7 @@ export const DailyVerseCard: React.FC = () => {
 
     if (loading || !verse) return null;
 
-    const gradientColors = getTimeGradient();
+    const gradientColors = getTimeGradient(theme.dark);
 
     return (
         <MotiView

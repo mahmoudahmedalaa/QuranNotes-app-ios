@@ -57,7 +57,10 @@ export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
 };
 
 export const MOOD_LIST: MoodType[] = [
-    'grateful', 'anxious', 'sad', 'hopeful',
-    'strong', 'frustrated', 'lost', 'heartbroken',
-    'confused', 'peaceful', 'lonely', 'inspired',
+    // ── Positive / uplifting ──
+    'grateful', 'hopeful', 'peaceful', 'inspired', 'strong',
+    // ── Neutral / challenged ──
+    'anxious', 'confused', 'lost',
+    // ── Heavier emotions ──
+    'sad', 'frustrated', 'heartbroken', 'lonely',
 ];

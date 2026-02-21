@@ -1,11 +1,11 @@
 /**
  * Onboarding Slide 2 — "Listen & Explore"
- * Combines: pick-surah + listen + reciter picker + subtle language hint
+ * Combines: language picker + listen + all reciters
  *
- * Flow: tap verse → audio plays → reciter list slides in → Continue → Capture slide
+ * Flow: pick language → tap verse → audio plays → all reciters slide in → Continue → Capture slide
  */
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Pressable, ScrollView, Animated } from 'react-native';
+import { View, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { Text, useTheme, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,8 +22,28 @@ import * as Haptics from 'expo-haptics';
 const STEP = 2;
 const TOTAL_STEPS = 6;
 
-// Top 4 reciters to show in picker
-const FEATURED_RECITERS = RECITERS.slice(0, 4);
+// ── Language Picker Data ──────────────────────────────────────────
+const LANG_TO_EDITION: Record<string, string> = {
+    en: 'en.sahih',
+    ar: 'ar.muyassar',
+    ur: 'ur.jalandhry',
+    fr: 'fr.hamidullah',
+    id: 'id.indonesian',
+    tr: 'tr.ates',
+    bn: 'bn.bengali',
+    ms: 'ms.basmeih',
+};
+
+const LANGUAGES: { code: string; label: string; nativeLabel: string; translation: string }[] = [
+    { code: 'en', label: 'English', nativeLabel: '🇬🇧 EN', translation: 'In the name of Allah, the Most Gracious, the Most Merciful' },
+    { code: 'ar', label: 'Arabic', nativeLabel: '🇸🇦 AR', translation: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ' },
+    { code: 'ur', label: 'Urdu', nativeLabel: '🇵🇰 UR', translation: 'اللہ کے نام سے جو رحمان و رحیم ہے' },
+    { code: 'fr', label: 'French', nativeLabel: '🇫🇷 FR', translation: 'Au nom d\'Allah, le Tout Miséricordieux, le Très Miséricordieux' },
+    { code: 'id', label: 'Indonesian', nativeLabel: '🇮🇩 ID', translation: 'Dengan nama Allah Yang Maha Pengasih, Maha Penyayang' },
+    { code: 'tr', label: 'Turkish', nativeLabel: '🇹🇷 TR', translation: 'Rahman ve Rahim olan Allah\'ın adıyla' },
+    { code: 'bn', label: 'Bengali', nativeLabel: '🇧🇩 BN', translation: 'পরম করুণাময় অতি দয়ালু আল্লাহর নামে' },
+    { code: 'ms', label: 'Malay', nativeLabel: '🇲🇾 MY', translation: 'Dengan nama Allah Yang Maha Pemurah lagi Maha Penyayang' },
+];
 
 export default function OnboardingListenExplore() {
     const theme = useTheme();
@@ -36,7 +56,12 @@ export default function OnboardingListenExplore() {
     const [hasPlayed, setHasPlayed] = useState(false);
     const [selectedReciter, setSelectedReciter] = useState(settings.reciterId || RECITERS[0].id);
     const [playingReciterId, setPlayingReciterId] = useState<string | null>(null);
+    const [selectedLang, setSelectedLang] = useState<string>(
+        Object.entries(LANG_TO_EDITION).find(([, ed]) => ed === settings.translationEdition)?.[0] ?? 'en'
+    );
     const soundRef = useRef<Audio.Sound | null>(null);
+
+    const currentLang = LANGUAGES.find(l => l.code === selectedLang) ?? LANGUAGES[0];
 
     useEffect(() => {
         return () => {
@@ -116,6 +141,13 @@ export default function OnboardingListenExplore() {
         await playVerse(reciterId);
     };
 
+    const handleLangSelect = (code: string) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setSelectedLang(code);
+        const edition = LANG_TO_EDITION[code] ?? 'en.sahih';
+        updateSettings({ translationEdition: edition });
+    };
+
     const handleContinue = async () => {
         await stopSound();
         goToStep(STEP + 1);
@@ -176,7 +208,7 @@ export default function OnboardingListenExplore() {
                                 بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
                             </Text>
                             <Text style={[styles.translation, { color: theme.colors.onSurfaceVariant }]}>
-                                In the name of Allah, the Most Gracious, the Most Merciful
+                                {currentLang.translation}
                             </Text>
 
                             {/* Play button */}
@@ -198,31 +230,59 @@ export default function OnboardingListenExplore() {
                                 </MotiView>
                             )}
 
-                            {/* Subtle language hint — shown only on verse phase */}
+                            {/* Language Picker — inline pills */}
                             {phase === 'verse' && (
                                 <MotiView
                                     from={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    transition={{ delay: 1200 }}>
-                                    <View style={[styles.languageHint, { backgroundColor: theme.colors.surfaceVariant }]}>
-                                        <Ionicons name="globe-outline" size={12} color={theme.colors.onSurfaceVariant} />
-                                        <Text style={[styles.languageHintText, { color: theme.colors.onSurfaceVariant }]}>
-                                            Change translation language in Settings › Preferences
+                                    transition={{ delay: 600 }}>
+                                    <View style={styles.langHeader}>
+                                        <Ionicons name="globe-outline" size={13} color={theme.colors.onSurfaceVariant} />
+                                        <Text style={[styles.langHeaderText, { color: theme.colors.onSurfaceVariant }]}>
+                                            Translation language
                                         </Text>
                                     </View>
+                                    <ScrollView
+                                        horizontal
+                                        showsHorizontalScrollIndicator={false}
+                                        contentContainerStyle={styles.langRow}>
+                                        {LANGUAGES.map(lang => {
+                                            const active = lang.code === selectedLang;
+                                            return (
+                                                <Pressable
+                                                    key={lang.code}
+                                                    onPress={() => handleLangSelect(lang.code)}
+                                                    style={[
+                                                        styles.langPill,
+                                                        {
+                                                            backgroundColor: active
+                                                                ? theme.colors.primary
+                                                                : theme.colors.surfaceVariant,
+                                                        },
+                                                    ]}>
+                                                    <Text style={[
+                                                        styles.langPillText,
+                                                        { color: active ? '#fff' : theme.colors.onSurfaceVariant },
+                                                    ]}>
+                                                        {lang.nativeLabel}
+                                                    </Text>
+                                                </Pressable>
+                                            );
+                                        })}
+                                    </ScrollView>
                                 </MotiView>
                             )}
                         </View>
                     </MotiView>
 
-                    {/* Phase 2 — Reciter picker (slides in after hasPlayed) */}
+                    {/* Phase 2 — All reciters (slides in after hasPlayed) */}
                     {hasPlayed && phase === 'reciter' && (
                         <MotiView
                             from={{ opacity: 0, translateY: 30 }}
                             animate={{ opacity: 1, translateY: 0 }}
                             transition={{ type: 'spring', damping: 18 }}
                             style={styles.reciterSection}>
-                            {FEATURED_RECITERS.map((reciter, index) => {
+                            {RECITERS.map((reciter, index) => {
                                 const isSelected = reciter.id === selectedReciter;
                                 const isPlayingThis = reciter.id === playingReciterId;
                                 return (
@@ -230,7 +290,7 @@ export default function OnboardingListenExplore() {
                                         key={reciter.id}
                                         from={{ opacity: 0, translateX: -20 }}
                                         animate={{ opacity: 1, translateX: 0 }}
-                                        transition={{ delay: index * 60 }}>
+                                        transition={{ delay: index * 40 }}>
                                         <Pressable
                                             onPress={() => handleReciterSelect(reciter.id)}
                                             style={({ pressed }) => [
@@ -334,10 +394,11 @@ const styles = StyleSheet.create({
         borderRadius: BorderRadius.xl,
         padding: Spacing.xl,
         alignItems: 'center',
+        gap: Spacing.sm,
     },
-    surahLabel: { fontSize: 12, fontWeight: '500', marginBottom: Spacing.sm },
-    arabicText: { fontSize: 26, textAlign: 'center', lineHeight: 42, marginBottom: Spacing.md },
-    translation: { fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: Spacing.lg },
+    surahLabel: { fontSize: 12, fontWeight: '500' },
+    arabicText: { fontSize: 26, textAlign: 'center', lineHeight: 42 },
+    translation: { fontSize: 14, textAlign: 'center', lineHeight: 21 },
     playButton: {
         width: 68,
         height: 68,
@@ -351,16 +412,30 @@ const styles = StyleSheet.create({
         elevation: 8,
     },
     nowPlaying: { fontSize: 13, fontWeight: '500' },
-    languageHint: {
+    // Language picker
+    langHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 5,
-        marginTop: Spacing.md,
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: BorderRadius.md,
+        marginTop: Spacing.sm,
+        marginBottom: 8,
     },
-    languageHintText: { fontSize: 11 },
+    langHeaderText: { fontSize: 12, fontWeight: '600' },
+    langRow: {
+        flexDirection: 'row',
+        gap: 8,
+        paddingHorizontal: 2,
+    },
+    langPill: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: BorderRadius.full,
+    },
+    langPillText: {
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    // Reciters
     reciterSection: { gap: Spacing.sm },
     reciterCard: {
         flexDirection: 'row',

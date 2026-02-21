@@ -273,6 +273,8 @@ PODS:
     - ExpoModulesCore
   - ExpoSpeechRecognition (0.2.15):
     - ExpoModulesCore
+  - ExpoSplashScreen (31.0.13):
+    - ExpoModulesCore
   - ExtensionStorage (1.0.0):
     - ExpoModulesCore
   - EXUpdatesInterface (2.0.0):
@@ -2411,6 +2413,7 @@ DEPENDENCIES:
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - ExpoSharing (from `../node_modules/expo-sharing/ios`)
   - "ExpoSpeechRecognition (from `../node_modules/@jamsch/expo-speech-recognition/ios`)"
+  - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
   - "ExtensionStorage (from `../node_modules/@bacons/apple-targets/ios`)"
   - EXUpdatesInterface (from `../node_modules/expo-updates-interface/ios`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
@@ -2563,6 +2566,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-sharing/ios"
   ExpoSpeechRecognition:
     :path: "../node_modules/@jamsch/expo-speech-recognition/ios"
+  ExpoSplashScreen:
+    :path: "../node_modules/expo-splash-screen/ios"
   ExtensionStorage:
     :path: "../node_modules/@bacons/apple-targets/ios"
   EXUpdatesInterface:
@@ -2759,6 +2764,7 @@ SPEC CHECKSUMS:
   ExpoModulesCore: f3da4f1ab5a8375d0beafab763739dbee8446583
   ExpoSharing: 0d983394ed4a80334bab5a0d5384f75710feb7e8
   ExpoSpeechRecognition: 1be520aff1d1bf8fd584a321ced0d30cde06235a
+  ExpoSplashScreen: bc3cffefca2716e5f22350ca109badd7e50ec14d
   ExtensionStorage: 5796de20bf181317c376d693fedb64c6781a33ba
   EXUpdatesInterface: 5adf50cb41e079c861da6d9b4b954c3db9a50734
   FBLazyVector: e95a291ad2dadb88e42b06e0c5fb8262de53ec12

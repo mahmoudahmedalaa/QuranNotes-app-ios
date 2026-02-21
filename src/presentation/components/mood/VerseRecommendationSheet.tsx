@@ -155,10 +155,10 @@ export default function VerseRecommendationSheet({
 
     if (!mood || verses.length === 0) return null;
 
-    // Gradient colors based on mood
-    const headerGradient: readonly [string, string] = theme.dark
-        ? [moodConfig?.darkColor || '#1A1F26', theme.colors.background]
-        : [moodConfig?.color || '#F8FAFB', theme.colors.background];
+    // Gradient header — 3-stop so the mood colour is clearly visible
+    const headerGradient = theme.dark
+        ? [moodConfig?.darkColor || '#1A1F26', (moodConfig?.darkColor || '#1A1F26') + 'AA', theme.colors.background] as const
+        : [moodConfig?.color || '#F8FAFB', moodConfig?.color || '#F8FAFB', theme.colors.background + '00'] as const;
 
     return (
         <Modal
@@ -170,7 +170,7 @@ export default function VerseRecommendationSheet({
             <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
                 {/* Gradient header */}
                 <LinearGradient
-                    colors={headerGradient as readonly [string, string]}
+                    colors={headerGradient as unknown as readonly [string, string]}
                     style={[styles.gradientHeader, { paddingTop: insets.top + Spacing.md }]}
                 >
                     {/* Close button — visible frosted glass */}
@@ -315,7 +315,7 @@ export default function VerseRecommendationSheet({
                                                     color="#FFFFFF"
                                                 />
                                                 <Text style={[styles.openButtonText, { color: '#FFFFFF' }]}>
-                                                    {verse.surah}:{verse.verse}
+                                                    Read in Quran
                                                 </Text>
                                             </Pressable>
                                         </View>
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
     },
     gradientHeader: {
         paddingHorizontal: Spacing.md,
-        paddingBottom: Spacing.lg,
+        paddingBottom: Spacing.xl * 2,
     },
     closeButton: {
         alignSelf: 'flex-end',

@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
         borderRadius: 28,
     },
     moodLabel: {
-        ...Typography.caption,
+        fontSize: 13,
         fontWeight: '500',
         textAlign: 'center',
     },

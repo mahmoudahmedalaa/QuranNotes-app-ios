@@ -8,8 +8,8 @@ import { AudioProvider } from '../src/infrastructure/audio/AudioContext';
 import { PrayerProvider } from '../src/infrastructure/prayer/PrayerContext';
 import { AdhkarProvider } from '../src/infrastructure/adhkar/AdhkarContext';
 import { AudioKhatmaBridge } from '../src/presentation/components/khatma/AudioKhatmaBridge';
-import { OnboardingProvider } from '../src/infrastructure/onboarding/OnboardingContext';
-import { AuthProvider } from '../src/infrastructure/auth/AuthContext';
+import { OnboardingProvider, useOnboarding } from '../src/infrastructure/onboarding/OnboardingContext';
+import { AuthProvider, useAuth } from '../src/infrastructure/auth/AuthContext';
 import { ProProvider } from '../src/infrastructure/auth/ProContext';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -19,6 +19,25 @@ import Toast from 'react-native-toast-message';
 import { toastConfig } from '../src/presentation/components/feedback/toastConfig';
 import { initRamadanDates } from '../src/utils/ramadanUtils';
 import { useEffect } from 'react';
+import * as SplashScreen from 'expo-splash-screen';
+
+// Keep native splash visible until providers are ready — prevents the
+// blank lavender + spinner flash between native splash and React UI.
+SplashScreen.preventAutoHideAsync();
+
+/** Hides the native splash once auth + onboarding data are resolved. */
+function SplashHider() {
+    const { loading: authLoading } = useAuth();
+    const { loading: onboardingLoading } = useOnboarding();
+
+    useEffect(() => {
+        if (!authLoading && !onboardingLoading) {
+            SplashScreen.hideAsync();
+        }
+    }, [authLoading, onboardingLoading]);
+
+    return null;
+}
 
 export default function RootLayout() {
     // Fetch + listen for Ramadan dates from Firestore (real-time)
@@ -48,6 +67,7 @@ export default function RootLayout() {
                                                     <AdhkarProvider>
                                                         <NoteProvider>
                                                             <FolderProvider>
+                                                                <SplashHider />
                                                                 <StatusBar style="dark" />
                                                                 <Stack
                                                                     screenOptions={{

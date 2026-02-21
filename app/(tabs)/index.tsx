@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, Modal, ScrollView, Dimensions } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -42,6 +42,7 @@ export default function DashboardScreen() {
     const { nextPrayer } = usePrayer();
     const [globalPosition, setGlobalPosition] = useState<ReadingPosition | null>(null);
     const [showAdhkar, setShowAdhkar] = useState(false);
+    const insets = useSafeAreaInsets();
     const { getCompletionPercentage } = useAdhkar();
 
     // Smart Adhkar timing: Morning = Fajr until Dhuhr, Evening = after Dhuhr
@@ -130,45 +131,7 @@ export default function DashboardScreen() {
                     contentContainerStyle={styles.scrollContent}
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* ── Continue Reading ── Slim gradient bar */}
-                    {showContinueReading && globalPosition && (
-                        <MotiView
-                            from={{ opacity: 0, translateY: 8 }}
-                            animate={{ opacity: 1, translateY: 0 }}
-                            transition={{ type: 'spring', damping: 18, delay: 80 }}
-                            style={styles.gridPad}
-                        >
-                            <Pressable
-                                onPress={() => {
-                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                                    router.push(`/surah/${globalPosition.surah}?verse=${globalPosition.verse}&autoplay=true`);
-                                }}
-                                style={({ pressed }) => [
-                                    styles.continueCard,
-                                    pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
-                                ]}
-                            >
-                                <LinearGradient
-                                    colors={['#5B7FFF', '#7B5FFF']}
-                                    start={{ x: 0, y: 0 }}
-                                    end={{ x: 1, y: 0 }}
-                                    style={StyleSheet.absoluteFill}
-                                />
-                                <View style={styles.continueLeft}>
-                                    <MaterialCommunityIcons name="book-open-page-variant" size={18} color="#FFFFFF" />
-                                    <View style={styles.continueTextGroup}>
-                                        <Text style={styles.continueTitle}>Continue Reading</Text>
-                                        <Text style={styles.continueSubtitle}>
-                                            {globalPosition.surahName || `Surah ${globalPosition.surah}`} · Verse {globalPosition.verse}
-                                        </Text>
-                                    </View>
-                                </View>
-                                <View style={styles.playCircle}>
-                                    <Ionicons name="play" size={14} color="#5B7FFF" />
-                                </View>
-                            </Pressable>
-                        </MotiView>
-                    )}
+
 
                     {/* ── Prayer Times (full width, collapsible) ── */}
                     <PrayerTimesCard />
@@ -198,8 +161,8 @@ export default function DashboardScreen() {
                         >
                             <LinearGradient
                                 colors={theme.dark
-                                    ? ['#D4A85308', '#D4A85303']
-                                    : ['#D4A85310', '#D4A85305']
+                                    ? ['#D4A85328', '#D4A85314']
+                                    : ['#D4A85348', '#D4A85322']
                                 }
                                 style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
                             />
@@ -248,11 +211,11 @@ export default function DashboardScreen() {
                             <LinearGradient
                                 colors={theme.dark
                                     ? (adhkarPeriod === 'morning'
-                                        ? ['#FEF3C708', '#FCD34D03']
-                                        : ['#312E8108', '#6366F103'])
+                                        ? ['#FEF3C730', '#FCD34D18']
+                                        : ['#312E8138', '#6366F128'])
                                     : (adhkarPeriod === 'morning'
-                                        ? ['#FEF3C718', '#FCD34D08']
-                                        : ['#312E8118', '#6366F108'])
+                                        ? ['#FEF3C758', '#FCD34D2A']
+                                        : ['#312E8148', '#6366F132'])
                                 }
                                 style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
                             />
@@ -276,10 +239,50 @@ export default function DashboardScreen() {
                     {/* ── Mood Check-In ── */}
                     <MoodCheckInCard />
 
-                    {/* Bottom padding for tab bar */}
-                    <View style={{ height: 120 }} />
+                    {/* Bottom padding — extra when floating pill is visible */}
+                    <View style={{ height: showContinueReading ? 176 : 120 }} />
                 </ScrollView>
             </SafeAreaView>
+
+            {/* ── Floating Continue Reading pill — Apple Music / Spotify pattern ── */}
+            {showContinueReading && globalPosition && (
+                <MotiView
+                    from={{ opacity: 0, translateY: 20 }}
+                    animate={{ opacity: 1, translateY: 0 }}
+                    transition={{ type: 'spring', damping: 18 }}
+                    style={[styles.floatingPill, { bottom: insets.bottom + 12 }]}
+                >
+                    <LinearGradient
+                        colors={['rgba(105, 85, 230, 0.30)', 'rgba(75, 55, 200, 0.24)']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={StyleSheet.absoluteFill}
+                    />
+                    <Pressable
+                        onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                            router.push(`/surah/${globalPosition.surah}?verse=${globalPosition.verse}&autoplay=true`);
+                        }}
+                        style={({ pressed }) => [
+                            styles.floatingPillInner,
+                            pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
+                        ]}
+                    >
+                        <View style={styles.continueLeft}>
+                            <MaterialCommunityIcons name="book-open-page-variant" size={18} color="#FFFFFF" />
+                            <View style={styles.continueTextGroup}>
+                                <Text style={styles.continueTitle}>Continue Reading</Text>
+                                <Text style={styles.continueSubtitle}>
+                                    {globalPosition.surahName || `Surah ${globalPosition.surah}`} · Verse {globalPosition.verse}
+                                </Text>
+                            </View>
+                        </View>
+                        <View style={styles.playCircle}>
+                            <Ionicons name="play" size={14} color="#A898FF" />
+                        </View>
+                    </Pressable>
+                </MotiView>
+            )}
 
             {/* Adhkar fullscreen modal */}
             <Modal
@@ -313,25 +316,37 @@ const styles = StyleSheet.create({
     headerMascot: { marginRight: Spacing.sm },
     headerTextGroup: { justifyContent: 'center' },
     greeting: {
-        fontSize: 12, fontWeight: '600', letterSpacing: 0.5,
+        fontSize: 13, fontWeight: '600', letterSpacing: 0.5,
         marginBottom: 2, textTransform: 'uppercase',
     },
-    headerTitle: { fontSize: 24, fontWeight: '800', letterSpacing: -0.5 },
+    headerTitle: { fontSize: 26, fontWeight: '800', letterSpacing: -0.5 },
     settingsButton: {
         width: 36, height: 36, borderRadius: 18,
         alignItems: 'center', justifyContent: 'center',
     },
 
-    // ── Continue Reading ── Slim gradient bar
-    gridPad: { paddingHorizontal: GRID_PAD, marginBottom: GRID_GAP },
-    continueCard: {
+    // ── Floating Continue Reading pill (Apple Music pattern) ──
+    floatingPill: {
+        position: 'absolute',
+        left: GRID_PAD,
+        right: GRID_PAD,
+        zIndex: 100,
+        borderRadius: 20,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.22)',
+        shadowColor: '#5B3FD0',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.22,
+        shadowRadius: 16,
+        elevation: 10,
+    },
+    floatingPillInner: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: 12,
+        paddingVertical: 13,
         paddingHorizontal: 16,
-        borderRadius: BorderRadius.lg,
-        overflow: 'hidden',
     },
     continueLeft: {
         flexDirection: 'row',
@@ -341,14 +356,16 @@ const styles = StyleSheet.create({
     },
     continueTextGroup: { flex: 1 },
     continueTitle: {
-        fontSize: 14, fontWeight: '700', color: '#FFFFFF',
+        fontSize: 15, fontWeight: '700', color: '#FFFFFF',
     },
     continueSubtitle: {
-        fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 1,
+        fontSize: 13, color: 'rgba(255,255,255,0.72)', marginTop: 1,
     },
     playCircle: {
-        width: 28, height: 28, borderRadius: 14,
-        backgroundColor: '#FFFFFF',
+        width: 30, height: 30, borderRadius: 15,
+        backgroundColor: 'rgba(255,255,255,0.18)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.30)',
         alignItems: 'center', justifyContent: 'center',
         marginLeft: 8,
     },
@@ -393,7 +410,7 @@ const styles = StyleSheet.create({
     tileEmoji: { fontSize: 28 },
 
     // ── Tile text ──
-    tileLabel: { fontSize: 15, fontWeight: '700', marginBottom: 1 },
-    tileSub: { fontSize: 12, textAlign: 'center' },
-    tileSub2: { fontSize: 11, textAlign: 'center', marginTop: 2 },
+    tileLabel: { fontSize: 16, fontWeight: '700', marginBottom: 1 },
+    tileSub: { fontSize: 13, textAlign: 'center' },
+    tileSub2: { fontSize: 12, textAlign: 'center', marginTop: 2 },
 });
