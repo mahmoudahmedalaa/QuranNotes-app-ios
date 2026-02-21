@@ -27,29 +27,48 @@ struct TimePalette {
     var gradient: LinearGradient {
         LinearGradient(colors: [top, bottom], startPoint: .topLeading, endPoint: .bottomTrailing)
     }
-    var primaryText: Color  { isDark ? .white : Color(hex: "#2E1065") }
-    var secondaryText: Color { isDark ? .white.opacity(0.65) : Color(hex: "#4C1D95").opacity(0.75) }
+    // Soft readable text — dark on light, white on dark
+    var primaryText: Color  { isDark ? .white : Color(hex: "312E81") }
+    var secondaryText: Color { isDark ? .white.opacity(0.60) : Color(hex: "4338CA").opacity(0.65) }
 
     static func forHour(_ hour: Int) -> TimePalette {
         switch hour {
-        case 4..<7:
-            return TimePalette(top: Color(hex: "#DDD6FE"), bottom: Color(hex: "#7C3AED"),
-                               accent: Color(hex: "#4C1D95"), isDark: false)
-        case 7..<12:
-            return TimePalette(top: Color(hex: "#EDE9FE"), bottom: Color(hex: "#8B5CF6"),
-                               accent: Color(hex: "#4C1D95"), isDark: false)
-        case 12..<16:
-            return TimePalette(top: Color(hex: "#C4B5FD"), bottom: Color(hex: "#6D28D9"),
-                               accent: Color(hex: "#EDE9FE"), isDark: false)
-        case 16..<19:
-            return TimePalette(top: Color(hex: "#7C3AED"), bottom: Color(hex: "#4C1D95"),
-                               accent: Color(hex: "#DDD6FE"), isDark: true)
-        case 19..<22:
-            return TimePalette(top: Color(hex: "#4C1D95"), bottom: Color(hex: "#1E0A3C"),
-                               accent: Color(hex: "#C4B5FD"), isDark: true)
-        default:
-            return TimePalette(top: Color(hex: "#2D1068"), bottom: Color(hex: "#0D0520"),
-                               accent: Color(hex: "#A78BFA"), isDark: true)
+        case 4..<7:  // Fajr — very pale blush lavender
+            return TimePalette(
+                top:    Color(hex: "EDE9FE"),
+                bottom: Color(hex: "DDD6FE"),
+                accent: Color(hex: "6D28D9"),
+                isDark: false)
+        case 7..<12: // Morning — lightest possible: almost white lavender
+            return TimePalette(
+                top:    Color(hex: "F5F3FF"),
+                bottom: Color(hex: "EDE9FE"),
+                accent: Color(hex: "7C3AED"),
+                isDark: false)
+        case 12..<16: // Afternoon — cool soft periwinkle
+            return TimePalette(
+                top:    Color(hex: "EDE9FE"),
+                bottom: Color(hex: "C4B5FD"),
+                accent: Color(hex: "5B21B6"),
+                isDark: false)
+        case 16..<19: // Asr/sunset — gentle warm-violet, still readable
+            return TimePalette(
+                top:    Color(hex: "C4B5FD"),
+                bottom: Color(hex: "A78BFA"),
+                accent: Color(hex: "F5F3FF"),
+                isDark: true)
+        case 19..<22: // Maghrib — muted deep indigo, not full-saturation
+            return TimePalette(
+                top:    Color(hex: "312E81"),
+                bottom: Color(hex: "1E1B4B"),
+                accent: Color(hex: "C4B5FD"),
+                isDark: true)
+        default:     // Isha/night — very deep navy, calm darkness
+            return TimePalette(
+                top:    Color(hex: "1E1B4B"),
+                bottom: Color(hex: "0F0E2A"),
+                accent: Color(hex: "A5B4FC"),
+                isDark: true)
         }
     }
     static func current() -> TimePalette {
@@ -157,11 +176,12 @@ struct DailyVerseWidgetView: View {
                         .padding(.bottom, 8)
 
                         Text(verse.arabicText)
-                            .font(.system(size: 18, weight: .medium))
+                            .font(.system(size: 16, weight: .medium))
                             .foregroundColor(entry.palette.primaryText)
                             .multilineTextAlignment(.trailing)
                             .frame(maxWidth: .infinity, alignment: .trailing)
-                            .lineSpacing(5)
+                            .lineSpacing(4)
+                            .lineLimit(2)
 
                         Spacer()
 
@@ -169,8 +189,9 @@ struct DailyVerseWidgetView: View {
                             .font(.system(size: 11))
                             .italic()
                             .foregroundColor(entry.palette.primaryText.opacity(0.80))
-                            .lineLimit(2)
+                            .lineLimit(3)
                             .lineSpacing(2)
+                            .minimumScaleFactor(0.85)
                             .padding(.bottom, 6)
 
                         Text("\(verse.surahName) · \(verse.verseNumber)")
