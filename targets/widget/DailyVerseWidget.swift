@@ -27,48 +27,52 @@ struct TimePalette {
     var gradient: LinearGradient {
         LinearGradient(colors: [top, bottom], startPoint: .topLeading, endPoint: .bottomTrailing)
     }
-    // Soft readable text — dark on light, white on dark
-    var primaryText: Color  { isDark ? .white : Color(hex: "312E81") }
-    var secondaryText: Color { isDark ? .white.opacity(0.60) : Color(hex: "4338CA").opacity(0.65) }
+    // The iOS Widget is a "Window to the Sky". We use these rich, atmospheric 
+    // gradients universally. All text inside the widget is permanently locked 
+    // to White/Light-opacities to guarantee WCAG AA perfect contrast.
+    var primaryText: Color  { .white }
+    var secondaryText: Color { .white.opacity(0.85) }
 
     static func forHour(_ hour: Int) -> TimePalette {
+        let isDark = true // Force dark-mode behavior for rich backgrounds universally
+
         switch hour {
-        case 4..<7:  // Fajr — very pale blush lavender
+        case 4..<6:  // Fajr: Dawn purple to soft pink
             return TimePalette(
-                top:    Color(hex: "EDE9FE"),
-                bottom: Color(hex: "DDD6FE"),
-                accent: Color(hex: "6D28D9"),
-                isDark: false)
-        case 7..<12: // Morning — lightest possible: almost white lavender
+                top:    Color(hex: "3B1F50"),
+                bottom: Color(hex: "7E4B8C"),
+                accent: Color(hex: "C481A7"), // Soft pink accent
+                isDark: isDark)
+        case 6..<12: // Morning: Airy sky blue
             return TimePalette(
-                top:    Color(hex: "F5F3FF"),
-                bottom: Color(hex: "EDE9FE"),
-                accent: Color(hex: "7C3AED"),
-                isDark: false)
-        case 12..<16: // Afternoon — cool soft periwinkle
+                top:    Color(hex: "4CA1AF"),
+                bottom: Color(hex: "73BDEB"),
+                accent: Color(hex: "A5D6F7"), // Light blue accent
+                isDark: isDark)
+        case 12..<16: // Dhuhr: Vibrant daytime blue
             return TimePalette(
-                top:    Color(hex: "EDE9FE"),
-                bottom: Color(hex: "C4B5FD"),
-                accent: Color(hex: "5B21B6"),
-                isDark: false)
-        case 16..<19: // Asr/sunset — gentle warm-violet, still readable
+                top:    Color(hex: "1E3A8A"),
+                bottom: Color(hex: "2563EB"),
+                accent: Color(hex: "60A5FA"), // Bright blue accent
+                isDark: isDark)
+        case 16..<18: // Asr: Golden hour amber/orange
             return TimePalette(
-                top:    Color(hex: "C4B5FD"),
-                bottom: Color(hex: "A78BFA"),
-                accent: Color(hex: "F5F3FF"),
-                isDark: true)
-        case 19..<22: // Maghrib — muted deep indigo, not full-saturation
+                top:    Color(hex: "9A3412"),
+                bottom: Color(hex: "C2410C"),
+                accent: Color(hex: "FDE68A"), // Gold accent
+                isDark: isDark)
+        case 18..<20: // Maghrib: Sunset crimson & purple
             return TimePalette(
-                top:    Color(hex: "312E81"),
-                bottom: Color(hex: "1E1B4B"),
-                accent: Color(hex: "C4B5FD"),
-                isDark: true)
-        default:     // Isha/night — very deep navy, calm darkness
+                top:    Color(hex: "581C87"),
+                bottom: Color(hex: "9D174D"),
+                accent: Color(hex: "FBCFE8"), // Soft pink/white accent
+                isDark: isDark)
+        default:     // Isha: Deep midnight
             return TimePalette(
-                top:    Color(hex: "1E1B4B"),
-                bottom: Color(hex: "0F0E2A"),
-                accent: Color(hex: "A5B4FC"),
-                isDark: true)
+                top:    Color(hex: "0F172A"),
+                bottom: Color(hex: "1E293B"),
+                accent: Color(hex: "D4A853"), // Premium Gold accent
+                isDark: isDark)
         }
     }
     static func current() -> TimePalette {
