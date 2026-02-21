@@ -89,8 +89,8 @@ export const PrayerTimesCard: React.FC = () => {
                         />
                     </View>
 
-                    {/* Compact: Next Prayer */}
-                    {nextPrayer && (
+                    {/* Compact: Next Prayer — always visible when collapsed */}
+                    {nextPrayer && !expanded && (
                         <View style={styles.nextPrayerRow}>
                             <View style={[styles.nextPrayerIcon, { backgroundColor: GOLD_DIM }]}>
                                 <MaterialCommunityIcons
