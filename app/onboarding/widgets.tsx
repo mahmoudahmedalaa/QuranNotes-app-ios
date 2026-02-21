@@ -1,6 +1,12 @@
 /**
  * Onboarding Slide 4 — "Widgets"
- * Home screen + Lock screen widgets — clean, readable, premium.
+ *
+ * Design principles:
+ * - Single brand family: rich violet (#1E0A3C → #6D28D9) as the unifying tone
+ * - Widget differentiation through *accent* color, not wildly different backgrounds
+ *   Prayer: cool blue-violet accent | Khatma: warm gold accent | Verse: white/light accent
+ * - Lock screen section mirrors actual iOS look (dark frosted, monochrome)
+ * - Generous whitespace, clear hierarchy, 8pt grid throughout
  */
 import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
@@ -8,22 +14,21 @@ import { Text, useTheme, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
-import { Spacing, BorderRadius, Shadows } from '../../src/presentation/theme/DesignSystem';
+import { Spacing, BorderRadius } from '../../src/presentation/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 const STEP = 4;
 const TOTAL_STEPS = 6;
 
-// ── Widget palette — each widget has its own distinct identity ──────
-// Verse: deep violet (brand purple)
-const VERSE_GRAD = ['#3B0764', '#6D28D9'] as const;
-// Prayer: deep navy — distinct from verse
-const PRAYER_GRAD = ['#0F172A', '#1E3A8A'] as const;
-// Khatma: warm dark chocolate-gold — matches the gold ring identity
-const KHATMA_GRAD = ['#1C0A02', '#3B1A06'] as const;
+// ── Brand palette — one family, accent differentiation ─────────────────
+// Dark violet base is on-brand and legible for all text colours below
+const WIDGET_BG = ['#2D1665', '#1A0940'] as const;   // Unified brand dark violet
+const VERSE_ACCENT = '#DDD6FE';  // Soft lavender (primaryContainer-ish)
+const PRAYER_ACCENT = '#93C5FD';  // Cool sky blue (calm, prayer/night)
+const KHATMA_ACCENT = '#FCD34D';  // Warm gold (Khatma gold ring identity)
 
 export default function OnboardingWidgets() {
     const theme = useTheme();
@@ -42,13 +47,14 @@ export default function OnboardingWidgets() {
         router.replace('/welcome');
     };
 
-    const bg = theme.dark
-        ? (['#0F1419', '#1A1F26'] as const)
+    const pageBg = theme.dark
+        ? (['#0B0613', '#130A2E'] as const)
         : (['#F5F3FF', '#EDE9FE'] as const);
 
     return (
-        <LinearGradient colors={bg} style={styles.container}>
+        <LinearGradient colors={pageBg} style={styles.container}>
             <SafeAreaView style={styles.safeArea}>
+
                 {/* Progress dots */}
                 <View style={styles.progressBar}>
                     {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
@@ -57,8 +63,9 @@ export default function OnboardingWidgets() {
                             style={[
                                 styles.dot,
                                 {
-                                    backgroundColor:
-                                        i < STEP ? theme.colors.primary : theme.colors.surfaceVariant,
+                                    backgroundColor: i === STEP - 1
+                                        ? theme.colors.primary
+                                        : theme.colors.outlineVariant,
                                     width: i === STEP - 1 ? 20 : 8,
                                 },
                             ]}
@@ -67,165 +74,142 @@ export default function OnboardingWidgets() {
                 </View>
 
                 <ScrollView
-                    contentContainerStyle={[styles.content, { paddingBottom: 130 }]}
-                    showsVerticalScrollIndicator={false}>
-
-                    {/* ── Header ──────────────────────────────────── */}
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
+                >
+                    {/* ── Headline ────────────────────────────── */}
                     <MotiView
-                        from={{ opacity: 0, translateY: -16 }}
+                        from={{ opacity: 0, translateY: 12 }}
                         animate={{ opacity: 1, translateY: 0 }}
-                        transition={{ type: 'timing', duration: 380 }}>
-                        <Text style={[styles.title, { color: theme.colors.onSurface }]}>
-                            Your Quran,{'\n'}Always Within Reach
+                        transition={{ type: 'spring', delay: 80 }}
+                    >
+                        <Text style={[styles.headline, { color: theme.colors.onBackground }]}>
+                            Your Quran,{'\n'}
+                            <Text style={{ color: theme.colors.primary }}>Always Within Reach</Text>
                         </Text>
-                        <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-                            Add widgets to your home screen and lock screen — verse of the day, prayer times, and Khatma progress at a glance
+                        <Text style={[styles.subheadline, { color: theme.colors.onSurfaceVariant }]}>
+                            Glanceable widgets for your home screen and lock screen
                         </Text>
                     </MotiView>
 
-                    {/* ── HOME SCREEN SECTION ──────────────────────── */}
+                    {/* ── HOME SCREEN widgets ─────────────────── */}
                     <MotiView
                         from={{ opacity: 0, translateY: 16 }}
                         animate={{ opacity: 1, translateY: 0 }}
-                        transition={{ type: 'spring', delay: 150 }}>
-
-                        <View style={styles.sectionRow}>
-                            <Ionicons name="grid-outline" size={13} color={theme.colors.primary} />
-                            <Text style={[styles.sectionLabel, { color: theme.colors.primary }]}>
+                        transition={{ type: 'spring', delay: 160 }}
+                        style={styles.section}
+                    >
+                        <View style={styles.sectionLabel}>
+                            <Ionicons name="phone-portrait-outline" size={13} color={theme.colors.primary} />
+                            <Text style={[styles.sectionLabelText, { color: theme.colors.primary }]}>
                                 HOME SCREEN
                             </Text>
                         </View>
 
                         {/* Verse of the Day — medium widget */}
-                        <LinearGradient colors={VERSE_GRAD} style={styles.widgetMedium}>
-                            <Text style={styles.wEyebrow}>✦  VERSE OF THE DAY</Text>
-                            <Text style={styles.wArabic}>حَسْبُنَا اللَّهُ</Text>
-                            <Text style={styles.wTranslation}>Sufficient for us is Allah</Text>
+                        <LinearGradient colors={WIDGET_BG} style={styles.widgetMedium}>
+                            <Text style={[styles.wEyebrow, { color: VERSE_ACCENT }]}>✦  VERSE OF THE DAY</Text>
+                            <Text style={[styles.wArabic, { color: '#FFFFFF' }]}>حَسْبُنَا ٱللَّهُ</Text>
+                            <Text style={[styles.wTranslation, { color: 'rgba(255,255,255,0.80)' }]}>
+                                Sufficient for us is Allah
+                            </Text>
                             <View style={styles.wFooter}>
-                                <Text style={styles.wRef}>Ali Imran · 173</Text>
-                                <Text style={styles.wBrand}>QuranNotes</Text>
+                                <Text style={[styles.wRef, { color: VERSE_ACCENT }]}>Ali Imran · 173</Text>
+                                <Text style={[styles.wBrand, { color: 'rgba(255,255,255,0.40)' }]}>QuranNotes</Text>
                             </View>
                         </LinearGradient>
 
                         {/* Prayer + Khatma — two small widgets */}
                         <View style={styles.smallRow}>
                             {/* Prayer */}
-                            <LinearGradient colors={PRAYER_GRAD} style={styles.widgetSmall}>
-                                <Ionicons name="moon-sharp" size={22} color="#93C5FD" />
-                                <Text style={styles.wPrayerName}>Isha</Text>
-                                <Text style={styles.wPrayerTime}>20:45</Text>
-                                <Text style={styles.wPrayerSub}>in 1h 20m</Text>
+                            <LinearGradient colors={WIDGET_BG} style={styles.widgetSmall}>
+                                <Ionicons name="moon-sharp" size={20} color={PRAYER_ACCENT} />
+                                <Text style={[styles.wPrayerName, { color: '#FFFFFF' }]}>Isha</Text>
+                                <Text style={[styles.wPrayerTime, { color: PRAYER_ACCENT }]}>20:45</Text>
+                                <Text style={[styles.wPrayerSub, { color: 'rgba(255,255,255,0.55)' }]}>in 1h 20m</Text>
                             </LinearGradient>
 
                             {/* Khatma */}
-                            <LinearGradient colors={KHATMA_GRAD} style={styles.widgetSmall}>
-                                <View style={styles.wRing}>
-                                    <Text style={styles.wRingNum}>12</Text>
-                                    <Text style={styles.wRingDenom}>/30</Text>
+                            <LinearGradient colors={WIDGET_BG} style={styles.widgetSmall}>
+                                <View style={[styles.wRing, { borderColor: KHATMA_ACCENT }]}>
+                                    <Text style={[styles.wRingNum, { color: KHATMA_ACCENT }]}>12</Text>
+                                    <Text style={[styles.wRingDenom, { color: 'rgba(255,255,255,0.55)' }]}>/30</Text>
                                 </View>
-                                <Text style={styles.wKhatmaLabel}>Khatma</Text>
-                                <Text style={styles.wKhatmaSub}>18 remaining</Text>
+                                <Text style={[styles.wKhatmaLabel, { color: '#FFFFFF' }]}>Khatma</Text>
+                                <Text style={[styles.wKhatmaSub, { color: 'rgba(255,255,255,0.55)' }]}>18 remaining</Text>
                             </LinearGradient>
                         </View>
                     </MotiView>
 
-                    {/* ── LOCK SCREEN SECTION ──────────────────────── */}
+                    {/* ── LOCK SCREEN widgets ─────────────────── */}
                     <MotiView
                         from={{ opacity: 0, translateY: 16 }}
                         animate={{ opacity: 1, translateY: 0 }}
-                        transition={{ type: 'spring', delay: 320 }}>
-
-                        <View style={styles.sectionRow}>
+                        transition={{ type: 'spring', delay: 260 }}
+                        style={styles.section}
+                    >
+                        <View style={styles.sectionLabel}>
                             <Ionicons name="lock-closed-outline" size={13} color={theme.colors.primary} />
-                            <Text style={[styles.sectionLabel, { color: theme.colors.primary }]}>
-                                LOCK SCREEN  ·  iOS 16+
+                            <Text style={[styles.sectionLabelText, { color: theme.colors.primary }]}>
+                                LOCK SCREEN · iOS 16+
                             </Text>
                         </View>
 
-                        {/* Lock screen phone mockup */}
-                        <View style={styles.lockPhone}>
-                            <Text style={styles.lockClock}>12:51</Text>
+                        {/* iOS Lock screen mock */}
+                        <View style={styles.lockMock}>
+                            {/* Clock */}
+                            <Text style={styles.lockTime}>12:51</Text>
                             <Text style={styles.lockDate}>Friday, 21 February</Text>
 
+                            {/* Circular + Rectangular widget row */}
                             <View style={styles.lockWidgetRow}>
-                                {/* Khatma circle */}
+                                {/* Circular — Khatma */}
                                 <View style={styles.lockCircle}>
                                     <Text style={styles.lockCircleNum}>12</Text>
-                                    <Text style={styles.lockCircleDenom}>/30</Text>
-                                    <Text style={styles.lockCircleLabel}>Khatma</Text>
+                                    <Text style={styles.lockCircleSub}>/30</Text>
                                 </View>
 
-                                {/* Prayer rectangle */}
-                                <View style={[styles.lockRect, { flex: 1 }]}>
-                                    <View style={styles.lockRectRow}>
-                                        <Ionicons name="moon-sharp" size={12} color="rgba(255,255,255,0.85)" />
-                                        <Text style={styles.lockRectPrayer}>Isha</Text>
-                                    </View>
-                                    <Text style={styles.lockRectTime}>20:45</Text>
+                                {/* Rectangular — Prayer */}
+                                <View style={styles.lockRect}>
+                                    <Ionicons name="moon-sharp" size={12} color="rgba(255,255,255,0.7)" />
+                                    <Text style={styles.lockRectTitle}>Isha  20:45</Text>
                                     <Text style={styles.lockRectSub}>in 1h 20m</Text>
                                 </View>
                             </View>
 
-                            {/* Verse rectangle */}
-                            <View style={styles.lockRectWide}>
-                                <MaterialCommunityIcons name="book-open-page-variant" size={13} color="rgba(255,255,255,0.8)" />
-                                <View>
-                                    <Text style={styles.lockRectWideSub}>Verse of the Day</Text>
-                                    <Text style={styles.lockRectWideTitle}>Ali Imran · 173</Text>
-                                </View>
+                            {/* Full-width rect — Verse */}
+                            <View style={styles.lockVerseRect}>
+                                <Text style={styles.lockVerseTrans}>Sufficient for us is Allah, and He is the best guardian.</Text>
+                                <Text style={styles.lockVerseRef}>— Ali Imran · 173</Text>
                             </View>
-                        </View>
 
-                        <Text style={[styles.lockCaption, { color: theme.colors.onSurfaceVariant }]}>
-                            Your Quran reminder, every time you pick up your phone
-                        </Text>
-                    </MotiView>
-
-                    {/* ── HOW TO ADD ───────────────────────────────── */}
-                    <MotiView
-                        from={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 460 }}>
-                        <View style={[styles.howTo, { backgroundColor: theme.colors.surface }, Shadows.sm]}>
-                            <Text style={[styles.howToTitle, { color: theme.colors.onSurface }]}>
-                                💡 How to add a widget
-                            </Text>
-                            <Text style={[styles.howToStep, { color: theme.colors.onSurfaceVariant }]}>
-                                <Text style={{ fontWeight: '800', color: theme.colors.primary }}>① </Text>
-                                Long-press an empty spot on your home or lock screen
-                            </Text>
-                            <Text style={[styles.howToStep, { color: theme.colors.onSurfaceVariant }]}>
-                                <Text style={{ fontWeight: '800', color: theme.colors.primary }}>② </Text>
-                                Tap <Text style={{ fontWeight: '800', color: theme.colors.onSurface }}>+</Text> in the top-left corner
-                            </Text>
-                            <Text style={[styles.howToStep, { color: theme.colors.onSurfaceVariant }]}>
-                                <Text style={{ fontWeight: '800', color: theme.colors.primary }}>③ </Text>
-                                Search <Text style={{ fontWeight: '700', color: theme.colors.primary }}>QuranNotes App</Text> and choose a size
+                            <Text style={[styles.lockCaption, { color: 'rgba(255,255,255,0.55)' }]}>
+                                Your Quran reminder, every time you pick up your phone
                             </Text>
                         </View>
                     </MotiView>
                 </ScrollView>
 
-                {/* ── Bottom CTA ───────────────────────────────────── */}
-                <MotiView
-                    from={{ opacity: 0, translateY: 20 }}
-                    animate={{ opacity: 1, translateY: 0 }}
-                    transition={{ type: 'spring', delay: 580 }}
-                    style={styles.bottom}>
+                {/* Bottom actions */}
+                <View style={styles.bottom}>
                     <Button
                         mode="contained"
                         onPress={handleContinue}
                         style={styles.cta}
-                        labelStyle={styles.ctaLabel}>
+                        labelStyle={styles.ctaLabel}
+                    >
                         Continue
                     </Button>
-                    <View style={{ height: Spacing.sm }} />
+                    <Text style={[styles.howToTip, { color: theme.colors.onSurfaceVariant }]}>
+                        💡 How to add a widget: long-press your home screen → + → QuranNotes
+                    </Text>
                     <Text
+                        style={[styles.skipText, { color: theme.colors.onSurfaceVariant }]}
                         onPress={handleSkip}
-                        style={[styles.skipText, { color: theme.colors.onSurfaceVariant }]}>
+                    >
                         Maybe Later
                     </Text>
-                </MotiView>
+                </View>
             </SafeAreaView>
         </LinearGradient>
     );
@@ -234,215 +218,193 @@ export default function OnboardingWidgets() {
 const styles = StyleSheet.create({
     container: { flex: 1 },
     safeArea: { flex: 1 },
+
     progressBar: {
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
         gap: 6,
         paddingTop: Spacing.md,
+        paddingBottom: Spacing.xs,
     },
     dot: { height: 8, borderRadius: 4 },
-    content: {
+
+    scrollContent: {
         paddingHorizontal: Spacing.lg,
-        paddingTop: Spacing.lg,
+        paddingBottom: Spacing.lg,
         gap: Spacing.lg,
     },
 
     // ── Header ──
-    title: {
-        fontSize: 28,
+    headline: {
+        fontSize: 30,
         fontWeight: '800',
-        textAlign: 'center',
         letterSpacing: -0.5,
-        marginBottom: Spacing.sm,
+        lineHeight: 36,
+        marginTop: Spacing.sm,
     },
-    subtitle: {
-        fontSize: 14,
-        textAlign: 'center',
-        lineHeight: 21,
+    subheadline: {
+        fontSize: 15,
+        lineHeight: 22,
+        marginTop: Spacing.sm,
     },
 
-    // ── Section label ──
-    sectionRow: {
+    // ── Section ──
+    section: { gap: 10 },
+    sectionLabel: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 5,
-        marginBottom: 10,
+        marginBottom: 2,
     },
-    sectionLabel: {
+    sectionLabelText: {
         fontSize: 11,
         fontWeight: '700',
         letterSpacing: 0.8,
     },
 
-    // ── Home screen: medium widget ──
+    // ── Home screen widgets ──
     widgetMedium: {
-        borderRadius: 20,
+        borderRadius: BorderRadius.xl,
         padding: 14,
-        minHeight: 108,
-        justifyContent: 'space-between',
-        marginBottom: 10,
+        gap: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        elevation: 8,
     },
-    wEyebrow: {
-        fontSize: 9,
-        fontWeight: '700',
-        letterSpacing: 1,
-        color: '#DDD6FE',
-    },
-    wArabic: {
-        fontSize: 20,
-        fontWeight: '500',
-        color: '#FFFFFF',
-        marginVertical: 4,
-    },
-    wTranslation: {
-        fontSize: 12,
-        color: 'rgba(255,255,255,0.82)',
-        fontStyle: 'italic',
-    },
-    wFooter: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 4,
-    },
-    wRef: { color: 'rgba(255,255,255,0.6)', fontSize: 10 },
-    wBrand: { color: 'rgba(255,255,255,0.45)', fontSize: 10 },
+    wEyebrow: { fontSize: 9, fontWeight: '800', letterSpacing: 0.8 },
+    wArabic: { fontSize: 22, fontWeight: '600', textAlign: 'right', lineHeight: 32, marginTop: 2 },
+    wTranslation: { fontSize: 12, lineHeight: 18, fontStyle: 'italic' },
+    wFooter: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
+    wRef: { fontSize: 10, fontWeight: '700' },
+    wBrand: { fontSize: 10 },
 
-    // ── Home screen: small widget row ──
-    smallRow: {
-        flexDirection: 'row',
-        gap: 10,
-    },
+    smallRow: { flexDirection: 'row', gap: 10 },
     widgetSmall: {
         flex: 1,
-        borderRadius: 20,
+        borderRadius: BorderRadius.xl,
         padding: 12,
+        gap: 2,
         aspectRatio: 1,
-        justifyContent: 'flex-start',
-        gap: 3,
-    },
-
-    // Prayer small
-    wPrayerName: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', marginTop: 4 },
-    wPrayerTime: { color: '#93C5FD', fontSize: 17, fontWeight: '800' },
-    wPrayerSub: {
-        color: 'rgba(255,255,255,0.65)',
-        fontSize: 10,
-        backgroundColor: 'rgba(255,255,255,0.12)',
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        borderRadius: 6,
-        overflow: 'hidden',
-        alignSelf: 'flex-start',
-        marginTop: 2,
-    },
-
-    // Khatma small
-    wRing: {
-        flexDirection: 'row',
-        alignItems: 'baseline',
-        gap: 1,
-        borderWidth: 2.5,
-        borderColor: '#D4A853',
-        width: 44,
-        height: 44,
-        borderRadius: 22,
         justifyContent: 'center',
-        marginBottom: 4,
+        alignItems: 'flex-start',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+        elevation: 6,
     },
-    wRingNum: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
-    wRingDenom: { color: 'rgba(255,255,255,0.5)', fontSize: 8 },
-    wKhatmaLabel: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
-    wKhatmaSub: { color: '#D4A853', fontSize: 10 },
+    wPrayerName: { fontSize: 13, fontWeight: '700', marginTop: 4 },
+    wPrayerTime: { fontSize: 20, fontWeight: '800', letterSpacing: -0.5 },
+    wPrayerSub: { fontSize: 10 },
 
-    // ── Lock screen mockup ──
-    lockPhone: {
-        backgroundColor: '#100020',
-        borderRadius: 22,
-        padding: 18,
+    wRing: {
+        width: 38,
+        height: 38,
+        borderRadius: 19,
+        borderWidth: 2.5,
         alignItems: 'center',
-        gap: 4,
+        justifyContent: 'center',
+        flexDirection: 'row',
+        gap: 1,
     },
-    lockClock: {
+    wRingNum: { fontSize: 13, fontWeight: '800' },
+    wRingDenom: { fontSize: 9, fontWeight: '500', marginTop: 2 },
+    wKhatmaLabel: { fontSize: 13, fontWeight: '700', marginTop: 4 },
+    wKhatmaSub: { fontSize: 10 },
+
+    // ── Lock screen mock ──
+    lockMock: {
+        backgroundColor: '#1A1A2E',
+        borderRadius: BorderRadius.xl,
+        padding: 20,
+        alignItems: 'center',
+        gap: 6,
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.4,
+        shadowRadius: 16,
+    },
+    lockTime: {
         color: '#FFFFFF',
-        fontSize: 48,
+        fontSize: 44,
         fontWeight: '200',
-        letterSpacing: -2,
+        letterSpacing: -1,
+        lineHeight: 48,
     },
     lockDate: {
-        color: 'rgba(255,255,255,0.55)',
+        color: 'rgba(255,255,255,0.65)',
         fontSize: 13,
-        marginBottom: 12,
+        fontWeight: '400',
+        marginBottom: 4,
     },
     lockWidgetRow: {
         flexDirection: 'row',
-        gap: 8,
+        gap: 10,
         width: '100%',
-        alignItems: 'center',
     },
     lockCircle: {
-        width: 68,
-        height: 68,
-        borderRadius: 34,
-        borderWidth: 2.5,
-        borderColor: 'rgba(255,255,255,0.28)',
-        justifyContent: 'center',
+        width: 62,
+        height: 62,
+        borderRadius: 31,
+        backgroundColor: 'rgba(255,255,255,0.15)',
         alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
     },
-    lockCircleNum: { color: '#FFFFFF', fontSize: 18, fontWeight: '800' },
-    lockCircleDenom: { color: 'rgba(255,255,255,0.5)', fontSize: 10 },
-    lockCircleLabel: { color: 'rgba(255,255,255,0.5)', fontSize: 9, fontWeight: '600' },
+    lockCircleNum: { color: '#FFFFFF', fontSize: 18, fontWeight: '700', lineHeight: 20 },
+    lockCircleSub: { color: 'rgba(255,255,255,0.55)', fontSize: 9, lineHeight: 11 },
     lockRect: {
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        borderRadius: 13,
+        flex: 1,
+        backgroundColor: 'rgba(255,255,255,0.12)',
+        borderRadius: 14,
         padding: 10,
-        justifyContent: 'center',
-        gap: 2,
+        gap: 1,
     },
-    lockRectRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-    lockRectPrayer: { color: 'rgba(255,255,255,0.85)', fontSize: 12, fontWeight: '600' },
-    lockRectTime: { color: '#FFFFFF', fontSize: 20, fontWeight: '800' },
-    lockRectSub: { color: 'rgba(255,255,255,0.5)', fontSize: 10 },
-    lockRectWide: {
-        flexDirection: 'row',
-        gap: 8,
-        alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        borderRadius: 12,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
+    lockRectTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+    lockRectSub: { color: 'rgba(255,255,255,0.55)', fontSize: 11 },
+    lockVerseRect: {
         width: '100%',
+        backgroundColor: 'rgba(255,255,255,0.12)',
+        borderRadius: 14,
+        padding: 10,
+        gap: 3,
     },
-    lockRectWideSub: { color: 'rgba(255,255,255,0.55)', fontSize: 10 },
-    lockRectWideTitle: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },
-    lockCaption: {
-        textAlign: 'center',
+    lockVerseTrans: {
+        color: '#FFFFFF',
         fontSize: 12,
-        fontStyle: 'italic',
-        marginTop: 6,
+        lineHeight: 17,
     },
-
-    // ── How to card ──
-    howTo: {
-        borderRadius: BorderRadius.lg,
-        padding: Spacing.md,
-        gap: 10,
+    lockVerseRef: {
+        color: 'rgba(255,255,255,0.55)',
+        fontSize: 10,
+        fontWeight: '600',
     },
-    howToTitle: { fontSize: 15, fontWeight: '700' },
-    howToStep: { fontSize: 14, lineHeight: 21 },
+    lockCaption: {
+        fontSize: 11,
+        textAlign: 'center',
+        lineHeight: 16,
+        marginTop: 4,
+    },
 
     // ── Bottom ──
     bottom: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
         alignItems: 'center',
         paddingHorizontal: Spacing.lg,
         paddingBottom: Spacing.xl,
-        paddingTop: Spacing.md,
+        gap: Spacing.xs,
     },
     cta: { borderRadius: BorderRadius.xl, width: '100%' },
     ctaLabel: { fontSize: 16, fontWeight: '700', paddingVertical: Spacing.xs },
-    skipText: { fontSize: 14, fontWeight: '500' },
+    howToTip: {
+        fontSize: 12,
+        textAlign: 'center',
+        paddingHorizontal: Spacing.md,
+        lineHeight: 18,
+        marginTop: 4,
+    },
+    skipText: { fontSize: 14, fontWeight: '500', paddingVertical: Spacing.sm },
 });

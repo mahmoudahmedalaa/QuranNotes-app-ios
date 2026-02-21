@@ -25,7 +25,7 @@ const TOTAL_STEPS = 6;
 // ── Language Picker Data ──────────────────────────────────────────
 const LANG_TO_EDITION: Record<string, string> = {
     en: 'en.sahih',
-    ar: 'ar.muyassar',
+    ru: 'ru.kuliev',
     ur: 'ur.jalandhry',
     fr: 'fr.hamidullah',
     id: 'id.indonesian',
@@ -36,11 +36,11 @@ const LANG_TO_EDITION: Record<string, string> = {
 
 const LANGUAGES: { code: string; label: string; nativeLabel: string; translation: string }[] = [
     { code: 'en', label: 'English', nativeLabel: '🇬🇧 EN', translation: 'In the name of Allah, the Most Gracious, the Most Merciful' },
-    { code: 'ar', label: 'Arabic', nativeLabel: '🇸🇦 AR', translation: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ' },
+    { code: 'ru', label: 'Russian', nativeLabel: '🇷🇺 RU', translation: 'Во имя Аллаха, Милостивого, Милосердного' },
     { code: 'ur', label: 'Urdu', nativeLabel: '🇵🇰 UR', translation: 'اللہ کے نام سے جو رحمان و رحیم ہے' },
-    { code: 'fr', label: 'French', nativeLabel: '🇫🇷 FR', translation: 'Au nom d\'Allah, le Tout Miséricordieux, le Très Miséricordieux' },
+    { code: 'fr', label: 'French', nativeLabel: '🇫🇷 FR', translation: "Au nom d'Allah, le Tout Miséricordieux, le Très Miséricordieux" },
     { code: 'id', label: 'Indonesian', nativeLabel: '🇮🇩 ID', translation: 'Dengan nama Allah Yang Maha Pengasih, Maha Penyayang' },
-    { code: 'tr', label: 'Turkish', nativeLabel: '🇹🇷 TR', translation: 'Rahman ve Rahim olan Allah\'ın adıyla' },
+    { code: 'tr', label: 'Turkish', nativeLabel: '🇹🇷 TR', translation: "Rahman ve Rahim olan Allah'ın adıyla" },
     { code: 'bn', label: 'Bengali', nativeLabel: '🇧🇩 BN', translation: 'পরম করুণাময় অতি দয়ালু আল্লাহর নামে' },
     { code: 'ms', label: 'Malay', nativeLabel: '🇲🇾 MY', translation: 'Dengan nama Allah Yang Maha Pemurah lagi Maha Penyayang' },
 ];
@@ -358,6 +358,9 @@ export default function OnboardingListenExplore() {
                     <Pressable onPress={handleSkip} style={styles.skipBtn}>
                         <Text style={[styles.skipText, { color: theme.colors.onSurfaceVariant }]}>Maybe Later</Text>
                     </Pressable>
+                    <Text style={[styles.settingsTip, { color: theme.colors.onSurfaceVariant }]}>
+                        ⚙ You can change this anytime in Settings → Reading
+                    </Text>
                 </View>
             </SafeAreaView>
         </LinearGradient>
@@ -467,4 +470,5 @@ const styles = StyleSheet.create({
     hint: { fontSize: 14, paddingVertical: Spacing.sm },
     skipBtn: { paddingVertical: Spacing.sm },
     skipText: { fontSize: 14, fontWeight: '500' },
+    settingsTip: { fontSize: 11, textAlign: 'center', opacity: 0.65, paddingBottom: 4 },
 });

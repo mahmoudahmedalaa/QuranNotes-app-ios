@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, Modal, ScrollView, Dimensions } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -76,12 +76,10 @@ export default function DashboardScreen() {
     const progress = completedCount / 30;
     const strokeDashoffset = CIRCUMFERENCE * (1 - progress);
 
+    // Reload reading position whenever the screen comes into focus
+    // (e.g. returning from the surah detail screen which updates the position)
     useFocusEffect(
         useCallback(() => {
-            if (playingVerse) {
-                setGlobalPosition(null);
-                return;
-            }
             ReadingPositionService.getGlobal().then(pos => {
                 if (pos && pos.verse > 1) {
                     setGlobalPosition(pos);
@@ -89,8 +87,23 @@ export default function DashboardScreen() {
                     setGlobalPosition(null);
                 }
             });
-        }, [playingVerse])
+        }, []) // No deps — always reload fresh on every focus
     );
+
+    // Separately: when audio STOPS playing, immediately restore the pill.
+    // We cannot rely on useFocusEffect for this because it only fires on focus events,
+    // not on dependency changes while the screen is already focused.
+    useEffect(() => {
+        if (!playingVerse) {
+            // Audio stopped — reload so the pill reappears
+            ReadingPositionService.getGlobal().then(pos => {
+                if (pos && pos.verse > 1) setGlobalPosition(pos);
+                else setGlobalPosition(null);
+            });
+        }
+        // When playingVerse is set, showContinueReading already hides the pill
+        // via !isPlaying — no need to clear globalPosition.
+    }, [playingVerse]);
 
     // When the reading position changes, silently pre-load the surah
     // so the play button can trigger in-place audio without navigating
