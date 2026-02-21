@@ -186,24 +186,17 @@ export default function DashboardScreen() {
                             }}
                             style={({ pressed }) => [
                                 styles.gridTile,
-                                { backgroundColor: theme.colors.surface },
+                                { backgroundColor: theme.colors.surfaceVariant },
                                 Shadows.md,
                                 pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                             ]}
                         >
-                            <LinearGradient
-                                colors={theme.dark
-                                    ? ['#D4A85328', '#D4A85314']
-                                    : ['#D4A85348', '#D4A85322']
-                                }
-                                style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
-                            />
                             {/* Ring */}
                             <View style={styles.tileRingWrap}>
                                 <Svg width={RING_SIZE} height={RING_SIZE}>
                                     <Circle
                                         cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RADIUS}
-                                        stroke={theme.dark ? '#2D3A4F' : '#E2E8F0'}
+                                        stroke={theme.colors.outlineVariant}
                                         strokeWidth={STROKE_WIDTH} fill="none"
                                     />
                                     <Circle
@@ -235,43 +228,25 @@ export default function DashboardScreen() {
                             }}
                             style={({ pressed }) => [
                                 styles.gridTile,
-                                { backgroundColor: theme.colors.surface },
+                                { backgroundColor: theme.colors.surfaceVariant },
                                 Shadows.md,
                                 pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                             ]}
                         >
-                            <LinearGradient
-                                colors={adhkarPeriod === 'morning'
-                                    ? (theme.dark ? ['#FDE68A40', '#D9770622'] : ['#FDE68A80', '#FEF3C755'])
-                                    : (theme.dark ? ['#1E1B4BCC', '#312E81AA'] : ['#E0E7FF', '#C7D2FE'])
-                                }
-                                style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
-                            />
                             <View style={styles.tileEmojiWrap}>
-                                <Text style={styles.tileEmoji}>
-                                    {adhkarPeriod === 'morning' ? '☀️' : '🌙'}
-                                </Text>
+                                {adhkarPeriod === 'morning' ? (
+                                    <MaterialCommunityIcons name="weather-sunny" size={28} color={GOLD} />
+                                ) : (
+                                    <MaterialCommunityIcons name="moon-waxing-crescent" size={28} color={theme.colors.primary} />
+                                )}
                             </View>
-                            <Text style={[styles.tileLabel, {
-                                color: adhkarPeriod === 'evening'
-                                    ? (theme.dark ? '#E0E7FF' : '#312E81')
-                                    : theme.colors.onSurface
-                            }]}>
+                            <Text style={[styles.tileLabel, { color: theme.colors.onSurface }]}>
                                 {adhkarPeriod === 'morning' ? 'Morning' : 'Evening'}
                             </Text>
-                            <Text style={[styles.tileSub, {
-                                color: adhkarPeriod === 'evening'
-                                    ? (theme.dark ? '#C7D2FE' : '#3730A3')
-                                    : theme.colors.onSurface,
-                                fontWeight: '600'
-                            }]}>
+                            <Text style={[styles.tileSub, { color: theme.colors.onSurface, fontWeight: '600' }]}>
                                 Adhkar
                             </Text>
-                            <Text style={[styles.tileSub2, {
-                                color: adhkarPeriod === 'evening'
-                                    ? (theme.dark ? '#A5B4FC' : '#4338CA')
-                                    : theme.colors.onSurfaceVariant
-                            }]}>
+                            <Text style={[styles.tileSub2, { color: theme.colors.onSurfaceVariant }]}>
                                 {adhkarPct > 0 ? `${adhkarPct}% done` : 'Tap to begin'}
                             </Text>
                         </Pressable>

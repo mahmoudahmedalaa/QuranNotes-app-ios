@@ -35,11 +35,11 @@ function getAllVerses(): TopicVerse[] {
 }
 
 /** Get time-of-day gradient — different palettes for light vs dark */
-function getTimeGradient(isDark: boolean): readonly [string, string, string] {
+function getTimeGradient(isDark: boolean, surfaceVariant: string, primaryContainer: string): readonly [string, string, string] {
     const hour = new Date().getHours();
 
     if (isDark) {
-        // Dark mode — rich, moody brand colors (unchanged, user happy with these)
+        // Dark mode — rich, moody brand colors (unchanged, user happy with these as they are dark enough for white text)
         if (hour >= 4 && hour < 6) return ['#1A1B3A', '#2D1B69', '#5B3A8C'] as const;   // Fajr
         if (hour >= 6 && hour < 12) return ['#1E3A8A', '#1D4ED8', '#5B7FFF'] as const;   // Morning
         if (hour >= 12 && hour < 16) return ['#1E3A5F', '#155E75', '#0E7490'] as const;   // Afternoon
@@ -48,8 +48,8 @@ function getTimeGradient(isDark: boolean): readonly [string, string, string] {
         return ['#0F172A', '#1E293B', '#2D3A5F'] as const;                                // Isha
     }
 
-    // Light mode — soft lavender tint: on-brand but not overpowering
-    return ['#DDD6FE', '#C4B5FD', '#A78BFA'] as const;
+    // Light mode — strictly use DesignSystem tokens (surfaceVariant -> primaryContainer) wrapper for perfect contrast with onSurface text
+    return [surfaceVariant, surfaceVariant, primaryContainer] as const;
 }
 
 
@@ -127,7 +127,10 @@ export const DailyVerseCard: React.FC = () => {
 
     if (loading || !verse) return null;
 
-    const gradientColors = getTimeGradient(theme.dark);
+    const gradientColors = getTimeGradient(theme.dark, theme.colors.surfaceVariant, theme.colors.primaryContainer);
+    const textColorPrimary = theme.dark ? '#FFFFFF' : theme.colors.onSurface;
+    const textColorSecondary = theme.dark ? 'rgba(255,255,255,0.7)' : theme.colors.onSurfaceVariant;
+    const textColorTertiary = theme.dark ? 'rgba(255,255,255,0.5)' : theme.colors.outline;
 
     return (
         <MotiView
@@ -163,13 +166,13 @@ export const DailyVerseCard: React.FC = () => {
                                 icon="refresh"
                                 size={18}
                                 onPress={handleRefresh}
-                                iconColor="rgba(255,255,255,0.6)"
+                                iconColor={textColorSecondary}
                                 style={styles.refreshButton}
                             />
                             <MaterialCommunityIcons
                                 name={expanded ? 'chevron-up' : 'chevron-down'}
                                 size={20}
-                                color="rgba(255,255,255,0.6)"
+                                color={textColorSecondary}
                             />
                         </View>
                     </View>
@@ -180,12 +183,12 @@ export const DailyVerseCard: React.FC = () => {
                             <MaterialCommunityIcons
                                 name="book-open-variant"
                                 size={14}
-                                color="rgba(255,255,255,0.5)"
+                                color={textColorTertiary}
                             />
-                            <Text style={[styles.referenceText, { color: 'rgba(255,255,255,0.6)' }]} numberOfLines={1}>
+                            <Text style={[styles.referenceText, { color: textColorSecondary }]} numberOfLines={1}>
                                 {verse.surahName} · Verse {verse.verse}
                             </Text>
-                            <Text style={[styles.translationText, { color: 'rgba(255,255,255,0.75)', marginBottom: 0, flex: 1 }]} numberOfLines={1}>
+                            <Text style={[styles.translationText, { color: textColorPrimary, marginBottom: 0, flex: 1 }]} numberOfLines={1}>
                                 {verse.translation}
                             </Text>
                         </View>
@@ -194,10 +197,10 @@ export const DailyVerseCard: React.FC = () => {
                     {/* Expanded: Arabic + translation + reference */}
                     {expanded && (
                         <>
-                            <Text style={[styles.arabicText, { color: '#FFFFFF' }]}>
+                            <Text style={[styles.arabicText, { color: textColorPrimary }]}>
                                 {verse.arabicSnippet}
                             </Text>
-                            <Text style={[styles.translationText, { color: 'rgba(255,255,255,0.8)' }]}>
+                            <Text style={[styles.translationText, { color: textColorSecondary }]}>
                                 {verse.translation}
                             </Text>
                             <Pressable onPress={handlePress}>
@@ -205,15 +208,15 @@ export const DailyVerseCard: React.FC = () => {
                                     <MaterialCommunityIcons
                                         name="book-open-variant"
                                         size={14}
-                                        color="rgba(255,255,255,0.5)"
+                                        color={textColorTertiary}
                                     />
-                                    <Text style={[styles.referenceText, { color: 'rgba(255,255,255,0.6)' }]}>
+                                    <Text style={[styles.referenceText, { color: textColorSecondary }]}>
                                         {verse.surahName} · Verse {verse.verse}
                                     </Text>
                                     <MaterialCommunityIcons
                                         name="chevron-right"
                                         size={16}
-                                        color="rgba(255,255,255,0.5)"
+                                        color={textColorTertiary}
                                     />
                                 </View>
                             </Pressable>
