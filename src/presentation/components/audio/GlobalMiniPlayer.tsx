@@ -1,7 +1,7 @@
 /**
  * GlobalMiniPlayer — Persistent audio controls shown across all screens
- * Appears above the tab bar when audio is playing.
- * Allows pause/resume/stop without navigating back to the surah screen.
+ * Bottom-positioned, Apple Music / Spotify style — sits above the floating tab bar.
+ * Slides up from the bottom when audio starts playing.
  */
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
@@ -9,7 +9,7 @@ import { useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
 import { useRouter, usePathname } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
 import { useAudio } from '../../../infrastructure/audio/AudioContext';
 import { Spacing, BorderRadius } from '../../theme/DesignSystem';
@@ -18,7 +18,7 @@ export const GlobalMiniPlayer: React.FC = () => {
     const theme = useTheme();
     const router = useRouter();
     const pathname = usePathname();
-    const insets = useSafeAreaInsets();
+    const tabBarHeight = useBottomTabBarHeight();
     const { playingVerse, isPlaying, currentSurahName, currentSurahNum, pause, resume, stop } = useAudio();
 
     // Don't show if nothing is playing or paused (verse is null = fully stopped)
@@ -48,79 +48,69 @@ export const GlobalMiniPlayer: React.FC = () => {
     };
 
     const surahLabel = currentSurahName || `Surah ${playingVerse.surah}`;
+    const pillBg = theme.dark ? 'rgba(50, 50, 55, 0.97)' : 'rgba(28, 28, 30, 0.96)';
 
     return (
         <MotiView
-            from={{ translateY: -60, opacity: 0 }}
+            from={{ translateY: 80, opacity: 0 }}
             animate={{ translateY: 0, opacity: 1 }}
-            exit={{ translateY: -60, opacity: 0 }}
-            transition={{ type: 'spring', damping: 18 }}
-            style={[
-                styles.container,
-                {
-                    backgroundColor: theme.colors.elevation.level4,
-                    paddingTop: insets.top,
-                },
-            ]}
+            exit={{ translateY: 80, opacity: 0 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 280 }}
+            style={[styles.container, { bottom: tabBarHeight + 8 }]}
         >
-            {/* Info — tappable to go to surah */}
             <Pressable
                 onPress={handleTap}
                 style={({ pressed }) => [
-                    styles.infoArea,
-                    pressed && { opacity: 0.7 },
+                    styles.pill,
+                    { backgroundColor: pillBg },
+                    pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] },
                 ]}
             >
-                <View style={[styles.iconBadge, { backgroundColor: `${theme.colors.primary}20` }]}>
+                {/* Artwork dot */}
+                <View style={[styles.artDot, { backgroundColor: theme.colors.primary }]}>
                     <MaterialCommunityIcons
                         name={isPlaying ? 'volume-high' : 'volume-off'}
-                        size={18}
-                        color={theme.colors.primary}
+                        size={16}
+                        color="#FFFFFF"
                     />
                 </View>
-                <View style={styles.textArea}>
-                    <Text
-                        style={[styles.surahName, { color: theme.colors.onSurface }]}
-                        numberOfLines={1}
-                    >
+
+                {/* Info */}
+                <View style={styles.info}>
+                    <Text style={styles.title} numberOfLines={1}>
                         {surahLabel}
                     </Text>
-                    <Text style={[styles.verseInfo, { color: theme.colors.onSurfaceVariant }]}>
+                    <Text style={styles.subtitle} numberOfLines={1}>
                         Verse {playingVerse.verse} · {isPlaying ? 'Playing' : 'Paused'}
                     </Text>
                 </View>
-            </Pressable>
 
-            {/* Controls */}
-            <View style={styles.controls}>
-                <Pressable
-                    onPress={handlePlayPause}
-                    style={({ pressed }) => [
-                        styles.controlButton,
-                        { backgroundColor: theme.colors.primary },
-                        pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
-                    ]}
-                >
-                    <MaterialCommunityIcons
-                        name={isPlaying ? 'pause' : 'play'}
-                        size={22}
-                        color="#FFF"
-                    />
-                </Pressable>
-                <Pressable
-                    onPress={handleStop}
-                    style={({ pressed }) => [
-                        styles.closeButton,
-                        pressed && { opacity: 0.6 },
-                    ]}
-                >
-                    <MaterialCommunityIcons
-                        name="close"
-                        size={20}
-                        color={theme.colors.onSurfaceVariant}
-                    />
-                </Pressable>
-            </View>
+                {/* Controls */}
+                <View style={styles.controls}>
+                    <Pressable
+                        onPress={handlePlayPause}
+                        hitSlop={8}
+                        style={({ pressed }) => [pressed && { opacity: 0.6 }]}
+                    >
+                        <MaterialCommunityIcons
+                            name={isPlaying ? 'pause' : 'play'}
+                            size={28}
+                            color="#FFFFFF"
+                        />
+                    </Pressable>
+                    <Pressable
+                        onPress={handleStop}
+                        hitSlop={8}
+                        style={({ pressed }) => [pressed && { opacity: 0.6 }]}
+                    >
+                        <MaterialCommunityIcons
+                            name="close"
+                            size={22}
+                            color="rgba(255,255,255,0.5)"
+                        />
+                    </Pressable>
+                </View>
+            </Pressable>
         </MotiView>
     );
 };
@@ -128,44 +118,42 @@ export const GlobalMiniPlayer: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        borderBottomLeftRadius: BorderRadius.lg,
-        borderBottomRightRadius: BorderRadius.lg,
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: Spacing.md,
-        paddingVertical: Spacing.sm,
-        paddingBottom: Spacing.sm + 2,
-        elevation: 6,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.12,
-        shadowRadius: 8,
-        zIndex: 100,
+        left: Spacing.md,
+        right: Spacing.md,
+        zIndex: 50,
     },
-    infoArea: {
-        flex: 1,
+    pill: {
         flexDirection: 'row',
         alignItems: 'center',
+        borderRadius: BorderRadius.full,
+        paddingVertical: 10,
+        paddingHorizontal: 12,
         gap: Spacing.sm,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        elevation: 10,
     },
-    iconBadge: {
+    artDot: {
         width: 36,
         height: 36,
         borderRadius: 18,
         alignItems: 'center',
         justifyContent: 'center',
+        flexShrink: 0,
     },
-    textArea: {
+    info: {
         flex: 1,
     },
-    surahName: {
-        fontSize: 14,
+    title: {
+        color: '#FFFFFF',
+        fontSize: 13,
         fontWeight: '700',
+        letterSpacing: -0.1,
     },
-    verseInfo: {
+    subtitle: {
+        color: 'rgba(255,255,255,0.5)',
         fontSize: 11,
         fontWeight: '500',
         marginTop: 1,
@@ -173,20 +161,7 @@ const styles = StyleSheet.create({
     controls: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
-    },
-    controlButton: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    closeButton: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        alignItems: 'center',
-        justifyContent: 'center',
+        gap: 8,
+        flexShrink: 0,
     },
 });
