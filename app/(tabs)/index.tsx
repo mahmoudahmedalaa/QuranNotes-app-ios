@@ -294,12 +294,12 @@ export default function DashboardScreen() {
                     style={[styles.floatingPill, { bottom: pillBottom }]}
                 >
                     <LinearGradient
-                        colors={['rgba(105, 85, 230, 0.30)', 'rgba(75, 55, 200, 0.24)']}
+                        colors={['rgba(98, 70, 234, 0.92)', 'rgba(72, 48, 180, 0.92)']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={StyleSheet.absoluteFill}
                     />
-                    {/* Body — navigates to the reading position */}
+                    {/* Body — tapping navigates to reading position */}
                     <Pressable
                         onPress={() => {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -307,37 +307,31 @@ export default function DashboardScreen() {
                         }}
                         style={({ pressed }) => [
                             styles.floatingPillInner,
-                            pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
+                            pressed && { opacity: 0.85 },
                         ]}
                     >
-                        <View style={styles.continueLeft}>
-                            <MaterialCommunityIcons name="book-open-page-variant" size={18} color="#FFFFFF" />
-                            <View style={styles.continueTextGroup}>
-                                <Text style={styles.continueTitle}>Continue Reading</Text>
-                                <Text style={styles.continueSubtitle}>
-                                    {globalPosition.surahName || `Surah ${globalPosition.surah}`} · Verse {globalPosition.verse}
-                                </Text>
-                            </View>
-                        </View>
+                        <MaterialCommunityIcons name="book-open-page-variant" size={16} color="rgba(255,255,255,0.85)" />
+                        <Text style={styles.continueTitle} numberOfLines={1}>
+                            Continue Reading
+                            <Text style={styles.continueSubtitle}>
+                                {'  ·  '}{globalPosition.surahName || `Surah ${globalPosition.surah}`} · {globalPosition.verse}
+                            </Text>
+                        </Text>
                     </Pressable>
-
-                    {/* Play button — plays in-place, does NOT navigate */}
+                    {/* Play button */}
                     <Pressable
                         onPress={async () => {
                             if (!continueSurah) {
-                                // fallback: navigate if surah not loaded yet
                                 router.push(`/surah/${globalPosition.surah}?verse=${globalPosition.verse}&autoplay=true`);
                                 return;
                             }
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                             await playFromVerse(continueSurah, globalPosition.verse);
                         }}
-                        hitSlop={10}
-                        style={styles.playCircleWrap}
+                        hitSlop={8}
+                        style={({ pressed }) => [styles.playCircleWrap, pressed && { opacity: 0.7 }]}
                     >
-                        <View style={styles.playCircle}>
-                            <Ionicons name="play" size={14} color="#A898FF" />
-                        </View>
+                        <MaterialCommunityIcons name="play" size={18} color="#FFFFFF" />
                     </Pressable>
                 </MotiView>
             )}
@@ -383,55 +377,48 @@ const styles = StyleSheet.create({
         alignItems: 'center', justifyContent: 'center',
     },
 
-    // ── Floating Continue Reading pill (Apple Music pattern) ──
+    // ── Floating Continue Reading pill ──
     floatingPill: {
         position: 'absolute',
-        alignSelf: 'center',   // centred — matches FloatingTabBar pill alignment
-        width: '90%',          // ~matches tab bar pill width across device sizes
+        alignSelf: 'center',
+        width: '82%',
+        height: 44,
         zIndex: 100,
-        borderRadius: 20,
+        borderRadius: 22,
         overflow: 'hidden',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.22)',
-        shadowColor: BrandTokens.light.accentPrimary,
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.22,
-        shadowRadius: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        shadowColor: '#3B22C8',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.28,
+        shadowRadius: 10,
         elevation: 10,
     },
     floatingPillInner: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        flex: 1,
-        paddingVertical: 13,
-        paddingLeft: 16,
-        paddingRight: 8,
+        gap: 8,
+        paddingLeft: 14,
+        paddingRight: 4,
+        height: 44,
     },
     playCircleWrap: {
-        paddingRight: 12,
-        paddingVertical: 10,
-    },
-    continueLeft: {
-        flexDirection: 'row',
+        width: 40,
+        height: 44,
         alignItems: 'center',
-        gap: 10,
-        flex: 1,
+        justifyContent: 'center',
+        paddingRight: 4,
     },
-    continueTextGroup: { flex: 1 },
+    continueLeft: {},
+    continueTextGroup: {},
     continueTitle: {
-        fontSize: 15, fontWeight: '700', color: '#FFFFFF',
+        fontSize: 13, fontWeight: '700', color: '#FFFFFF',
     },
     continueSubtitle: {
-        fontSize: 13, color: 'rgba(255,255,255,0.72)', marginTop: 1,
+        fontSize: 12, color: 'rgba(255,255,255,0.65)',
     },
-    playCircle: {
-        width: 30, height: 30, borderRadius: 15,
-        backgroundColor: 'rgba(255,255,255,0.18)',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.30)',
-        alignItems: 'center', justifyContent: 'center',
-        marginLeft: 8,
-    },
+    playCircle: {},
 
     // ── 2-Column Grid ──
     gridRow: {
