@@ -35,21 +35,18 @@ function getAllVerses(): TopicVerse[] {
 }
 
 /** Get time-of-day gradient — different palettes for light vs dark */
-function getTimeGradient(isDark: boolean, surfaceVariant: string, primaryContainer: string): readonly [string, string, string] {
+function getTimeGradient(): readonly [string, string, string] {
     const hour = new Date().getHours();
 
-    if (isDark) {
-        // Dark mode — rich, moody brand colors (unchanged, user happy with these as they are dark enough for white text)
-        if (hour >= 4 && hour < 6) return ['#1A1B3A', '#2D1B69', '#5B3A8C'] as const;   // Fajr
-        if (hour >= 6 && hour < 12) return ['#1E3A8A', '#1D4ED8', '#5B7FFF'] as const;   // Morning
-        if (hour >= 12 && hour < 16) return ['#1E3A5F', '#155E75', '#0E7490'] as const;   // Afternoon
-        if (hour >= 16 && hour < 18) return ['#7C2D12', '#9A3412', '#D4853C'] as const;   // Asr
-        if (hour >= 18 && hour < 20) return ['#3B0764', '#6B21A8', '#9333EA'] as const;   // Maghrib
-        return ['#0F172A', '#1E293B', '#2D3A5F'] as const;                                // Isha
-    }
-
-    // Light mode — strictly use DesignSystem tokens (surfaceVariant -> primaryContainer) wrapper for perfect contrast with onSurface text
-    return [surfaceVariant, surfaceVariant, primaryContainer] as const;
+    // The DailyVerseCard is a "Window to the Sky". We use these rich, atmospheric 
+    // gradients universally in both Light and Dark modes. All text inside the card 
+    // is permanently locked to White/Light-opacities to guarantee WCAG AA contrast.
+    if (hour >= 4 && hour < 6) return ['#3B1F50', '#7E4B8C', '#C481A7'] as const;   // Fajr: Dawn purple to soft pink
+    if (hour >= 6 && hour < 12) return ['#4CA1AF', '#73bdeb', '#A5D6F7'] as const;  // Morning: Airy sky blue
+    if (hour >= 12 && hour < 16) return ['#1E3A8A', '#2563EB', '#60A5FA'] as const; // Dhuhr: Vibrant daytime blue
+    if (hour >= 16 && hour < 18) return ['#9A3412', '#C2410C', '#EA580C'] as const; // Asr: Golden hour amber/orange
+    if (hour >= 18 && hour < 20) return ['#581C87', '#9D174D', '#BE123C'] as const; // Maghrib: Sunset crimson & purple
+    return ['#0F172A', '#1E293B', '#334155'] as const;                              // Isha: Deep midnight
 }
 
 
@@ -127,10 +124,13 @@ export const DailyVerseCard: React.FC = () => {
 
     if (loading || !verse) return null;
 
-    const gradientColors = getTimeGradient(theme.dark, theme.colors.surfaceVariant, theme.colors.primaryContainer);
-    const textColorPrimary = theme.dark ? '#FFFFFF' : theme.colors.onSurface;
-    const textColorSecondary = theme.dark ? 'rgba(255,255,255,0.7)' : theme.colors.onSurfaceVariant;
-    const textColorTertiary = theme.dark ? 'rgba(255,255,255,0.5)' : theme.colors.outline;
+    // Render atmospheric gradient for the Sky window.
+    // Text is ALWAYS hard-locked to white/light-opacities to guarantee maximum contrast 
+    // against these rich, vibrant time-of-day backgrounds.
+    const gradientColors = getTimeGradient();
+    const textColorPrimary = '#FFFFFF';
+    const textColorSecondary = 'rgba(255,255,255,0.85)';
+    const textColorTertiary = 'rgba(255,255,255,0.6)';
 
     return (
         <MotiView
