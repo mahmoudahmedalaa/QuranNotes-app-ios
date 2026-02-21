@@ -193,8 +193,8 @@ export default function DashboardScreen() {
                         >
                             <LinearGradient
                                 colors={theme.dark
-                                    ? ['#3D2E10', '#D4A85320']
-                                    : ['#FDF6E3', '#FDE68A40']
+                                    ? ['#1A1340', '#2D1F6E']
+                                    : ['#F8F5FF', '#EDE5FF']
                                 }
                                 style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
                             />
@@ -203,7 +203,7 @@ export default function DashboardScreen() {
                                 <Svg width={RING_SIZE} height={RING_SIZE}>
                                     <Circle
                                         cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RADIUS}
-                                        stroke={theme.dark ? '#4A3B18' : '#FDE68A'}
+                                        stroke={theme.dark ? '#3C2D80' : '#E0D4F5'}
                                         strokeWidth={STROKE_WIDTH} fill="none"
                                     />
                                     <Circle
