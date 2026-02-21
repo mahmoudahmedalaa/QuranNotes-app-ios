@@ -118,8 +118,8 @@ export const GlobalMiniPlayer: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        left: Spacing.md,
-        right: Spacing.md,
+        alignSelf: 'center',  // centred — matches FloatingTabBar pill alignment
+        width: '90%',         // ~matches tab bar pill width across device sizes
         zIndex: 50,
     },
     pill: {

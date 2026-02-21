@@ -22,6 +22,8 @@ import { useKhatma } from '../../src/infrastructure/khatma/KhatmaContext';
 import { useAudio } from '../../src/infrastructure/audio/AudioContext';
 import { useAdhkar } from '../../src/infrastructure/adhkar/AdhkarContext';
 import { AdhkarScreen } from '../../src/presentation/screens/AdhkarScreen';
+import { useQuran } from '../../src/presentation/hooks/useQuran';
+import { useSettings } from '../../src/infrastructure/settings/SettingsContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GRID_GAP = 10;
@@ -38,10 +40,12 @@ const GOLD = '#D4A853';
 export default function DashboardScreen() {
     const router = useRouter();
     const theme = useTheme();
-    const { playingVerse, isPlaying } = useAudio();
+    const { playingVerse, isPlaying, playFromVerse } = useAudio();
     const { completedSurahs, completedJuz } = useKhatma();
     const { nextPrayer } = usePrayer();
     const [globalPosition, setGlobalPosition] = useState<ReadingPosition | null>(null);
+    const { settings } = useSettings();
+    const { surah: continueSurah, loadSurah } = useQuran();
     const [showAdhkar, setShowAdhkar] = useState(false);
     const insets = useSafeAreaInsets();
     const tabBarHeight = useBottomTabBarHeight();  // actual runtime height, safe-area-inclusive
@@ -83,6 +87,15 @@ export default function DashboardScreen() {
                 }
             });
         }, [playingVerse])
+    );
+
+    // When the reading position changes, silently pre-load the surah
+    // so the play button can trigger in-place audio without navigating
+    useFocusEffect(
+        useCallback(() => {
+            if (!globalPosition) return;
+            loadSurah(globalPosition.surah, settings.translationEdition);
+        }, [globalPosition?.surah, settings.translationEdition])
     );
 
     const showContinueReading = globalPosition && !isPlaying && !completedSurahs.includes(globalPosition.surah);
@@ -257,10 +270,11 @@ export default function DashboardScreen() {
                         end={{ x: 1, y: 0 }}
                         style={StyleSheet.absoluteFill}
                     />
+                    {/* Body — navigates to the reading position */}
                     <Pressable
                         onPress={() => {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                            router.push(`/surah/${globalPosition.surah}?verse=${globalPosition.verse}&autoplay=true`);
+                            router.push(`/surah/${globalPosition.surah}?verse=${globalPosition.verse}`);
                         }}
                         style={({ pressed }) => [
                             styles.floatingPillInner,
@@ -276,6 +290,22 @@ export default function DashboardScreen() {
                                 </Text>
                             </View>
                         </View>
+                    </Pressable>
+
+                    {/* Play button — plays in-place, does NOT navigate */}
+                    <Pressable
+                        onPress={async () => {
+                            if (!continueSurah) {
+                                // fallback: navigate if surah not loaded yet
+                                router.push(`/surah/${globalPosition.surah}?verse=${globalPosition.verse}&autoplay=true`);
+                                return;
+                            }
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                            await playFromVerse(continueSurah, globalPosition.verse);
+                        }}
+                        hitSlop={10}
+                        style={styles.playCircleWrap}
+                    >
                         <View style={styles.playCircle}>
                             <Ionicons name="play" size={14} color="#A898FF" />
                         </View>
@@ -327,8 +357,8 @@ const styles = StyleSheet.create({
     // ── Floating Continue Reading pill (Apple Music pattern) ──
     floatingPill: {
         position: 'absolute',
-        left: GRID_PAD,
-        right: GRID_PAD,
+        alignSelf: 'center',   // centred — matches FloatingTabBar pill alignment
+        width: '90%',          // ~matches tab bar pill width across device sizes
         zIndex: 100,
         borderRadius: 20,
         overflow: 'hidden',
@@ -343,9 +373,14 @@ const styles = StyleSheet.create({
     floatingPillInner: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        flex: 1,
         paddingVertical: 13,
-        paddingHorizontal: 16,
+        paddingLeft: 16,
+        paddingRight: 8,
+    },
+    playCircleWrap: {
+        paddingRight: 12,
+        paddingVertical: 10,
     },
     continueLeft: {
         flexDirection: 'row',
