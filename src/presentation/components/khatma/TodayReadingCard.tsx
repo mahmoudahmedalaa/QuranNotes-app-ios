@@ -14,7 +14,7 @@ import * as Haptics from 'expo-haptics';
 import { ReadingPositionService, ReadingPosition } from '../../../infrastructure/reading/ReadingPositionService';
 import { SurahMeta, getSurahMeta } from '../../../infrastructure/khatma/KhatmaContext';
 import { getSurahsInJuz, getJuzForSurah } from '../../../data/khatmaData';
-import { Spacing, BorderRadius, Shadows, Typography } from '../../theme/DesignSystem';
+import { Spacing, BorderRadius, Shadows, Typography, BrandTokens } from '../../theme/DesignSystem';
 
 // ─── Colors ─────────────────────────────────────────────────────────────────
 
@@ -23,7 +23,7 @@ const ACCENT = {
     green: '#10B981',
     greenBg: '#ECFDF5',
     greenBgDark: '#064E3B',
-    blue: '#5B7FFF',
+    blue: BrandTokens.light.accentPrimary,
     blueBg: '#EEF2FF',
     blueBgDark: '#312E81',
     goldBg: '#FFFBEB',
@@ -184,7 +184,7 @@ const SurahCard: React.FC<SurahCardProps> = ({
                             ]}
                         >
                             <LinearGradient
-                                colors={['#5B7FFF', '#7B5FFF']}
+                                colors={[BrandTokens.light.accentPrimary, '#7B5FFF']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 1 }}
                                 style={styles.primaryAction}
@@ -202,7 +202,7 @@ const SurahCard: React.FC<SurahCardProps> = ({
                             ]}
                         >
                             <LinearGradient
-                                colors={['#5B7FFF', '#7B5FFF']}
+                                colors={[BrandTokens.light.accentPrimary, '#7B5FFF']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 1 }}
                                 style={styles.primaryAction}
@@ -212,6 +212,7 @@ const SurahCard: React.FC<SurahCardProps> = ({
                             </LinearGradient>
                         </Pressable>
                     )}
+
 
                     <Pressable
                         onPress={onMarkComplete}
@@ -226,8 +227,8 @@ const SurahCard: React.FC<SurahCardProps> = ({
                         </Text>
                     </Pressable>
                 </View>
-            </View>
-        </MotiView>
+            </View >
+        </MotiView >
     );
 };
 
@@ -553,7 +554,7 @@ const styles = StyleSheet.create({
     primaryActionWrapper: {
         flex: 1,
         borderRadius: BorderRadius.full,
-        shadowColor: '#5B7FFF',
+        shadowColor: BrandTokens.light.accentPrimary,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,

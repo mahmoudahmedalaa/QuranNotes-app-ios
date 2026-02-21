@@ -16,7 +16,7 @@ import { Audio } from 'expo-av';
 import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
 import { RECITERS } from '../../src/domain/entities/Reciter';
 import { useSettings } from '../../src/infrastructure/settings/SettingsContext';
-import { Spacing, BorderRadius, Shadows, Gradients } from '../../src/presentation/theme/DesignSystem';
+import { Spacing, BorderRadius, Shadows, Gradients, BrandTokens } from '../../src/presentation/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 const STEP = 2;
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
         borderRadius: 34,
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: '#5B7FFF',
+        shadowColor: BrandTokens.light.accentPrimary,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 12,

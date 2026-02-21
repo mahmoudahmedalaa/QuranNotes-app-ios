@@ -11,7 +11,7 @@ import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { JuzInfo } from '../../../data/khatmaData';
-import { Spacing, BorderRadius, Shadows } from '../../theme/DesignSystem';
+import { Spacing, BorderRadius, Shadows, BrandTokens } from '../../theme/DesignSystem';
 
 interface JuzCardProps {
     juz: JuzInfo;
@@ -127,7 +127,7 @@ export const JuzCard: React.FC<JuzCardProps> = ({
                             ]}
                         >
                             <LinearGradient
-                                colors={['#5B7FFF', '#7B5FFF']}
+                                colors={[BrandTokens.light.accentPrimary, '#7B5FFF']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 1 }}
                                 style={styles.continueButton}
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     continueButtonWrapper: {
         flex: 1,
         borderRadius: BorderRadius.full,
-        shadowColor: '#5B7FFF',
+        shadowColor: BrandTokens.light.accentPrimary,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,

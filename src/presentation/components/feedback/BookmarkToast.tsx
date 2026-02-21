@@ -9,7 +9,7 @@ import { useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Spacing, BorderRadius } from '../../theme/DesignSystem';
+import { Spacing, BorderRadius, BrandTokens } from '../../theme/DesignSystem';
 
 const ACCENT_GOLD = '#D4A853';
 
@@ -50,7 +50,7 @@ export const BookmarkToast: React.FC<BookmarkToastProps> = ({
                 {
                     top: insets.top + 8,
                     backgroundColor: theme.colors.elevation.level3,
-                    shadowColor: theme.dark ? '#000' : '#5B7FFF',
+                    shadowColor: theme.dark ? '#000' : BrandTokens.light.accentPrimary,
                 },
             ]}
         >

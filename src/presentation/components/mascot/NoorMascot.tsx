@@ -4,6 +4,7 @@ import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Path, G } from 'react-native-svg';
 import { useTheme } from 'react-native-paper';
+import { BrandTokens } from '../../theme/DesignSystem';
 
 interface NoorMascotProps {
     size?: number;
@@ -21,8 +22,8 @@ export const NoorMascot = ({
     const theme = useTheme();
     const isDark = theme.dark;
 
-    const coreColor = isDark ? '#7B9EFF' : '#5B7FFF';
-    const glowColor = isDark ? 'rgba(123, 158, 255, 0.3)' : 'rgba(91, 127, 255, 0.2)';
+    const coreColor = isDark ? BrandTokens.dark.accentPrimary : BrandTokens.light.accentPrimary;
+    const glowColor = isDark ? 'rgba(139, 116, 240, 0.3)' : 'rgba(98, 70, 234, 0.2)';
     const goldAccent = '#D4A853';
 
     const getEyeProps = () => {
@@ -91,7 +92,7 @@ export const NoorMascot = ({
                     { width: size * 0.8, height: size * 0.8, borderRadius: size * 0.4 },
                 ]}>
                 <LinearGradient
-                    colors={[coreColor, isDark ? '#5B7FFF' : '#7B5FFF']}
+                    colors={[coreColor, isDark ? BrandTokens.light.accentPrimary : '#7B5FFF']}
                     start={{ x: 0.3, y: 0 }}
                     end={{ x: 0.7, y: 1 }}
                     style={StyleSheet.absoluteFillObject}

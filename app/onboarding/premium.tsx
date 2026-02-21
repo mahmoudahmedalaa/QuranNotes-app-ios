@@ -12,6 +12,7 @@ import {
     BorderRadius,
     Shadows,
     Gradients,
+    BrandTokens,
 } from '../../src/presentation/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 import { revenueCatService, PurchasesOffering } from '../../src/infrastructure/payments/RevenueCatService';
@@ -218,7 +219,7 @@ export default function OnboardingPremium() {
                         style={styles.ctaButton}
                         labelStyle={styles.ctaLabel}
                         buttonColor="#FFFFFF"
-                        textColor="#5B7FFF"
+                        textColor={BrandTokens.light.accentPrimary}
                         loading={purchasing}
                         disabled={purchasing}>
                         Unlock Full Access

@@ -3,7 +3,7 @@ import { View, StyleSheet, Animated } from 'react-native';
 import { Text, useTheme, Surface } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useStreaks } from '../../../infrastructure/auth/StreakContext';
-import { Spacing, BorderRadius, Shadows } from '../../theme/DesignSystem';
+import { Spacing, BorderRadius, Shadows, BrandTokens } from '../../theme/DesignSystem';
 import { MotiView } from 'moti';
 
 export const StreakCounter: React.FC = () => {
@@ -70,6 +70,6 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#6B7C93',
+        color: BrandTokens.light.textSecondary,
     },
 });

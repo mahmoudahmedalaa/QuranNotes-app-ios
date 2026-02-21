@@ -8,7 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { NoorMascot } from '../../src/presentation/components/mascot/NoorMascot';
-import { Spacing, BorderRadius, Shadows, TAB_BAR_HEIGHT } from '../../src/presentation/theme/DesignSystem';
+import { Spacing, BorderRadius, Shadows, TAB_BAR_HEIGHT, BrandTokens } from '../../src/presentation/theme/DesignSystem';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.22)',
-        shadowColor: '#5B3FD0',
+        shadowColor: BrandTokens.light.accentPrimary,
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.22,
         shadowRadius: 16,

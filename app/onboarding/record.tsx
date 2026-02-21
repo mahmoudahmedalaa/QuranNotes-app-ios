@@ -11,7 +11,7 @@ import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
-import { Spacing, BorderRadius, Shadows, Gradients } from '../../src/presentation/theme/DesignSystem';
+import { Spacing, BorderRadius, Shadows, Gradients, BrandTokens } from '../../src/presentation/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 const STEP = 3;
@@ -20,7 +20,7 @@ const TOTAL_STEPS = 6;
 const FEATURES = [
     {
         icon: 'mic',
-        color: '#5B7FFF',
+        color: BrandTokens.light.accentPrimary,
         bg: '#EDE5FF',
         title: 'Voice Reflections',
         desc: 'Record thoughts while you listen',

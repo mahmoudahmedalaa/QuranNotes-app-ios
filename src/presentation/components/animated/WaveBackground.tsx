@@ -24,7 +24,7 @@ import Animated, {
     interpolate,
 } from 'react-native-reanimated';
 import { useTheme } from 'react-native-paper';
-import { Gradients } from '../../theme/DesignSystem';
+import { Gradients, BrandTokens } from '../../theme/DesignSystem';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -112,7 +112,7 @@ export const WaveBackground = ({
     const colorSchemes = {
         serene: {
             gradient: isDark ? Gradients.nightSky : Gradients.sereneSky,
-            waves: isDark ? ['#5B7FFF', '#7B9EFF', '#9BB5FF'] : ['#5B7FFF', '#7B9EFF', '#B8C9FF'],
+            waves: isDark ? [BrandTokens.dark.accentPrimary, '#A78BFA', '#C4B5FD'] : [BrandTokens.light.accentPrimary, '#7B9EFF', '#B8C9FF'],
         },
         golden: {
             gradient: isDark ? ['#1F1A14', '#140F0A'] : Gradients.calmSunset,
@@ -124,7 +124,7 @@ export const WaveBackground = ({
         },
         night: {
             gradient: Gradients.nightSky,
-            waves: ['#5B7FFF', '#4B6EDD', '#3A5DBB'],
+            waves: [BrandTokens.light.accentPrimary, '#4B6EDD', '#3A5DBB'],
         },
     };
 

@@ -7,7 +7,7 @@ import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
-import { Spacing, BorderRadius, Gradients } from '../../src/presentation/theme/DesignSystem';
+import { Spacing, BorderRadius, Gradients, BrandTokens } from '../../src/presentation/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 const { width, height } = Dimensions.get('window');
@@ -38,7 +38,7 @@ export default function OnboardingWelcome() {
                         transition={{ type: 'spring', delay: 200 }}
                         style={styles.iconContainer}>
                         <View style={styles.iconCircle}>
-                            <Ionicons name="book" size={48} color="#5B7FFF" />
+                            <Ionicons name="book" size={48} color={BrandTokens.light.accentPrimary} />
                         </View>
                     </MotiView>
 
@@ -85,7 +85,7 @@ export default function OnboardingWelcome() {
                         style={styles.ctaButton}
                         labelStyle={styles.ctaLabel}
                         buttonColor="#FFFFFF"
-                        textColor="#5B7FFF">
+                        textColor={BrandTokens.light.accentPrimary}>
                         Begin
                     </Button>
                 </MotiView>

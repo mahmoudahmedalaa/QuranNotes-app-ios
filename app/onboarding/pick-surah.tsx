@@ -11,6 +11,7 @@ import {
     BorderRadius,
     Shadows,
     Gradients,
+    BrandTokens,
 } from '../../src/presentation/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
@@ -196,8 +197,8 @@ const styles = StyleSheet.create({
     },
     spotlightCard: {
         borderWidth: 2,
-        borderColor: '#5B7FFF',
-        shadowColor: '#5B7FFF',
+        borderColor: BrandTokens.light.accentPrimary,
+        shadowColor: BrandTokens.light.accentPrimary,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 12,

@@ -4,7 +4,7 @@ import { Text, useTheme } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
-import { Shadows, BorderRadius, Spacing } from '../../theme/DesignSystem';
+import { Shadows, BorderRadius, Spacing, BrandTokens } from '../../theme/DesignSystem';
 
 /**
  * Premium Components Library
@@ -127,7 +127,7 @@ export function PremiumButton({
                     pressed && { transform: [{ scale: 0.96 }] },
                 ]}>
                 <LinearGradient
-                    colors={['#5B7FFF', '#7B5FFF']}
+                    colors={[BrandTokens.light.accentPrimary, '#7B5FFF']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={[styles.buttonGradient, sizeStyles[size]]}>
@@ -227,7 +227,7 @@ interface BadgeProps {
     variant?: 'filled' | 'subtle';
 }
 
-export function Badge({ label, color = '#5B7FFF', variant = 'subtle' }: BadgeProps) {
+export function Badge({ label, color = BrandTokens.light.accentPrimary, variant = 'subtle' }: BadgeProps) {
     return (
         <View
             style={[

@@ -4,7 +4,7 @@ import { Text, Button, useTheme, ActivityIndicator } from 'react-native-paper';
 import { useRouter, useLocalSearchParams, Redirect } from 'expo-router';
 import { revenueCatService, PurchasesOffering, PurchasesPackage } from '../../../infrastructure/payments/RevenueCatService';
 import { usePro } from '../../../infrastructure/auth/ProContext';
-import { Spacing, BorderRadius, Gradients } from '../../theme/DesignSystem';
+import { Spacing, BorderRadius, Gradients, BrandTokens } from '../../theme/DesignSystem';
 import { MotiView } from 'moti';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -264,7 +264,7 @@ export default function PaywallScreen() {
                         style={styles.ctaButton}
                         labelStyle={styles.ctaLabel}
                         buttonColor="#FFFFFF"
-                        textColor="#5B7FFF"
+                        textColor={BrandTokens.light.accentPrimary}
                         loading={purchasing}
                         disabled={purchasing}>
                         Unlock Full Access

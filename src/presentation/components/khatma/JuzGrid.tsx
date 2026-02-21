@@ -8,7 +8,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
-import { Spacing, BorderRadius, Shadows } from '../../theme/DesignSystem';
+import { Spacing, BorderRadius, Shadows, BrandTokens } from '../../theme/DesignSystem';
 
 const COLUMNS = 6;
 const GAP = 6;
@@ -18,8 +18,8 @@ const ACCENT = {
     goldLight: '#F5A62350',
     green: '#10B981',
     greenLight: '#10B98140',
-    selected: '#5B7FFF',
-    selectedLight: '#5B7FFF30',
+    selected: BrandTokens.light.accentPrimary,
+    selectedLight: BrandTokens.light.accentPrimary + '30',
 };
 
 interface JuzGridProps {
