@@ -68,19 +68,26 @@ export const PrayerTimesCard: React.FC = () => {
                 ]}
             >
                 <View style={[styles.card, { backgroundColor: theme.colors.surface }, Shadows.md]}>
-                    {/* Hijri Date */}
-                    {prayerTimes.hijriDate ? (
-                        <View style={styles.hijriRow}>
+                    {/* Hijri Date row — always shows chevron as collapse affordance */}
+                    <View style={styles.hijriRow}>
+                        {prayerTimes.hijriDate ? (
                             <Text style={[styles.hijriDate, { color: GOLD }]}>
                                 ☪ {prayerTimes.hijriDate}
                             </Text>
-                            {prayerTimes.location ? (
-                                <Text style={[styles.locationText, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
-                                    📍 {prayerTimes.location}
-                                </Text>
-                            ) : null}
-                        </View>
-                    ) : null}
+                        ) : null}
+                        <View style={{ flex: 1 }} />
+                        {prayerTimes.location ? (
+                            <Text style={[styles.locationText, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
+                                📍 {prayerTimes.location}
+                            </Text>
+                        ) : null}
+                        <MaterialCommunityIcons
+                            name={expanded ? 'chevron-up' : 'chevron-down'}
+                            size={20}
+                            color={theme.colors.onSurfaceVariant}
+                            style={{ marginLeft: 6 }}
+                        />
+                    </View>
 
                     {/* Compact: Next Prayer */}
                     {nextPrayer && (
@@ -110,11 +117,6 @@ export const PrayerTimesCard: React.FC = () => {
                                     </Text>
                                 ) : null}
                             </View>
-                            <MaterialCommunityIcons
-                                name={expanded ? 'chevron-up' : 'chevron-down'}
-                                size={20}
-                                color={theme.colors.onSurfaceVariant}
-                            />
                         </View>
                     )}
 

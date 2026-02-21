@@ -243,7 +243,7 @@ export default function DashboardScreen() {
                             <LinearGradient
                                 colors={adhkarPeriod === 'morning'
                                     ? (theme.dark ? ['#FDE68A40', '#D9770622'] : ['#FDE68A80', '#FEF3C755'])
-                                    : (theme.dark ? ['#1E1B4B90', '#312E8170'] : ['#312E8128', '#4338CA20'])
+                                    : (theme.dark ? ['#1E1B4BCC', '#312E81AA'] : ['#E0E7FF', '#C7D2FE'])
                                 }
                                 style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
                             />
@@ -252,13 +252,26 @@ export default function DashboardScreen() {
                                     {adhkarPeriod === 'morning' ? '☀️' : '🌙'}
                                 </Text>
                             </View>
-                            <Text style={[styles.tileLabel, { color: adhkarPeriod === 'evening' ? '#E0E7FF' : theme.colors.onSurface }]}>
+                            <Text style={[styles.tileLabel, {
+                                color: adhkarPeriod === 'evening'
+                                    ? (theme.dark ? '#E0E7FF' : '#312E81')
+                                    : theme.colors.onSurface
+                            }]}>
                                 {adhkarPeriod === 'morning' ? 'Morning' : 'Evening'}
                             </Text>
-                            <Text style={[styles.tileSub, { color: adhkarPeriod === 'evening' ? '#C7D2FE' : theme.colors.onSurface, fontWeight: '600' }]}>
+                            <Text style={[styles.tileSub, {
+                                color: adhkarPeriod === 'evening'
+                                    ? (theme.dark ? '#C7D2FE' : '#3730A3')
+                                    : theme.colors.onSurface,
+                                fontWeight: '600'
+                            }]}>
                                 Adhkar
                             </Text>
-                            <Text style={[styles.tileSub2, { color: adhkarPeriod === 'evening' ? '#A5B4FC' : theme.colors.onSurfaceVariant }]}>
+                            <Text style={[styles.tileSub2, {
+                                color: adhkarPeriod === 'evening'
+                                    ? (theme.dark ? '#A5B4FC' : '#4338CA')
+                                    : theme.colors.onSurfaceVariant
+                            }]}>
                                 {adhkarPct > 0 ? `${adhkarPct}% done` : 'Tap to begin'}
                             </Text>
                         </Pressable>
