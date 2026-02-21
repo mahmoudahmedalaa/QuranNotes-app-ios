@@ -122,7 +122,7 @@ export default function OnboardingPremium() {
 
     return (
         <LinearGradient
-            colors={Gradients.primary}
+            colors={['#1A1340', '#312E81', '#1A1340']}
             style={styles.container}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}>

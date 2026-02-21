@@ -83,7 +83,7 @@ ShareCardGenerator.displayName = 'ShareCardGenerator';
 // ═══════════════════════════════════════════════════════════════════════
 const VerseCard = ({ data }: { data: VerseShareData }) => (
     <LinearGradient
-        colors={['#0C1220', '#152238', '#1A2D50']}
+        colors={['#0F172A', '#1E293B', '#1A1340']}
         start={{ x: 0, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={styles.card}
@@ -144,7 +144,7 @@ const VerseCard = ({ data }: { data: VerseShareData }) => (
 // ═══════════════════════════════════════════════════════════════════════
 const KhatmaCard = ({ data }: { data: KhatmaShareData }) => (
     <LinearGradient
-        colors={['#0D1117', '#1B2838', '#2D4A22']}
+        colors={['#1A2421', '#2C4035', '#1B3022']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.card}
@@ -193,7 +193,7 @@ const KhatmaCard = ({ data }: { data: KhatmaShareData }) => (
 // ═══════════════════════════════════════════════════════════════════════
 const StreakCard = ({ data }: { data: StreakShareData }) => (
     <LinearGradient
-        colors={['#1A0A00', '#3D1500', '#662200']}
+        colors={['#2E1610', '#4A2518', '#381A12']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.card}

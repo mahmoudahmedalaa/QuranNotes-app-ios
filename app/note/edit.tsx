@@ -125,9 +125,8 @@ export default function NoteEditorScreen() {
     }
 
     return (
-        <LinearGradient
-            colors={theme.dark ? ['#0F1419', '#1A1F26'] : (Gradients.sereneSky as any)}
-            style={styles.container}>
+        <View
+            style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <SafeAreaView style={styles.safeArea} edges={['top']}>
                 <KeyboardAvoidingView
                     style={styles.keyboardView}
@@ -151,8 +150,8 @@ export default function NoteEditorScreen() {
                                 {isStandalone
                                     ? 'New Note'
                                     : verse
-                                      ? `Surah ${surah}:${verse}`
-                                      : `Surah ${surah}`}
+                                        ? `Surah ${surah}:${verse}`
+                                        : `Surah ${surah}`}
                             </Text>
                         </View>
                         <View style={styles.headerActions}>
@@ -250,7 +249,7 @@ export default function NoteEditorScreen() {
                     </ScrollView>
                 </KeyboardAvoidingView>
             </SafeAreaView>
-        </LinearGradient>
+        </View>
     );
 }
 
