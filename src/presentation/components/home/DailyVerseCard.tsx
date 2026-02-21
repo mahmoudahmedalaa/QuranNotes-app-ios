@@ -48,8 +48,8 @@ function getTimeGradient(isDark: boolean): readonly [string, string, string] {
         return ['#0F172A', '#1E293B', '#2D3A5F'] as const;                                // Isha
     }
 
-    // Light mode — consistent brand faint-purple (app identity colour)
-    return ['#C4B5FD', '#8B5CF6', '#5B7FFF'] as const;
+    // Light mode — deep brand violet (readable white text, WCAG AA compliant)
+    return ['#5B21B6', '#6D28D9', '#4C1D95'] as const;
 }
 
 

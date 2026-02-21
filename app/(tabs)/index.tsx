@@ -37,7 +37,7 @@ const GOLD = '#D4A853';
 export default function DashboardScreen() {
     const router = useRouter();
     const theme = useTheme();
-    const { playingVerse } = useAudio();
+    const { playingVerse, isPlaying } = useAudio();
     const { completedSurahs, completedJuz } = useKhatma();
     const { nextPrayer } = usePrayer();
     const [globalPosition, setGlobalPosition] = useState<ReadingPosition | null>(null);
@@ -45,18 +45,19 @@ export default function DashboardScreen() {
     const insets = useSafeAreaInsets();
     const { getCompletionPercentage } = useAdhkar();
 
-    // Smart Adhkar timing: Morning = Fajr until Dhuhr, Evening = after Dhuhr
-    // If prayer data available, use it; otherwise fall back to time-based heuristic
+    // Smart Adhkar timing: Morning = Fajr until Asr begins. Evening = Asr onwards.
+    // If prayer data available, use it; otherwise fall back to hour < 15 heuristic.
     const getAdhkarPeriod = (): 'morning' | 'evening' => {
         if (nextPrayer) {
-            // If next prayer is Dhuhr, Fajr, or Sunrise → we're in morning window
-            const morningPrayers = ['Fajr', 'Sunrise', 'Dhuhr'];
-            if (morningPrayers.includes(nextPrayer.name)) return 'morning';
-            return 'evening';
+            // Evening begins when next prayer is Maghrib, Isha, or Midnight
+            // (meaning Asr has already passed)
+            const eveningPrayers = ['Maghrib', 'Isha', 'Midnight'];
+            if (eveningPrayers.includes(nextPrayer.name)) return 'evening';
+            return 'morning'; // Fajr, Sunrise, Dhuhr, Asr upcoming = still morning
         }
-        // Fallback: 5 AM–12 PM = morning, rest = evening
+        // Fallback: 3 PM (15:00) = approximate Asr in most timezones
         const h = new Date().getHours();
-        return h >= 5 && h < 12 ? 'morning' : 'evening';
+        return h >= 15 ? 'evening' : 'morning';
     };
     const adhkarPeriod = getAdhkarPeriod();
     const adhkarPct = getCompletionPercentage(adhkarPeriod as any);
@@ -82,7 +83,7 @@ export default function DashboardScreen() {
         }, [playingVerse])
     );
 
-    const showContinueReading = globalPosition && !completedSurahs.includes(globalPosition.surah);
+    const showContinueReading = globalPosition && !isPlaying && !completedSurahs.includes(globalPosition.surah);
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -209,13 +210,9 @@ export default function DashboardScreen() {
                             ]}
                         >
                             <LinearGradient
-                                colors={theme.dark
-                                    ? (adhkarPeriod === 'morning'
-                                        ? ['#FEF3C730', '#FCD34D18']
-                                        : ['#312E8138', '#6366F128'])
-                                    : (adhkarPeriod === 'morning'
-                                        ? ['#FEF3C758', '#FCD34D2A']
-                                        : ['#312E8148', '#6366F132'])
+                                colors={adhkarPeriod === 'morning'
+                                    ? (theme.dark ? ['#FDE68A40', '#D97706' + '22'] : ['#FDE68A80', '#FEF3C755'])
+                                    : (theme.dark ? ['#4338CA55', '#312E8140'] : ['#4338CA65', '#312E8150'])
                                 }
                                 style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
                             />
@@ -250,7 +247,7 @@ export default function DashboardScreen() {
                     from={{ opacity: 0, translateY: 20 }}
                     animate={{ opacity: 1, translateY: 0 }}
                     transition={{ type: 'spring', damping: 18 }}
-                    style={[styles.floatingPill, { bottom: insets.bottom + 12 }]}
+                    style={[styles.floatingPill, { bottom: 88 }]}
                 >
                     <LinearGradient
                         colors={['rgba(105, 85, 230, 0.30)', 'rgba(75, 55, 200, 0.24)']}
@@ -291,7 +288,7 @@ export default function DashboardScreen() {
                 presentationStyle="fullScreen"
                 onRequestClose={() => setShowAdhkar(false)}
             >
-                <AdhkarScreen onClose={() => setShowAdhkar(false)} />
+                <AdhkarScreen onClose={() => setShowAdhkar(false)} initialPeriod={adhkarPeriod} />
             </Modal>
         </View>
     );

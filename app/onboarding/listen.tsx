@@ -190,6 +190,41 @@ export default function OnboardingListenExplore() {
                         animate={{ opacity: 1, translateY: 0 }}
                         transition={{ type: 'timing', duration: 400 }}>
 
+                        {/* Language picker — clearly above the audio card */}
+                        <View style={styles.langSection}>
+                            <Text style={[styles.langSectionTitle, { color: theme.colors.onSurfaceVariant }]}>
+                                🌐 Translation subtitle
+                            </Text>
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={styles.langRow}>
+                                {LANGUAGES.map(lang => {
+                                    const active = lang.code === selectedLang;
+                                    return (
+                                        <Pressable
+                                            key={lang.code}
+                                            onPress={() => handleLangSelect(lang.code)}
+                                            style={[
+                                                styles.langPill,
+                                                {
+                                                    backgroundColor: active
+                                                        ? theme.colors.primary
+                                                        : theme.colors.surfaceVariant,
+                                                },
+                                            ]}>
+                                            <Text style={[
+                                                styles.langPillText,
+                                                { color: active ? '#fff' : theme.colors.onSurfaceVariant },
+                                            ]}>
+                                                {lang.nativeLabel}
+                                            </Text>
+                                        </Pressable>
+                                    );
+                                })}
+                            </ScrollView>
+                        </View>
+
                         {/* Coach bubble */}
                         <View style={styles.coachRow}>
                             <View style={[styles.coachBubble, { backgroundColor: theme.colors.primary }]}>
@@ -230,48 +265,7 @@ export default function OnboardingListenExplore() {
                                 </MotiView>
                             )}
 
-                            {/* Language Picker — inline pills */}
-                            {phase === 'verse' && (
-                                <MotiView
-                                    from={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 600 }}>
-                                    <View style={styles.langHeader}>
-                                        <Ionicons name="globe-outline" size={13} color={theme.colors.onSurfaceVariant} />
-                                        <Text style={[styles.langHeaderText, { color: theme.colors.onSurfaceVariant }]}>
-                                            Translation language
-                                        </Text>
-                                    </View>
-                                    <ScrollView
-                                        horizontal
-                                        showsHorizontalScrollIndicator={false}
-                                        contentContainerStyle={styles.langRow}>
-                                        {LANGUAGES.map(lang => {
-                                            const active = lang.code === selectedLang;
-                                            return (
-                                                <Pressable
-                                                    key={lang.code}
-                                                    onPress={() => handleLangSelect(lang.code)}
-                                                    style={[
-                                                        styles.langPill,
-                                                        {
-                                                            backgroundColor: active
-                                                                ? theme.colors.primary
-                                                                : theme.colors.surfaceVariant,
-                                                        },
-                                                    ]}>
-                                                    <Text style={[
-                                                        styles.langPillText,
-                                                        { color: active ? '#fff' : theme.colors.onSurfaceVariant },
-                                                    ]}>
-                                                        {lang.nativeLabel}
-                                                    </Text>
-                                                </Pressable>
-                                            );
-                                        })}
-                                    </ScrollView>
-                                </MotiView>
-                            )}
+
                         </View>
                     </MotiView>
 
@@ -413,6 +407,16 @@ const styles = StyleSheet.create({
     },
     nowPlaying: { fontSize: 13, fontWeight: '500' },
     // Language picker
+    langSection: {
+        marginBottom: Spacing.sm,
+        gap: 8,
+    },
+    langSectionTitle: {
+        fontSize: 12,
+        fontWeight: '700',
+        letterSpacing: 0.3,
+        paddingHorizontal: 2,
+    },
     langHeader: {
         flexDirection: 'row',
         alignItems: 'center',

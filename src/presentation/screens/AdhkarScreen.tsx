@@ -28,9 +28,10 @@ type SessionPhase = 'intro' | 'active' | 'complete';
 
 interface AdhkarScreenProps {
     onClose: () => void;
+    initialPeriod?: AdhkarPeriod;
 }
 
-export const AdhkarScreen = ({ onClose }: AdhkarScreenProps) => {
+export const AdhkarScreen = ({ onClose, initialPeriod }: AdhkarScreenProps) => {
     const theme = useTheme();
     const {
         adhkar,
@@ -42,7 +43,8 @@ export const AdhkarScreen = ({ onClose }: AdhkarScreenProps) => {
     } = useAdhkar();
 
     const currentHour = new Date().getHours();
-    const defaultPeriod: AdhkarPeriod = currentHour < 15 ? 'morning' : 'evening';
+    // initialPeriod from dashboard (honours prayer-time logic); fall back to time heuristic
+    const defaultPeriod: AdhkarPeriod = initialPeriod ?? (currentHour < 15 ? 'morning' : 'evening');
     const [period, setPeriod] = useState<AdhkarPeriod>(defaultPeriod);
     const [phase, setPhase] = useState<SessionPhase>('intro');
     const [currentIndex, setCurrentIndex] = useState(0);
