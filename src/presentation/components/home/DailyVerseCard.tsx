@@ -48,8 +48,8 @@ function getTimeGradient(isDark: boolean): readonly [string, string, string] {
         return ['#0F172A', '#1E293B', '#2D3A5F'] as const;                                // Isha
     }
 
-    // Light mode — medium brand violet, softer than before to fit the lavender theme
-    return ['#8B5CF6', '#7C3AED', '#6D28D9'] as const;
+    // Light mode — soft lavender tint: on-brand but not overpowering
+    return ['#DDD6FE', '#C4B5FD', '#A78BFA'] as const;
 }
 
 

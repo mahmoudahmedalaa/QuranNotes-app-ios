@@ -8,13 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		1F6055CC821976A1BFFA5411 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D544972A64D3DB002FF7C418 /* PrivacyInfo.xcprivacy */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		81E1AE14A4D16631E28FE6A9 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2134811A0378C049B6389EC /* ExpoModulesProvider.swift */; };
-		97EFB0785EF64A7092C18DDC /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = E357B80DCFA5430AB11F0196 /* GoogleService-Info.plist */; };
+		9936C8DD2A4D48979ADF2590 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = BDA08D4D60CB4CFDA1125567 /* GoogleService-Info.plist */; };
+		B1C22FF88A7B1552F03BAC72 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E740DF875621E740DD70CBB4 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
+		BCDC269D3BAA947728EFA9F5 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E263653AD107200C8A7A01F0 /* PrivacyInfo.xcprivacy */; };
+		EE852AB72859AC35789A1703 /* libPods-QuranNotes.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 979EA675E7AAA162660054D3 /* libPods-QuranNotes.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		F2D98B48EC4670868510D3B1 /* libPods-QuranNotes.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 51BBDFB68B3715FBCD779FE4 /* libPods-QuranNotes.a */; };
 		XX09E725E164C2787243F7XX /* widget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = XXD26DB380DB6D7349BA89XX /* widget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		XX12B55A1EDABF083C3B51XX /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = XX470101BAEB8E0BBC8B0DXX /* WidgetKit.framework */; };
 		XX1A6800511A685AB346D2XX /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = XXA12889081EB894481655XX /* AppIntents.framework */; };
@@ -50,17 +50,17 @@
 		13B07F961A680F5B00A75B9A /* QuranNotes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; fileEncoding = 4; includeInIndex = 0; path = QuranNotes.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = QuranNotes/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = Info.plist; path = QuranNotes/Info.plist; sourceTree = "<group>"; };
-		51BBDFB68B3715FBCD779FE4 /* libPods-QuranNotes.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-QuranNotes.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3A8ED2551FB6A72000263758 /* Pods-QuranNotes.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-QuranNotes.release.xcconfig"; path = "Target Support Files/Pods-QuranNotes/Pods-QuranNotes.release.xcconfig"; sourceTree = "<group>"; };
+		979EA675E7AAA162660054D3 /* libPods-QuranNotes.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-QuranNotes.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = QuranNotes/SplashScreen.storyboard; sourceTree = "<group>"; };
-		B2134811A0378C049B6389EC /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-QuranNotes/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		D544972A64D3DB002FF7C418 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = QuranNotes/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		E357B80DCFA5430AB11F0196 /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "QuranNotes/GoogleService-Info.plist"; sourceTree = "<group>"; };
-		EC5E949D0381F390C5DD0A21 /* Pods-QuranNotes.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-QuranNotes.debug.xcconfig"; path = "Target Support Files/Pods-QuranNotes/Pods-QuranNotes.debug.xcconfig"; sourceTree = "<group>"; };
+		BDA08D4D60CB4CFDA1125567 /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "QuranNotes/GoogleService-Info.plist"; sourceTree = "<group>"; };
+		D7D2D5460E58EF4BB9B3592E /* Pods-QuranNotes.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-QuranNotes.debug.xcconfig"; path = "Target Support Files/Pods-QuranNotes/Pods-QuranNotes.debug.xcconfig"; sourceTree = "<group>"; };
+		E263653AD107200C8A7A01F0 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = QuranNotes/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		E740DF875621E740DD70CBB4 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-QuranNotes/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; fileEncoding = 4; includeInIndex = undefined; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = QuranNotes/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* QuranNotes-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "QuranNotes-Bridging-Header.h"; path = "QuranNotes/QuranNotes-Bridging-Header.h"; sourceTree = "<group>"; };
-		F3C2708CADEF960229FA800D /* Pods-QuranNotes.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-QuranNotes.release.xcconfig"; path = "Target Support Files/Pods-QuranNotes/Pods-QuranNotes.release.xcconfig"; sourceTree = "<group>"; };
 		XX470101BAEB8E0BBC8B0DXX /* WidgetKit.framework */ = {isa = PBXFileReference; fileEncoding = 4; includeInIndex = undefined; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		XX4DFF38D47332D6BF0183XX /* SwiftUI.framework */ = {isa = PBXFileReference; fileEncoding = 4; includeInIndex = undefined; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		XXA12889081EB894481655XX /* AppIntents.framework */ = {isa = PBXFileReference; fileEncoding = 4; includeInIndex = undefined; lastKnownFileType = wrapper.framework; name = AppIntents.framework; path = System/Library/Frameworks/AppIntents.framework; sourceTree = SDKROOT; };
@@ -99,7 +99,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F2D98B48EC4670868510D3B1 /* libPods-QuranNotes.a in Frameworks */,
+				EE852AB72859AC35789A1703 /* libPods-QuranNotes.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -126,16 +126,8 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				E357B80DCFA5430AB11F0196 /* GoogleService-Info.plist */,
-				D544972A64D3DB002FF7C418 /* PrivacyInfo.xcprivacy */,
-			);
-			name = QuranNotes;
-			sourceTree = "<group>";
-		};
-		2BC623219944D8EA2FE40DBB /* QuranNotes */ = {
-			isa = PBXGroup;
-			children = (
-				B2134811A0378C049B6389EC /* ExpoModulesProvider.swift */,
+				BDA08D4D60CB4CFDA1125567 /* GoogleService-Info.plist */,
+				E263653AD107200C8A7A01F0 /* PrivacyInfo.xcprivacy */,
 			);
 			name = QuranNotes;
 			sourceTree = "<group>";
@@ -148,17 +140,27 @@
 				XX4DFF38D47332D6BF0183XX /* SwiftUI.framework */,
 				XXCAF23C3FC41F82140FA1XX /* ActivityKit.framework */,
 				XXA12889081EB894481655XX /* AppIntents.framework */,
-				51BBDFB68B3715FBCD779FE4 /* libPods-QuranNotes.a */,
+				979EA675E7AAA162660054D3 /* libPods-QuranNotes.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		700A71DB8E464FEF3561E0D1 /* ExpoModulesProviders */ = {
+		7890941C9B031ADF8CACB17B /* QuranNotes */ = {
 			isa = PBXGroup;
 			children = (
-				2BC623219944D8EA2FE40DBB /* QuranNotes */,
+				E740DF875621E740DD70CBB4 /* ExpoModulesProvider.swift */,
 			);
-			name = ExpoModulesProviders;
+			name = QuranNotes;
+			sourceTree = "<group>";
+		};
+		7CD95E8CD677294CA87E3ED9 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				D7D2D5460E58EF4BB9B3592E /* Pods-QuranNotes.debug.xcconfig */,
+				3A8ED2551FB6A72000263758 /* Pods-QuranNotes.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -176,8 +178,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				A946A474AFAD50637B8CE328 /* Pods */,
-				700A71DB8E464FEF3561E0D1 /* ExpoModulesProviders */,
+				7CD95E8CD677294CA87E3ED9 /* Pods */,
+				DAB8F85E5F73948F485F428A /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -193,16 +195,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		A946A474AFAD50637B8CE328 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				EC5E949D0381F390C5DD0A21 /* Pods-QuranNotes.debug.xcconfig */,
-				F3C2708CADEF960229FA800D /* Pods-QuranNotes.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
-			sourceTree = "<group>";
-		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
 			isa = PBXGroup;
 			children = (
@@ -210,6 +202,14 @@
 			);
 			name = Supporting;
 			path = QuranNotes/Supporting;
+			sourceTree = "<group>";
+		};
+		DAB8F85E5F73948F485F428A /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				7890941C9B031ADF8CACB17B /* QuranNotes */,
+			);
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		XX3E41C1850246162C0061XX /* expo:targets */ = {
@@ -229,14 +229,14 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "QuranNotes" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				FD6408783D4A628A94B59C22 /* [Expo] Configure project */,
+				50E6EEFA3E565F365CC3988D /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
 				XX72A8CFBF0FBA13A79902XX /* Embed Foundation Extensions */,
-				D02EDA6BA19F6B3AE44B57EC /* [CP] Embed Pods Frameworks */,
+				9FEB760CED2275B495904861 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -313,8 +313,8 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				97EFB0785EF64A7092C18DDC /* GoogleService-Info.plist in Resources */,
-				1F6055CC821976A1BFFA5411 /* PrivacyInfo.xcprivacy in Resources */,
+				9936C8DD2A4D48979ADF2590 /* GoogleService-Info.plist in Resources */,
+				BCDC269D3BAA947728EFA9F5 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -370,6 +370,30 @@
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
+		};
+		50E6EEFA3E565F365CC3988D /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/QuranNotes/QuranNotes.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-QuranNotes/expo-configure-project.sh",
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Pods/Target Support Files/Pods-QuranNotes/ExpoModulesProvider.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-QuranNotes/expo-configure-project.sh\"\n";
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -427,7 +451,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-QuranNotes/Pods-QuranNotes-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		D02EDA6BA19F6B3AE44B57EC /* [CP] Embed Pods Frameworks */ = {
+		9FEB760CED2275B495904861 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -449,30 +473,6 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-QuranNotes/Pods-QuranNotes-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		FD6408783D4A628A94B59C22 /* [Expo] Configure project */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/.xcode.env",
-				"$(SRCROOT)/.xcode.env.local",
-				"$(SRCROOT)/QuranNotes/QuranNotes.entitlements",
-				"$(SRCROOT)/Pods/Target Support Files/Pods-QuranNotes/expo-configure-project.sh",
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(SRCROOT)/Pods/Target Support Files/Pods-QuranNotes/ExpoModulesProvider.swift",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-QuranNotes/expo-configure-project.sh\"\n";
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -481,7 +481,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				81E1AE14A4D16631E28FE6A9 /* ExpoModulesProvider.swift in Sources */,
+				B1C22FF88A7B1552F03BAC72 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -505,7 +505,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = EC5E949D0381F390C5DD0A21 /* Pods-QuranNotes.debug.xcconfig */;
+			baseConfigurationReference = D7D2D5460E58EF4BB9B3592E /* Pods-QuranNotes.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -542,7 +542,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = F3C2708CADEF960229FA800D /* Pods-QuranNotes.release.xcconfig */;
+			baseConfigurationReference = 3A8ED2551FB6A72000263758 /* Pods-QuranNotes.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;

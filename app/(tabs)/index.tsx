@@ -51,7 +51,7 @@ export default function DashboardScreen() {
     const tabBarHeight = useBottomTabBarHeight();  // actual runtime height, safe-area-inclusive
     // Reliable bottom offset: insets.bottom + constant tab height + breathing room
     // (useBottomTabBarHeight can be unreliable with custom floating tab bars)
-    const pillBottom = insets.bottom + TAB_BAR_HEIGHT + 16;
+    const pillBottom = insets.bottom + TAB_BAR_HEIGHT + 8;
     const { getCompletionPercentage } = useAdhkar();
 
     // Smart Adhkar timing: Morning = Fajr until Asr begins. Evening = Asr onwards.
@@ -114,7 +114,7 @@ export default function DashboardScreen() {
         }, [globalPosition?.surah, settings.translationEdition])
     );
 
-    const showContinueReading = globalPosition && !isPlaying && !completedSurahs.includes(globalPosition.surah);
+    const showContinueReading = globalPosition && !playingVerse && !completedSurahs.includes(globalPosition.surah);
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -242,8 +242,8 @@ export default function DashboardScreen() {
                         >
                             <LinearGradient
                                 colors={adhkarPeriod === 'morning'
-                                    ? (theme.dark ? ['#FDE68A40', '#D97706' + '22'] : ['#FDE68A80', '#FEF3C755'])
-                                    : (theme.dark ? ['#1E3A8A55', '#1E40AF40'] : ['#1E3A8A40', '#1E40AF50'])
+                                    ? (theme.dark ? ['#FDE68A40', '#D9770622'] : ['#FDE68A80', '#FEF3C755'])
+                                    : (theme.dark ? ['#1E1B4B90', '#312E8170'] : ['#312E8128', '#4338CA20'])
                                 }
                                 style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
                             />
@@ -252,13 +252,13 @@ export default function DashboardScreen() {
                                     {adhkarPeriod === 'morning' ? '☀️' : '🌙'}
                                 </Text>
                             </View>
-                            <Text style={[styles.tileLabel, { color: theme.colors.onSurface }]}>
+                            <Text style={[styles.tileLabel, { color: adhkarPeriod === 'evening' ? '#E0E7FF' : theme.colors.onSurface }]}>
                                 {adhkarPeriod === 'morning' ? 'Morning' : 'Evening'}
                             </Text>
-                            <Text style={[styles.tileSub, { color: theme.colors.onSurface, fontWeight: '600' }]}>
+                            <Text style={[styles.tileSub, { color: adhkarPeriod === 'evening' ? '#C7D2FE' : theme.colors.onSurface, fontWeight: '600' }]}>
                                 Adhkar
                             </Text>
-                            <Text style={[styles.tileSub2, { color: theme.colors.onSurfaceVariant }]}>
+                            <Text style={[styles.tileSub2, { color: adhkarPeriod === 'evening' ? '#A5B4FC' : theme.colors.onSurfaceVariant }]}>
                                 {adhkarPct > 0 ? `${adhkarPct}% done` : 'Tap to begin'}
                             </Text>
                         </Pressable>

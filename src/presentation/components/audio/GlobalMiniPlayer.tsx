@@ -28,7 +28,7 @@ export const GlobalMiniPlayer: React.FC = () => {
     // TAB_BAR_HEIGHT constant used instead of useBottomTabBarHeight() because
     // GlobalMiniPlayer renders as a sibling of <Tabs> in _layout.tsx —
     // outside the tab navigator context where the hook would throw.
-    const miniPlayerBottom = insets.bottom + TAB_BAR_HEIGHT + 16;
+    const miniPlayerBottom = insets.bottom + TAB_BAR_HEIGHT + 8;
 
     if (!playingVerse) return null;
     if (pathname.startsWith('/surah/')) return null;
