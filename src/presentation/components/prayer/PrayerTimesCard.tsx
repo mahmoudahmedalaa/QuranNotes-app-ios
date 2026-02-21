@@ -29,7 +29,11 @@ export const PrayerTimesCard: React.FC = () => {
                 transition={{ type: 'spring', damping: 18, delay: 100 }}
                 style={{ paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}
             >
-                <View style={[styles.card, { backgroundColor: theme.colors.surface }, Shadows.md]}>
+                <View style={[styles.card, Shadows.md]}>
+                    <LinearGradient
+                        colors={theme.dark ? ['#1A1340', '#2D1F6E'] : ['#F8F5FF', '#EDE5FF']}
+                        style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
+                    />
                     <View style={styles.loadingRow}>
                         <MaterialCommunityIcons
                             name="mosque"
@@ -67,7 +71,11 @@ export const PrayerTimesCard: React.FC = () => {
                     pressed && { opacity: 0.95, transform: [{ scale: 0.99 }] },
                 ]}
             >
-                <View style={[styles.card, { backgroundColor: theme.colors.surface }, Shadows.md]}>
+                <View style={[styles.card, Shadows.md]}>
+                    <LinearGradient
+                        colors={theme.dark ? ['#1A1340', '#2D1F6E'] : ['#F8F5FF', '#EDE5FF']}
+                        style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
+                    />
                     {/* Hijri Date row — always shows chevron as collapse affordance */}
                     <View style={styles.hijriRow}>
                         {prayerTimes.hijriDate ? (

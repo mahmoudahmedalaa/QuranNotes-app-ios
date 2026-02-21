@@ -186,17 +186,24 @@ export default function DashboardScreen() {
                             }}
                             style={({ pressed }) => [
                                 styles.gridTile,
-                                { backgroundColor: theme.colors.surfaceVariant },
+                                { backgroundColor: theme.colors.surface },
                                 Shadows.md,
                                 pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                             ]}
                         >
+                            <LinearGradient
+                                colors={theme.dark
+                                    ? ['#3D2E10', '#D4A85320']
+                                    : ['#FDF6E3', '#FDE68A40']
+                                }
+                                style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
+                            />
                             {/* Ring */}
                             <View style={styles.tileRingWrap}>
                                 <Svg width={RING_SIZE} height={RING_SIZE}>
                                     <Circle
                                         cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RADIUS}
-                                        stroke={theme.colors.outlineVariant}
+                                        stroke={theme.dark ? '#4A3B18' : '#FDE68A'}
                                         strokeWidth={STROKE_WIDTH} fill="none"
                                     />
                                     <Circle
@@ -228,25 +235,32 @@ export default function DashboardScreen() {
                             }}
                             style={({ pressed }) => [
                                 styles.gridTile,
-                                { backgroundColor: theme.colors.surfaceVariant },
+                                { backgroundColor: theme.colors.surface },
                                 Shadows.md,
                                 pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                             ]}
                         >
+                            <LinearGradient
+                                colors={adhkarPeriod === 'morning'
+                                    ? ['#FFFBEB', '#FEF3C7', '#FDE68A']
+                                    : ['#1E1B4B', '#312E81', '#4338CA']
+                                }
+                                style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
+                            />
                             <View style={styles.tileEmojiWrap}>
                                 {adhkarPeriod === 'morning' ? (
-                                    <MaterialCommunityIcons name="weather-sunny" size={28} color={GOLD} />
+                                    <MaterialCommunityIcons name="weather-sunny" size={28} color="#D97706" />
                                 ) : (
-                                    <MaterialCommunityIcons name="moon-waxing-crescent" size={28} color={theme.colors.primary} />
+                                    <MaterialCommunityIcons name="moon-waxing-crescent" size={28} color="#A5B4FC" />
                                 )}
                             </View>
-                            <Text style={[styles.tileLabel, { color: theme.colors.onSurface }]}>
+                            <Text style={[styles.tileLabel, { color: adhkarPeriod === 'morning' ? '#451A03' : '#FFFFFF' }]}>
                                 {adhkarPeriod === 'morning' ? 'Morning' : 'Evening'}
                             </Text>
-                            <Text style={[styles.tileSub, { color: theme.colors.onSurface, fontWeight: '600' }]}>
+                            <Text style={[styles.tileSub, { color: adhkarPeriod === 'morning' ? '#451A03' : '#FFFFFF', fontWeight: '600' }]}>
                                 Adhkar
                             </Text>
-                            <Text style={[styles.tileSub2, { color: theme.colors.onSurfaceVariant }]}>
+                            <Text style={[styles.tileSub2, { color: adhkarPeriod === 'morning' ? '#78350F' : '#C7D2FE' }]}>
                                 {adhkarPct > 0 ? `${adhkarPct}% done` : 'Tap to begin'}
                             </Text>
                         </Pressable>
