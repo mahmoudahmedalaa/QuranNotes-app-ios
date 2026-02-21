@@ -8,7 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { NoorMascot } from '../../src/presentation/components/mascot/NoorMascot';
-import { Spacing, BorderRadius, Shadows } from '../../src/presentation/theme/DesignSystem';
+import { Spacing, BorderRadius, Shadows, TAB_BAR_HEIGHT } from '../../src/presentation/theme/DesignSystem';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -49,6 +49,9 @@ export default function DashboardScreen() {
     const [showAdhkar, setShowAdhkar] = useState(false);
     const insets = useSafeAreaInsets();
     const tabBarHeight = useBottomTabBarHeight();  // actual runtime height, safe-area-inclusive
+    // Reliable bottom offset: insets.bottom + constant tab height + breathing room
+    // (useBottomTabBarHeight can be unreliable with custom floating tab bars)
+    const pillBottom = insets.bottom + TAB_BAR_HEIGHT + 16;
     const { getCompletionPercentage } = useAdhkar();
 
     // Smart Adhkar timing: Morning = Fajr until Asr begins. Evening = Asr onwards.
@@ -227,7 +230,7 @@ export default function DashboardScreen() {
                             <LinearGradient
                                 colors={adhkarPeriod === 'morning'
                                     ? (theme.dark ? ['#FDE68A40', '#D97706' + '22'] : ['#FDE68A80', '#FEF3C755'])
-                                    : (theme.dark ? ['#4338CA55', '#312E8140'] : ['#4338CA65', '#312E8150'])
+                                    : (theme.dark ? ['#1E3A8A55', '#1E40AF40'] : ['#1E3A8A40', '#1E40AF50'])
                                 }
                                 style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
                             />
@@ -262,7 +265,7 @@ export default function DashboardScreen() {
                     from={{ opacity: 0, translateY: 20 }}
                     animate={{ opacity: 1, translateY: 0 }}
                     transition={{ type: 'spring', damping: 18 }}
-                    style={[styles.floatingPill, { bottom: tabBarHeight + 8 }]}
+                    style={[styles.floatingPill, { bottom: pillBottom }]}
                 >
                     <LinearGradient
                         colors={['rgba(105, 85, 230, 0.30)', 'rgba(75, 55, 200, 0.24)']}
@@ -417,7 +420,7 @@ const styles = StyleSheet.create({
         padding: Spacing.md,
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: 140,
+        minHeight: 110,
         overflow: 'hidden',
     },
 
@@ -444,7 +447,7 @@ const styles = StyleSheet.create({
     tileEmoji: { fontSize: 28 },
 
     // ── Tile text ──
-    tileLabel: { fontSize: 16, fontWeight: '700', marginBottom: 1 },
+    tileLabel: { fontSize: 17, fontWeight: '700', marginBottom: 2 },
     tileSub: { fontSize: 13, textAlign: 'center' },
     tileSub2: { fontSize: 12, textAlign: 'center', marginTop: 2 },
 });

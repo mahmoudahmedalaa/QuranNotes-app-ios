@@ -1,13 +1,17 @@
 /**
- * GlobalMiniPlayer — Persistent audio controls shown across all screens
- * Bottom-positioned, Apple Music / Spotify style — sits above the floating tab bar.
- * Slides up from the bottom when audio starts playing.
+ * GlobalMiniPlayer — persistent audio pill, Apple Music / Spotify style.
+ * Matches the Continue Reading pill style (frosted purple glass) so the
+ * transition between states feels seamless and part of the same design system.
+ *
+ * Position: floats above the FloatingTabBar using TAB_BAR_HEIGHT constant
+ * (cannot use useBottomTabBarHeight — rendered outside tab navigator context).
  */
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -21,24 +25,17 @@ export const GlobalMiniPlayer: React.FC = () => {
     const insets = useSafeAreaInsets();
     const { playingVerse, isPlaying, currentSurahName, currentSurahNum, pause, resume, stop } = useAudio();
 
-    // TAB_BAR_HEIGHT constant used here because GlobalMiniPlayer is rendered as a
-    // sibling of <Tabs> in _layout.tsx — outside the tab navigator context.
-    // useBottomTabBarHeight() would throw in that position.
-    const miniPlayerBottom = TAB_BAR_HEIGHT + insets.bottom + 8;
+    // TAB_BAR_HEIGHT constant used instead of useBottomTabBarHeight() because
+    // GlobalMiniPlayer renders as a sibling of <Tabs> in _layout.tsx —
+    // outside the tab navigator context where the hook would throw.
+    const miniPlayerBottom = insets.bottom + TAB_BAR_HEIGHT + 16;
 
-    // Don't show if nothing is playing or paused (verse is null = fully stopped)
     if (!playingVerse) return null;
-
-    // Don't show on the surah detail screen — it has its own StickyAudioPlayer
     if (pathname.startsWith('/surah/')) return null;
 
     const handlePlayPause = async () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        if (isPlaying) {
-            await pause();
-        } else {
-            await resume();
-        }
+        if (isPlaying) { await pause(); } else { await resume(); }
     };
 
     const handleStop = async () => {
@@ -53,7 +50,9 @@ export const GlobalMiniPlayer: React.FC = () => {
     };
 
     const surahLabel = currentSurahName || `Surah ${playingVerse.surah}`;
-    const pillBg = theme.dark ? 'rgba(50, 50, 55, 0.97)' : 'rgba(28, 28, 30, 0.96)';
+    const gradientColors = theme.dark
+        ? ['rgba(80, 60, 200, 0.55)', 'rgba(55, 40, 150, 0.50)'] as const
+        : ['rgba(105, 85, 230, 0.30)', 'rgba(75, 55, 200, 0.24)'] as const;
 
     return (
         <MotiView
@@ -63,58 +62,53 @@ export const GlobalMiniPlayer: React.FC = () => {
             transition={{ type: 'spring', damping: 20, stiffness: 280 }}
             style={[styles.container, { bottom: miniPlayerBottom }]}
         >
+            {/* Same frosted-glass gradient as the Continue Reading pill */}
+            <LinearGradient
+                colors={gradientColors}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={StyleSheet.absoluteFill}
+            />
+
+            {/* Info — tapping the body navigates to surah */}
             <Pressable
                 onPress={handleTap}
                 style={({ pressed }) => [
-                    styles.pill,
-                    { backgroundColor: pillBg },
-                    pressed && { opacity: 0.9, transform: [{ scale: 0.99 }] },
+                    styles.body,
+                    pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
                 ]}
             >
-                {/* Artwork dot */}
-                <View style={[styles.artDot, { backgroundColor: theme.colors.primary }]}>
-                    <MaterialCommunityIcons
-                        name={isPlaying ? 'volume-high' : 'volume-off'}
-                        size={16}
-                        color="#FFFFFF"
-                    />
-                </View>
-
-                {/* Info */}
-                <View style={styles.info}>
-                    <Text style={styles.title} numberOfLines={1}>
-                        {surahLabel}
-                    </Text>
+                <MaterialCommunityIcons
+                    name={isPlaying ? 'volume-high' : 'volume-off'}
+                    size={18}
+                    color="#FFFFFF"
+                />
+                <View style={styles.textArea}>
+                    <Text style={styles.title} numberOfLines={1}>{surahLabel}</Text>
                     <Text style={styles.subtitle} numberOfLines={1}>
                         Verse {playingVerse.verse} · {isPlaying ? 'Playing' : 'Paused'}
                     </Text>
                 </View>
+            </Pressable>
 
-                {/* Controls */}
-                <View style={styles.controls}>
-                    <Pressable
-                        onPress={handlePlayPause}
-                        hitSlop={8}
-                        style={({ pressed }) => [pressed && { opacity: 0.6 }]}
-                    >
-                        <MaterialCommunityIcons
-                            name={isPlaying ? 'pause' : 'play'}
-                            size={28}
-                            color="#FFFFFF"
-                        />
-                    </Pressable>
-                    <Pressable
-                        onPress={handleStop}
-                        hitSlop={8}
-                        style={({ pressed }) => [pressed && { opacity: 0.6 }]}
-                    >
-                        <MaterialCommunityIcons
-                            name="close"
-                            size={22}
-                            color="rgba(255,255,255,0.5)"
-                        />
-                    </Pressable>
-                </View>
+            {/* Controls — separate Pressables so they don't trigger body navigation */}
+            <Pressable
+                onPress={handlePlayPause}
+                hitSlop={8}
+                style={({ pressed }) => [styles.controlCircle, pressed && { opacity: 0.7 }]}
+            >
+                <MaterialCommunityIcons
+                    name={isPlaying ? 'pause' : 'play'}
+                    size={16}
+                    color="#A898FF"
+                />
+            </Pressable>
+            <Pressable
+                onPress={handleStop}
+                hitSlop={8}
+                style={({ pressed }) => [styles.closeWrap, pressed && { opacity: 0.6 }]}
+            >
+                <MaterialCommunityIcons name="close" size={18} color="rgba(255,255,255,0.6)" />
             </Pressable>
         </MotiView>
     );
@@ -123,50 +117,53 @@ export const GlobalMiniPlayer: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        alignSelf: 'center',  // centred — matches FloatingTabBar pill alignment
-        width: '90%',         // ~matches tab bar pill width across device sizes
-        zIndex: 50,
-    },
-    pill: {
+        alignSelf: 'center',
+        width: '90%',
+        zIndex: 100,
+        borderRadius: 20,
+        overflow: 'hidden',
         flexDirection: 'row',
         alignItems: 'center',
-        borderRadius: BorderRadius.full,
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        gap: Spacing.sm,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.22)',
+        shadowColor: '#5B3FD0',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.22,
+        shadowRadius: 16,
         elevation: 10,
     },
-    artDot: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-    },
-    info: {
+    body: {
         flex: 1,
-    },
-    title: {
-        color: '#FFFFFF',
-        fontSize: 13,
-        fontWeight: '700',
-        letterSpacing: -0.1,
-    },
-    subtitle: {
-        color: 'rgba(255,255,255,0.5)',
-        fontSize: 11,
-        fontWeight: '500',
-        marginTop: 1,
-    },
-    controls: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
-        flexShrink: 0,
+        gap: 10,
+        paddingVertical: 13,
+        paddingLeft: 16,
+        paddingRight: 8,
+    },
+    textArea: { flex: 1 },
+    title: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#FFFFFF',
+    },
+    subtitle: {
+        fontSize: 13,
+        color: 'rgba(255,255,255,0.72)',
+        marginTop: 1,
+    },
+    controlCircle: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        backgroundColor: 'rgba(255,255,255,0.18)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.30)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    closeWrap: {
+        paddingHorizontal: 12,
+        paddingVertical: 13,
     },
 });
