@@ -14,6 +14,7 @@ import Animated, {
     withSpring,
 } from 'react-native-reanimated';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { BlurView } from 'expo-blur';
 
 // Tab icon configuration
 const TAB_ICONS: Record<string, {
@@ -104,14 +105,27 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
     // Filter to only show tabs that have icons configured (visible tabs)
     const visibleRoutes = state.routes.filter(route => TAB_ICONS[route.name]);
 
-    const activeColor = '#FFFFFF';
-    const inactiveColor = 'rgba(255, 255, 255, 0.4)';
+    const activeColor = theme.dark ? '#FFFFFF' : theme.colors.primary;
+    const inactiveColor = theme.dark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)';
 
-    const pillBg = theme.dark ? PILL_BG_DARK : PILL_BG_LIGHT;
+    // Glassmorphism base tint
+    const pillBg = theme.dark ? 'rgba(30, 30, 35, 0.75)' : 'rgba(255, 255, 255, 0.85)';
+    const pillBorder = theme.dark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
 
     return (
         <View style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-            <View style={[styles.pill, { backgroundColor: pillBg }]}>
+            <BlurView
+                intensity={theme.dark ? 40 : 60}
+                tint={theme.dark ? 'dark' : 'light'}
+                style={[
+                    styles.pill,
+                    {
+                        backgroundColor: pillBg,
+                        borderColor: pillBorder,
+                        borderWidth: 1,
+                    }
+                ]}
+            >
                 {visibleRoutes.map((route) => {
                     const realIndex = state.routes.indexOf(route);
                     const isFocused = state.index === realIndex;
@@ -149,7 +163,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
                         />
                     );
                 })}
-            </View>
+            </BlurView>
         </View>
     );
 }

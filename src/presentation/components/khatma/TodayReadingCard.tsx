@@ -125,9 +125,17 @@ const SurahCard: React.FC<SurahCardProps> = ({
         >
             <View style={[
                 styles.activeCard,
-                { backgroundColor: theme.colors.surface, borderColor: accentColor + '30' },
+                { backgroundColor: 'transparent', borderColor: accentColor + '30' },
                 Shadows.sm,
             ]}>
+                {/* Tactile Depth Gradient */}
+                <LinearGradient
+                    colors={[theme.colors.surfaceVariant, theme.colors.surface]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.md }]}
+                />
+
                 {/* Status badge + Juz tag */}
                 <View style={styles.cardHeader}>
                     <View style={[styles.statusBadge, { backgroundColor: bgTint }]}>

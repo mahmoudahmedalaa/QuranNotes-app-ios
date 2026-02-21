@@ -48,15 +48,23 @@ export const JuzCard: React.FC<JuzCardProps> = ({
                 style={[
                     styles.card,
                     {
-                        backgroundColor: theme.colors.surface,
                         borderColor: isCompleted
                             ? '#38A169'
                             : theme.colors.primaryContainer,
                         borderWidth: 1.5,
+                        backgroundColor: 'transparent', // Let gradient show through
                     },
                     Shadows.md,
                 ]}
             >
+                {/* Tactile Depth Gradient */}
+                <LinearGradient
+                    colors={[theme.colors.surfaceVariant, theme.colors.surface]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
+                />
+
                 {/* Header Row */}
                 <View style={styles.headerRow}>
                     <View style={styles.juzBadge}>

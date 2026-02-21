@@ -9,6 +9,7 @@ import { Text, useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { MoodType, MOOD_CONFIGS, MOOD_LIST } from '../../../domain/entities/Mood';
 import { useMood } from '../../../infrastructure/mood/MoodContext';
 import { usePro } from '../../../infrastructure/auth/ProContext';
@@ -64,9 +65,20 @@ export default function MoodCheckInCard() {
             >
                 <View style={[
                     styles.card,
-                    { backgroundColor: theme.colors.surface },
+                    { backgroundColor: 'transparent' }, // Let gradient show through
                     Shadows.sm,
                 ]}>
+                    {/* Calming Twilight Gradient */}
+                    <LinearGradient
+                        colors={theme.dark
+                            ? ['#1A1340', '#2D1F6E'] // Deep space violet (calm)
+                            : ['#F8F5FF', '#EDE5FF'] // Suble dawn violet (calm)
+                        }
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 0, y: 1 }}
+                        style={StyleSheet.absoluteFill}
+                    />
+
                     {/* Header */}
                     <View style={styles.header}>
                         <Text style={[styles.title, { color: theme.colors.onSurface }]}>
