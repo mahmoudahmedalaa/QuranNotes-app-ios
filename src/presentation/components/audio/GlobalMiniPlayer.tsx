@@ -9,17 +9,22 @@ import { useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
 import { useRouter, usePathname } from 'expo-router';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useAudio } from '../../../infrastructure/audio/AudioContext';
-import { Spacing, BorderRadius } from '../../theme/DesignSystem';
+import { Spacing, BorderRadius, TAB_BAR_HEIGHT } from '../../theme/DesignSystem';
 
 export const GlobalMiniPlayer: React.FC = () => {
     const theme = useTheme();
     const router = useRouter();
     const pathname = usePathname();
-    const tabBarHeight = useBottomTabBarHeight();
+    const insets = useSafeAreaInsets();
     const { playingVerse, isPlaying, currentSurahName, currentSurahNum, pause, resume, stop } = useAudio();
+
+    // TAB_BAR_HEIGHT constant used here because GlobalMiniPlayer is rendered as a
+    // sibling of <Tabs> in _layout.tsx — outside the tab navigator context.
+    // useBottomTabBarHeight() would throw in that position.
+    const miniPlayerBottom = TAB_BAR_HEIGHT + insets.bottom + 8;
 
     // Don't show if nothing is playing or paused (verse is null = fully stopped)
     if (!playingVerse) return null;
@@ -56,7 +61,7 @@ export const GlobalMiniPlayer: React.FC = () => {
             animate={{ translateY: 0, opacity: 1 }}
             exit={{ translateY: 80, opacity: 0 }}
             transition={{ type: 'spring', damping: 20, stiffness: 280 }}
-            style={[styles.container, { bottom: tabBarHeight + 8 }]}
+            style={[styles.container, { bottom: miniPlayerBottom }]}
         >
             <Pressable
                 onPress={handleTap}

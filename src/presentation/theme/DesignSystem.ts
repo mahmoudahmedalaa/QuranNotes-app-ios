@@ -19,6 +19,11 @@ import { MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
  *  Voice overlays and scroll padding reference this so we never hardcode 90. */
 export const STICKY_PLAYER_HEIGHT = 80;
 
+/** Approximate height of the FloatingTabBar pill (paddingVertical×2 + icon + safe-area).
+ *  Used by components rendered OUTSIDE the tab navigator context where
+ *  useBottomTabBarHeight() would throw (e.g. GlobalMiniPlayer in _layout.tsx). */
+export const TAB_BAR_HEIGHT = 80;
+
 // ═══════════════════════════════════════════════════════════════════════════
 // COLORS - Serene Palette
 // ═══════════════════════════════════════════════════════════════════════════
