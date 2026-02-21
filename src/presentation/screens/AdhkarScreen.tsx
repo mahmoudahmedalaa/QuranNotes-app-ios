@@ -7,6 +7,7 @@ import {
     Dimensions,
 } from 'react-native';
 import { useTheme, ProgressBar } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -33,6 +34,7 @@ interface AdhkarScreenProps {
 
 export const AdhkarScreen = ({ onClose, initialPeriod }: AdhkarScreenProps) => {
     const theme = useTheme();
+    const insets = useSafeAreaInsets();
     const {
         adhkar,
         todayProgress,
@@ -158,7 +160,7 @@ export const AdhkarScreen = ({ onClose, initialPeriod }: AdhkarScreenProps) => {
     if (phase === 'intro') {
         return (
             <LinearGradient colors={gradientColors} style={styles.container}>
-                <Pressable onPress={onClose} style={styles.closeButton} hitSlop={12}>
+                <Pressable onPress={onClose} style={[styles.closeButton, { top: insets.top + 16 }]} hitSlop={12}>
                     <Ionicons name="close" size={24} color={textColor} />
                 </Pressable>
 
@@ -642,7 +644,7 @@ const styles = StyleSheet.create({
     // ── Close button ──
     closeButton: {
         position: 'absolute',
-        top: 60,
+        top: undefined, // set dynamically via style prop
         left: Spacing.lg,
         zIndex: 10,
     },

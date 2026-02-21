@@ -12,6 +12,14 @@ import { MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
  */
 
 // ═══════════════════════════════════════════════════════════════════════════
+// LAYOUT CONSTANTS — shared across screens so overlays/padding stay in sync
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Height of the StickyAudioPlayer bar inside the Surah screen.
+ *  Voice overlays and scroll padding reference this so we never hardcode 90. */
+export const STICKY_PLAYER_HEIGHT = 80;
+
+// ═══════════════════════════════════════════════════════════════════════════
 // COLORS - Serene Palette
 // ═══════════════════════════════════════════════════════════════════════════
 

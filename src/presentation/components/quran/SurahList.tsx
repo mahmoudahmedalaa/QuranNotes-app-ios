@@ -10,6 +10,7 @@
 import React, { useCallback } from 'react';
 import { FlatList, StyleSheet, View, Text } from 'react-native';
 import { useTheme } from 'react-native-paper';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Surah } from '../../../domain/entities/Quran';
 import { Spacing, BorderRadius } from '../../theme/DesignSystem';
 import { AnimatedCard } from '../../components/animated/AnimatedCard';
@@ -22,6 +23,7 @@ interface Props {
 
 export const SurahList = ({ surahs, onSelect, ListHeaderComponent }: Props) => {
     const theme = useTheme();
+    const tabBarHeight = useBottomTabBarHeight();
 
     const renderItem = useCallback(
         ({ item, index }: { item: Surah; index: number }) => (
@@ -75,7 +77,10 @@ export const SurahList = ({ surahs, onSelect, ListHeaderComponent }: Props) => {
         <FlatList
             data={surahs}
             keyExtractor={item => item.number.toString()}
-            contentContainerStyle={styles.listContent}
+            contentContainerStyle={[
+                styles.listContent,
+                { paddingBottom: tabBarHeight + Spacing.md },
+            ]}
             showsVerticalScrollIndicator={false}
             renderItem={renderItem}
             ListHeaderComponent={ListHeaderComponent}
@@ -90,7 +95,7 @@ export const SurahList = ({ surahs, onSelect, ListHeaderComponent }: Props) => {
 const styles = StyleSheet.create({
     listContent: {
         paddingHorizontal: Spacing.md,
-        paddingBottom: 100,
+        paddingBottom: Spacing.md, // base; actual bottom pad added inline from tabBarHeight
         paddingTop: Spacing.xs,
     },
     numberBadge: {

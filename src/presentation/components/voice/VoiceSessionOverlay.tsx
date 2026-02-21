@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
 import { Text, IconButton, useTheme, Surface } from 'react-native-paper';
-import { Spacing, BorderRadius, Shadows } from '../../theme/DesignSystem';
+import { Spacing, BorderRadius, Shadows, STICKY_PLAYER_HEIGHT } from '../../theme/DesignSystem';
 
 interface VoiceSessionOverlayProps {
     visible: boolean;
@@ -76,7 +76,7 @@ export const VoiceSessionOverlay: React.FC<VoiceSessionOverlayProps> = ({
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        bottom: 90, // Positioned above the audio player (which is usually at bottom 0-80)
+        bottom: STICKY_PLAYER_HEIGHT + 10,
         left: Spacing.md,
         right: Spacing.md,
         zIndex: 1000,
