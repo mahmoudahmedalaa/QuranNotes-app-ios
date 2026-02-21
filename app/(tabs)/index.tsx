@@ -6,6 +6,7 @@ import { useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { NoorMascot } from '../../src/presentation/components/mascot/NoorMascot';
 import { Spacing, BorderRadius, Shadows } from '../../src/presentation/theme/DesignSystem';
 import { StatusBar } from 'expo-status-bar';
@@ -43,6 +44,7 @@ export default function DashboardScreen() {
     const [globalPosition, setGlobalPosition] = useState<ReadingPosition | null>(null);
     const [showAdhkar, setShowAdhkar] = useState(false);
     const insets = useSafeAreaInsets();
+    const tabBarHeight = useBottomTabBarHeight();  // actual runtime height, safe-area-inclusive
     const { getCompletionPercentage } = useAdhkar();
 
     // Smart Adhkar timing: Morning = Fajr until Asr begins. Evening = Asr onwards.
@@ -247,7 +249,7 @@ export default function DashboardScreen() {
                     from={{ opacity: 0, translateY: 20 }}
                     animate={{ opacity: 1, translateY: 0 }}
                     transition={{ type: 'spring', damping: 18 }}
-                    style={[styles.floatingPill, { bottom: 88 }]}
+                    style={[styles.floatingPill, { bottom: tabBarHeight + 8 }]}
                 >
                     <LinearGradient
                         colors={['rgba(105, 85, 230, 0.30)', 'rgba(75, 55, 200, 0.24)']}
