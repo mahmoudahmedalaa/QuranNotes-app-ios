@@ -5,11 +5,12 @@ import { GlobalMiniPlayer } from '../../src/presentation/components/audio/Global
 
 export default function TabsLayout() {
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: 'transparent' }}>
             <Tabs
                 tabBar={(props) => <FloatingTabBar {...props} />}
                 screenOptions={{
                     headerShown: false,
+                    sceneStyle: { backgroundColor: 'transparent' } // Ensures the underlying layout is visible
                 }}>
                 <Tabs.Screen
                     name="index"

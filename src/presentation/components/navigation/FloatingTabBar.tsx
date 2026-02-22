@@ -125,6 +125,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
                     }
                 ]}
             >
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: pillBg }]} />
                 {visibleRoutes.map((route) => {
                     const realIndex = state.routes.indexOf(route);
                     const isFocused = state.index === realIndex;
