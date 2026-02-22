@@ -81,24 +81,29 @@ const lightColors = {
 };
 
 const darkColors = {
-    background: '#110A26', // ← bg-main dark: deep violet (was generic #0F1419)
-    surface: '#1A1340',   // ← bg-surface dark: slightly lighter violet
-    surfaceVariant: '#231C4E',
+    // Elegant, Neutral Dark Foundation (Zinc scale instead of Blue/Violet)
+    background: '#09090B', // Zinc 950 (Profound dark)
+    surface: '#18181B',    // Zinc 900 (Slightly elevated card surface)
+    surfaceVariant: '#27272A', // Zinc 800 (Secondary surfaces)
 
-    primary: '#8B74F0', // ← accent-primary dark: light violet (was blue-tinted #7B9EFF)
+    // Primary Brand Accent (Kept purely for semantic highlights, not backgrounds)
+    primary: '#A78BFA', // Soft spiritual violet
     primaryContainer: '#2D1F6E',
     onPrimary: '#FFFFFF',
-    onPrimaryContainer: '#D4CCFF',
+    onPrimaryContainer: '#EDE9FE',
 
+    // Secondary Brand Accent (Gold)
     secondary: '#E5B969',
     secondaryContainer: '#3D2E10',
     onSecondary: '#110A26',
     onSecondaryContainer: '#FDE68A',
 
-    onBackground: '#F0EEFF', // ← text-primary dark: lavender-tinted white (was grey #F1F5F9)
-    onSurface: '#DDD8F5',    // Soft lavender body text
-    onSurfaceVariant: '#9E9AC8', // ← text-secondary dark: violet-muted (was blue-grey #94A3B8)
+    // Neutral High-Contrast Text
+    onBackground: '#FAFAFA', // Zinc 50
+    onSurface: '#F4F4F5',    // Zinc 100
+    onSurfaceVariant: '#A1A1AA', // Zinc 400 (Perfect for secondary text)
 
+    // Semantic States
     error: '#FC8181',
     success: '#68D391',
     warning: '#F6E05E',
@@ -107,7 +112,7 @@ const darkColors = {
     chartReading: '#5AC8D8',
     chartReciting: '#3A9BEC',
     chartReflection: '#F28B8A',
-    chartEmpty: '#2D2456',
+    chartEmpty: '#27272A',
 
     // Heatmap (Dark Mode — violet scale)
     heatmapLow: '#6246EA',
@@ -120,9 +125,10 @@ const darkColors = {
     widgetPurple: '#A78BFA',
     widgetPink: '#F472B6',
 
-    outline: '#35295A',
-    divider: '#1E1640',
-    outlineVariant: '#2A2350',
+    // Borders & Dividers
+    outline: '#3F3F46', // Zinc 700
+    divider: '#27272A', // Zinc 800
+    outlineVariant: '#52525B', // Zinc 600
 };
 
 // ═══════════════════════════════════════════════════════════════════════════

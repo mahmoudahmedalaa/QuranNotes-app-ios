@@ -14,11 +14,11 @@ QuranNotes occupies the **premium Islamic mindfulness** space — serene, intros
 
 | Token | Light Hex | Dark Hex | Role |
 |---|---|---|---|
-| `bgMain` | `#F8F5FF` | `#110A26` | Primary background (60% of UI) |
-| `bgSurface` | `#EEE9FA` | `#1A1340` | Cards, panels, text boxes (30% of UI) |
-| `textPrimary` | `#1C1033` | `#F0EEFF` | Main headings and body text |
-| `textSecondary` | `#5E5A98` | `#9E9AC8` | Transliterations, timestamps, captions |
-| `accentPrimary` | `#6246EA` | `#8B74F0` | CTAs, play buttons, saves (10% of UI) |
+| `bgMain` | `#F8F5FF` | `#09090B` | Primary background (Zinc 950 in Dark) |
+| `bgSurface` | `#EEE9FA` | `#18181B` | Cards, panels, text boxes (Zinc 900 in Dark) |
+| `textPrimary` | `#1C1033` | `#FAFAFA` | Main headings and body text (Zinc 50 in Dark) |
+| `textSecondary` | `#5E5A98` | `#A1A1AA` | Transliterations, timestamps, captions (Zinc 400 in Dark) |
+| `accentPrimary` | `#6246EA` | `#A78BFA` | CTAs, play buttons, saves (10% of UI) |
 
 ---
 
