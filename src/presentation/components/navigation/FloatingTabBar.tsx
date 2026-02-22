@@ -113,7 +113,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
     const pillBorder = theme.dark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
 
     return (
-        <View style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+        <View style={[styles.wrapper, { bottom: Math.max(insets.bottom, 16) + 8 }]}>
             <BlurView
                 intensity={60}
                 tint={theme.dark ? 'dark' : 'light'}
