@@ -7,9 +7,10 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
-import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import { useRouter, usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from 'react-native-paper';
 import * as Haptics from 'expo-haptics';
 import { useAudio } from '../../../infrastructure/audio/AudioContext';
 import { TAB_BAR_HEIGHT } from '../../theme/DesignSystem';
@@ -18,6 +19,7 @@ export const GlobalMiniPlayer: React.FC = () => {
     const router = useRouter();
     const pathname = usePathname();
     const insets = useSafeAreaInsets();
+    const theme = useTheme();
     const { playingVerse, isPlaying, currentSurahName, currentSurahNum, pause, resume, stop } = useAudio();
 
     const bottom = insets.bottom + TAB_BAR_HEIGHT + 8;
@@ -49,100 +51,111 @@ export const GlobalMiniPlayer: React.FC = () => {
             animate={{ translateY: 0, opacity: 1 }}
             exit={{ translateY: 60, opacity: 0 }}
             transition={{ type: 'spring', damping: 22, stiffness: 300 }}
-            style={[styles.container, { bottom }]}
+            style={[styles.containerWrap, { bottom }]}
         >
-            <LinearGradient
-                colors={['rgba(98, 70, 234, 0.92)', 'rgba(72, 48, 180, 0.92)']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={StyleSheet.absoluteFill}
-            />
-
-            {/* Surah name + verse — tap to navigate */}
-            <Pressable
-                onPress={handleTap}
-                style={({ pressed }) => [styles.body, pressed && { opacity: 0.85 }]}
+            <BlurView
+                intensity={60}
+                tint={theme.dark ? 'dark' : 'light'}
+                style={[
+                    styles.blurContainer,
+                    {
+                        borderColor: theme.dark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                        borderWidth: 1,
+                    }
+                ]}
             >
-                <MaterialCommunityIcons
-                    name={isPlaying ? 'volume-high' : 'volume-off'}
-                    size={15}
-                    color="rgba(255,255,255,0.85)"
-                />
-                <Text style={styles.label} numberOfLines={1}>
-                    {surahLabel}
-                    <Text style={styles.labelSub}>  ·  Verse {playingVerse.verse}</Text>
-                </Text>
-            </Pressable>
+                {/* Surah name + verse — tap to navigate */}
+                <Pressable
+                    onPress={handleTap}
+                    style={({ pressed }) => [styles.body, pressed && { opacity: 0.85 }]}
+                >
+                    <MaterialCommunityIcons
+                        name={isPlaying ? 'volume-high' : 'volume-off'}
+                        size={16}
+                        color={theme.colors.primary}
+                    />
+                    <View style={{ flex: 1, marginLeft: 4 }}>
+                        <Text style={[styles.label, { color: theme.colors.onSurface }]} numberOfLines={1}>
+                            Now Reciting
+                        </Text>
+                        <Text style={[styles.labelSub, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
+                            {surahLabel}  ·  Verse {playingVerse.verse}
+                        </Text>
+                    </View>
+                </Pressable>
 
-            {/* Play / pause */}
-            <Pressable
-                onPress={handlePlayPause}
-                hitSlop={8}
-                style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.7 }]}
-            >
-                <MaterialCommunityIcons
-                    name={isPlaying ? 'pause' : 'play'}
-                    size={18}
-                    color="#FFFFFF"
-                />
-            </Pressable>
+                {/* Play / pause */}
+                <Pressable
+                    onPress={handlePlayPause}
+                    hitSlop={8}
+                    style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.7 }]}
+                >
+                    <MaterialCommunityIcons
+                        name={isPlaying ? 'pause-circle' : 'play-circle'}
+                        size={26}
+                        color={theme.colors.primary}
+                    />
+                </Pressable>
 
-            {/* Close */}
-            <Pressable
-                onPress={handleStop}
-                hitSlop={8}
-                style={({ pressed }) => [styles.iconBtn, styles.closeBtn, pressed && { opacity: 0.6 }]}
-            >
-                <MaterialCommunityIcons name="close" size={16} color="rgba(255,255,255,0.7)" />
-            </Pressable>
+                {/* Close */}
+                <Pressable
+                    onPress={handleStop}
+                    hitSlop={8}
+                    style={({ pressed }) => [styles.iconBtn, styles.closeBtn, pressed && { opacity: 0.6 }]}
+                >
+                    <MaterialCommunityIcons name="close" size={20} color={theme.colors.onSurfaceVariant} />
+                </Pressable>
+            </BlurView>
         </MotiView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
+    containerWrap: {
         position: 'absolute',
         alignSelf: 'center',
-        width: '82%',          // slightly narrower than 90% to sit inside the tab bar width naturally
-        height: 44,
-        borderRadius: 22,      // full pill shape matching tab bar
+        width: '85%',
+        height: 52,
+        zIndex: 100,
+        flexDirection: 'row',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+        elevation: 8,
+    },
+    blurContainer: {
+        ...StyleSheet.absoluteFillObject,
+        borderRadius: 26,
         overflow: 'hidden',
         flexDirection: 'row',
         alignItems: 'center',
-        zIndex: 100,
-        // subtle shadow
-        shadowColor: '#3B22C8',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.28,
-        shadowRadius: 10,
-        elevation: 10,
     },
     body: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 7,
-        paddingLeft: 14,
+        gap: 6,
+        paddingLeft: 16,
         paddingRight: 4,
     },
     label: {
-        flex: 1,
-        fontSize: 13,
+        fontSize: 14,
         fontWeight: '700',
-        color: '#FFFFFF',
     },
     labelSub: {
         fontSize: 12,
         fontWeight: '400',
-        color: 'rgba(255,255,255,0.65)',
+        marginTop: -2,
     },
     iconBtn: {
-        width: 36,
-        height: 44,
+        width: 40,
+        height: 52,
         alignItems: 'center',
         justifyContent: 'center',
     },
     closeBtn: {
-        paddingRight: 4,
+        paddingRight: 8,
     },
 });
