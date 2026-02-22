@@ -4,6 +4,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
+import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
@@ -280,14 +281,21 @@ export default function DashboardScreen() {
                     from={{ opacity: 0, translateY: 20 }}
                     animate={{ opacity: 1, translateY: 0 }}
                     transition={{ type: 'spring', damping: 18 }}
-                    style={[styles.floatingPill, { bottom: pillBottom }]}
+                    style={[styles.floatingPillWrap, { bottom: pillBottom }]}
                 >
-                    <LinearGradient
-                        colors={['rgba(98, 70, 234, 0.92)', 'rgba(72, 48, 180, 0.92)']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={StyleSheet.absoluteFill}
+                    <BlurView
+                        intensity={theme.dark ? 40 : 60}
+                        tint={theme.dark ? 'dark' : 'light'}
+                        style={[
+                            styles.floatingPillBlur,
+                            {
+                                backgroundColor: theme.dark ? 'rgba(30, 30, 35, 0.75)' : 'rgba(255, 255, 255, 0.85)',
+                                borderColor: theme.dark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                                borderWidth: 1,
+                            }
+                        ]}
                     />
+
                     {/* Body — tapping navigates to reading position */}
                     <Pressable
                         onPress={() => {
@@ -299,13 +307,15 @@ export default function DashboardScreen() {
                             pressed && { opacity: 0.85 },
                         ]}
                     >
-                        <MaterialCommunityIcons name="book-open-page-variant" size={16} color="rgba(255,255,255,0.85)" />
-                        <Text style={styles.continueTitle} numberOfLines={1}>
-                            Continue Reading
-                            <Text style={styles.continueSubtitle}>
-                                {'  ·  '}{globalPosition.surahName || `Surah ${globalPosition.surah}`} · {globalPosition.verse}
+                        <MaterialCommunityIcons name="book-open-page-variant" size={18} color={theme.dark ? '#FFFFFF' : theme.colors.primary} />
+                        <View style={{ flex: 1 }}>
+                            <Text style={[styles.continueTitle, { color: theme.colors.onSurface }]} numberOfLines={1}>
+                                Continue Reading
                             </Text>
-                        </Text>
+                            <Text style={[styles.continueSubtitle, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
+                                {globalPosition.surahName || `Surah ${globalPosition.surah}`} · Verse {globalPosition.verse}
+                            </Text>
+                        </View>
                     </Pressable>
                     {/* Play button */}
                     <Pressable
@@ -320,7 +330,7 @@ export default function DashboardScreen() {
                         hitSlop={8}
                         style={({ pressed }) => [styles.playCircleWrap, pressed && { opacity: 0.7 }]}
                     >
-                        <MaterialCommunityIcons name="play" size={18} color="#FFFFFF" />
+                        <MaterialCommunityIcons name="play-circle" size={24} color={theme.dark ? '#FFFFFF' : theme.colors.primary} />
                     </Pressable>
                 </MotiView>
             )}
@@ -367,47 +377,47 @@ const styles = StyleSheet.create({
     },
 
     // ── Floating Continue Reading pill ──
-    floatingPill: {
+    floatingPillWrap: {
         position: 'absolute',
         alignSelf: 'center',
-        width: '82%',
-        height: 44,
+        width: '85%',
+        height: 52,
         zIndex: 100,
-        borderRadius: 22,
-        overflow: 'hidden',
-        flexDirection: 'row',
-        alignItems: 'center',
-        shadowColor: '#3B22C8',
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.28,
+        shadowOpacity: 0.15,
         shadowRadius: 10,
-        elevation: 10,
+        elevation: 8,
+    },
+    floatingPillBlur: {
+        ...StyleSheet.absoluteFillObject,
+        borderRadius: 26,
+        overflow: 'hidden',
     },
     floatingPillInner: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
-        paddingLeft: 14,
+        gap: 12,
+        paddingLeft: 16,
         paddingRight: 4,
-        height: 44,
+        height: 52,
     },
     playCircleWrap: {
-        width: 40,
-        height: 44,
+        width: 48,
+        height: 52,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingRight: 4,
+        paddingRight: 8,
+        position: 'absolute',
+        right: 0,
     },
-    continueLeft: {},
-    continueTextGroup: {},
     continueTitle: {
-        fontSize: 13, fontWeight: '700', color: '#FFFFFF',
+        fontSize: 14, fontWeight: '700',
     },
     continueSubtitle: {
-        fontSize: 12, color: 'rgba(255,255,255,0.65)',
+        fontSize: 12, marginTop: -2,
     },
-    playCircle: {},
 
     // ── 2-Column Grid ──
     gridRow: {

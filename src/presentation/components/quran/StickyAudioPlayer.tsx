@@ -6,6 +6,7 @@ import { Colors, Spacing, BorderRadius, Shadows } from '../../theme/DesignSystem
 import { useSettings } from '../../../infrastructure/settings/SettingsContext';
 import { RECITERS } from '../../../domain/entities/Reciter';
 import { MotiView } from 'moti';
+import { BlurView } from 'expo-blur';
 
 interface Props {
     isPlaying: boolean;
@@ -42,124 +43,139 @@ export const StickyAudioPlayer = ({
             animate={{ translateY: 0, opacity: 1 }}
             transition={{ type: 'spring', damping: 15 }}
             style={[
-                styles.container,
-                {
-                    backgroundColor: theme.colors.elevation.level5,
-                    borderBottomColor: theme.colors.outlineVariant,
-                },
-            ]}>
-            <View style={[styles.content, { paddingBottom: Math.max(Spacing.md, insets.bottom) }]}>
-                <View style={styles.info}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                        <Text
-                            variant="labelMedium"
-                            style={[styles.playingLabel, { color: theme.colors.primary }]}>
-                            Now Reciting
-                        </Text>
-                        <Menu
-                            visible={visible}
-                            onDismiss={closeMenu}
-                            anchor={
-                                <TouchableOpacity onPress={openMenu}>
-                                    <View
-                                        style={[
-                                            styles.reciterBadge,
-                                            { backgroundColor: theme.colors.primaryContainer },
-                                        ]}>
-                                        <Text
-                                            style={[
-                                                styles.reciterText,
-                                                { color: theme.colors.onPrimaryContainer },
-                                            ]}>
-                                            {currentReciter?.name.split(' ')[0]}
-                                        </Text>
-                                        <IconButton
-                                            icon="chevron-down"
-                                            size={14}
-                                            iconColor={theme.colors.onPrimaryContainer}
-                                            style={{ margin: 0, height: 14, width: 14 }}
-                                        />
-                                    </View>
-                                </TouchableOpacity>
-                            }>
+                styles.wrapper,
+                { bottom: Math.max(Spacing.xl, insets.bottom + Spacing.sm) }
+            ]}
+        >
+            <BlurView
+                intensity={theme.dark ? 40 : 60}
+                tint={theme.dark ? 'dark' : 'light'}
+                style={[
+                    styles.container,
+                    {
+                        backgroundColor: theme.dark ? 'rgba(30, 30, 35, 0.75)' : 'rgba(255, 255, 255, 0.85)',
+                        borderColor: theme.dark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                        borderWidth: 1,
+                    }
+                ]}
+            >
+                <View style={styles.content}>
+                    <View style={styles.info}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
                             <Text
-                                style={{
-                                    padding: 12,
-                                    fontWeight: 'bold',
-                                    color: theme.colors.primary,
-                                }}>
-                                Select Reciter
+                                variant="labelMedium"
+                                style={[styles.playingLabel, { color: theme.colors.primary }]}>
+                                Now Reciting
                             </Text>
-                            <Divider />
-                            {RECITERS.map(r => (
-                                <Menu.Item
-                                    key={r.id}
-                                    onPress={() => {
-                                        updateSettings({ reciterId: r.id });
-                                        closeMenu();
-                                    }}
-                                    title={r.name}
-                                    leadingIcon={r.id === settings.reciterId ? 'check' : undefined}
-                                />
-                            ))}
-                        </Menu>
+                            <Menu
+                                visible={visible}
+                                onDismiss={closeMenu}
+                                anchor={
+                                    <TouchableOpacity onPress={openMenu}>
+                                        <View
+                                            style={[
+                                                styles.reciterBadge,
+                                                { backgroundColor: theme.colors.primaryContainer },
+                                            ]}>
+                                            <Text
+                                                style={[
+                                                    styles.reciterText,
+                                                    { color: theme.colors.onPrimaryContainer },
+                                                ]}>
+                                                {currentReciter?.name.split(' ')[0]}
+                                            </Text>
+                                            <IconButton
+                                                icon="chevron-down"
+                                                size={14}
+                                                iconColor={theme.colors.onPrimaryContainer}
+                                                style={{ margin: 0, height: 14, width: 14 }}
+                                            />
+                                        </View>
+                                    </TouchableOpacity>
+                                }>
+                                <Text
+                                    style={{
+                                        padding: 12,
+                                        fontWeight: 'bold',
+                                        color: theme.colors.primary,
+                                    }}>
+                                    Select Reciter
+                                </Text>
+                                <Divider />
+                                {RECITERS.map(r => (
+                                    <Menu.Item
+                                        key={r.id}
+                                        onPress={() => {
+                                            updateSettings({ reciterId: r.id });
+                                            closeMenu();
+                                        }}
+                                        title={r.name}
+                                        leadingIcon={r.id === settings.reciterId ? 'check' : undefined}
+                                    />
+                                ))}
+                            </Menu>
+                        </View>
+
+                        <Text
+                            variant="titleMedium"
+                            style={[styles.verseLabel, { color: theme.colors.onSurface }]}>
+                            Verse {currentVerse.verse}
+                        </Text>
+                        {verseText && (
+                            <Text
+                                numberOfLines={1}
+                                style={[
+                                    styles.arabicPreview,
+                                    { color: theme.colors.onSurfaceVariant },
+                                ]}>
+                                {verseText}
+                            </Text>
+                        )}
                     </View>
 
-                    <Text
-                        variant="titleMedium"
-                        style={[styles.verseLabel, { color: theme.colors.onSurface }]}>
-                        Verse {currentVerse.verse}
-                    </Text>
-                    {verseText && (
-                        <Text
-                            numberOfLines={1}
-                            style={[
-                                styles.arabicPreview,
-                                { color: theme.colors.onSurfaceVariant },
-                            ]}>
-                            {verseText}
-                        </Text>
-                    )}
-                </View>
-
-                <View style={styles.controls}>
-                    {isPlaying ? (
+                    <View style={styles.controls}>
+                        {isPlaying ? (
+                            <IconButton
+                                icon="pause-circle"
+                                iconColor={theme.colors.primary}
+                                size={44}
+                                onPress={onPause}
+                            />
+                        ) : (
+                            <IconButton
+                                icon="play-circle"
+                                iconColor={theme.colors.primary}
+                                size={44}
+                                onPress={onResume}
+                            />
+                        )}
                         <IconButton
-                            icon="pause-circle"
-                            iconColor={theme.colors.primary}
-                            size={44}
-                            onPress={onPause}
+                            icon="close"
+                            iconColor={theme.colors.onSurfaceVariant}
+                            size={24}
+                            onPress={onStop}
                         />
-                    ) : (
-                        <IconButton
-                            icon="play-circle"
-                            iconColor={theme.colors.primary}
-                            size={44}
-                            onPress={onResume}
-                        />
-                    )}
-                    <IconButton
-                        icon="close"
-                        iconColor={theme.colors.onSurfaceVariant}
-                        size={24}
-                        onPress={onStop}
-                    />
+                    </View>
                 </View>
-            </View>
-            <ProgressBar indeterminate color={theme.colors.primary} style={{ height: 3 }} />
+            </BlurView>
         </MotiView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        borderTopLeftRadius: BorderRadius.xxl,
-        borderTopRightRadius: BorderRadius.xxl,
+    wrapper: {
+        position: 'absolute',
+        left: Spacing.md,
+        right: Spacing.md,
+        zIndex: 100,
         elevation: 8,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: -4 },
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.15,
         shadowRadius: 10,
+    },
+    container: {
+        borderRadius: BorderRadius.xxl,
         overflow: 'hidden',
     },
     content: {
