@@ -180,16 +180,15 @@ const styles = StyleSheet.create({
     pill: {
         flexDirection: 'row',
         alignItems: 'center',
-        // backgroundColor applied dynamically via theme
-        borderRadius: 999,
+        justifyContent: 'space-around',
+        width: '92%',
+        borderRadius: 24,
         paddingHorizontal: 8,
         paddingVertical: 12,
-        gap: 4,
-        overflow: 'hidden', // Strictly bounds the blur
-        // Shadow eliminated: shadows on a BlurView force iOS to render an opaque backing rectangle
+        overflow: 'hidden',
     },
     tabButton: {
-        paddingHorizontal: 20,
+        flex: 1,
         paddingVertical: 8,
         alignItems: 'center',
         justifyContent: 'center',

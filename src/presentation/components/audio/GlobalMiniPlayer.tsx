@@ -22,7 +22,7 @@ export const GlobalMiniPlayer: React.FC = () => {
     const theme = useTheme();
     const { playingVerse, isPlaying, currentSurahName, currentSurahNum, pause, resume, stop } = useAudio();
 
-    const bottom = insets.bottom + TAB_BAR_HEIGHT + 8;
+    const bottom = insets.bottom + 56;
 
     if (!playingVerse) return null;
     if (pathname.startsWith('/surah/')) return null;
