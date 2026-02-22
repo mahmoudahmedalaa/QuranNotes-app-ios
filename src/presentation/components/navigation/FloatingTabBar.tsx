@@ -115,7 +115,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
     return (
         <View style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 16) }]}>
             <BlurView
-                intensity={theme.dark ? 40 : 60}
+                intensity={80}
                 tint={theme.dark ? 'dark' : 'light'}
                 style={[
                     styles.pill,
@@ -125,8 +125,6 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
                     }
                 ]}
             >
-                <View style={[StyleSheet.absoluteFill, { backgroundColor: pillBg }]} />
-
                 {visibleRoutes.map((route) => {
                     const realIndex = state.routes.indexOf(route);
                     const isFocused = state.index === realIndex;

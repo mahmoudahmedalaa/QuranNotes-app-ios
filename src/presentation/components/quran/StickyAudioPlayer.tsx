@@ -48,7 +48,7 @@ export const StickyAudioPlayer = ({
             ]}
         >
             <BlurView
-                intensity={theme.dark ? 40 : 60}
+                intensity={80}
                 tint={theme.dark ? 'dark' : 'light'}
                 style={[
                     styles.container,
@@ -58,10 +58,6 @@ export const StickyAudioPlayer = ({
                     }
                 ]}
             >
-                <View style={[
-                    StyleSheet.absoluteFill,
-                    { backgroundColor: theme.dark ? 'rgba(30, 30, 35, 0.75)' : 'rgba(255, 255, 255, 0.85)' }
-                ]} />
                 <View style={styles.content}>
                     <View style={styles.info}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>

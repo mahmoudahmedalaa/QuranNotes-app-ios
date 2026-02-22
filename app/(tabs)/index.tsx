@@ -284,7 +284,7 @@ export default function DashboardScreen() {
                     style={[styles.floatingPillWrap, { bottom: pillBottom }]}
                 >
                     <BlurView
-                        intensity={theme.dark ? 40 : 60}
+                        intensity={80}
                         tint={theme.dark ? 'dark' : 'light'}
                         style={[
                             styles.floatingPillBlur,
@@ -293,12 +293,7 @@ export default function DashboardScreen() {
                                 borderWidth: 1,
                             }
                         ]}
-                    >
-                        <View style={[
-                            StyleSheet.absoluteFill,
-                            { backgroundColor: theme.dark ? 'rgba(30, 30, 35, 0.75)' : 'rgba(255, 255, 255, 0.85)' }
-                        ]} />
-                    </BlurView>
+                    />
 
                     {/* Body — tapping navigates to reading position */}
                     <Pressable
