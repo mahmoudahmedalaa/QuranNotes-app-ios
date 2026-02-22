@@ -185,18 +185,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 8,
         paddingVertical: 12,
         gap: 4,
-        // Subtle shadow
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.25,
-                shadowRadius: 16,
-            },
-            android: {
-                elevation: 12,
-            },
-        }),
+        overflow: 'hidden', // Strictly bounds the blur
+        // Shadow eliminated: shadows on a BlurView force iOS to render an opaque backing rectangle
     },
     tabButton: {
         paddingHorizontal: 20,
