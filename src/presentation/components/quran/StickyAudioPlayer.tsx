@@ -48,7 +48,7 @@ export const StickyAudioPlayer = ({
             ]}
         >
             <BlurView
-                intensity={80}
+                intensity={60}
                 tint={theme.dark ? 'dark' : 'light'}
                 style={[
                     styles.container,

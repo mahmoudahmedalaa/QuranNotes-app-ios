@@ -115,7 +115,7 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
     return (
         <View style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 16) }]}>
             <BlurView
-                intensity={80}
+                intensity={60}
                 tint={theme.dark ? 'dark' : 'light'}
                 style={[
                     styles.pill,

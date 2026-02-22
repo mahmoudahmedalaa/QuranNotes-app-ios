@@ -284,7 +284,7 @@ export default function DashboardScreen() {
                     style={[styles.floatingPillWrap, { bottom: pillBottom }]}
                 >
                     <BlurView
-                        intensity={80}
+                        intensity={60}
                         tint={theme.dark ? 'dark' : 'light'}
                         style={[
                             styles.floatingPillBlur,
