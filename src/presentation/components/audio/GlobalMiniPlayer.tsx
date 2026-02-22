@@ -22,9 +22,10 @@ export const GlobalMiniPlayer: React.FC = () => {
     const theme = useTheme();
     const { playingVerse, isPlaying, currentSurahName, currentSurahNum, pause, resume, stop } = useAudio();
 
-    // Tab bar is at bottom: Math.max(insets.bottom, 16) + 8. Its height is 48.
-    // Sitting 8 points above the tab bar requires adding 56.
-    const bottom = Math.max(insets.bottom, 16) + 64;
+    // Tab bar wrapper bottom is Math.max(insets.bottom, 16) + 8.
+    // Tab bar height is precisely 64.
+    // 8 + 64 + 8 gap = 80.
+    const bottom = Math.max(insets.bottom, 16) + 80;
 
     if (!playingVerse) return null;
     if (pathname.startsWith('/surah/')) return null;

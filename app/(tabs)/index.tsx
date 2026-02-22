@@ -50,8 +50,8 @@ export default function DashboardScreen() {
     const [showAdhkar, setShowAdhkar] = useState(false);
     const insets = useSafeAreaInsets();
     const tabBarHeight = useBottomTabBarHeight();  // actual runtime height, safe-area-inclusive
-    // Reliable bottom offset: Math.max(insets.bottom, 16) + 8 (tab margin) + 48 (tab height) + 8 (gap)
-    const pillBottom = Math.max(insets.bottom, 16) + 64;
+    // Reliable bottom offset: Math.max(insets.bottom, 16) + 8 (tab margin) + 64 (strict tab height) + 8 (gap) = 80
+    const pillBottom = Math.max(insets.bottom, 16) + 80;
     const { getCompletionPercentage } = useAdhkar();
 
     // Smart Adhkar timing: Morning = Fajr until Asr begins. Evening = Asr onwards.

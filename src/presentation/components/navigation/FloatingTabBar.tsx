@@ -183,13 +183,12 @@ const styles = StyleSheet.create({
         justifyContent: 'space-around',
         width: '92%',
         borderRadius: 24,
-        paddingHorizontal: 8,
-        paddingVertical: 12,
+        height: 64, // Strict height for predictable layout math
         overflow: 'hidden',
     },
     tabButton: {
         flex: 1,
-        paddingVertical: 8,
+        height: '100%',
         alignItems: 'center',
         justifyContent: 'center',
     },
