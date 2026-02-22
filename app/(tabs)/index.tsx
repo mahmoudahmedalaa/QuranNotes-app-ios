@@ -289,12 +289,16 @@ export default function DashboardScreen() {
                         style={[
                             styles.floatingPillBlur,
                             {
-                                backgroundColor: theme.dark ? 'rgba(30, 30, 35, 0.75)' : 'rgba(255, 255, 255, 0.85)',
                                 borderColor: theme.dark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
                                 borderWidth: 1,
                             }
                         ]}
-                    />
+                    >
+                        <View style={[
+                            StyleSheet.absoluteFill,
+                            { backgroundColor: theme.dark ? 'rgba(30, 30, 35, 0.75)' : 'rgba(255, 255, 255, 0.85)' }
+                        ]} />
+                    </BlurView>
 
                     {/* Body — tapping navigates to reading position */}
                     <Pressable

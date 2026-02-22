@@ -53,12 +53,15 @@ export const StickyAudioPlayer = ({
                 style={[
                     styles.container,
                     {
-                        backgroundColor: theme.dark ? 'rgba(30, 30, 35, 0.75)' : 'rgba(255, 255, 255, 0.85)',
                         borderColor: theme.dark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
                         borderWidth: 1,
                     }
                 ]}
             >
+                <View style={[
+                    StyleSheet.absoluteFill,
+                    { backgroundColor: theme.dark ? 'rgba(30, 30, 35, 0.75)' : 'rgba(255, 255, 255, 0.85)' }
+                ]} />
                 <View style={styles.content}>
                     <View style={styles.info}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
