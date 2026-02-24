@@ -11,9 +11,9 @@ import {
     IconButton,
 } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useFolders } from '../../../src/infrastructure/notes/FolderContext';
-import { Folder, DEFAULT_FOLDER } from '../../../src/domain/entities/Folder';
-import { Spacing, BorderRadius, Shadows } from '../../../src/presentation/theme/DesignSystem';
+import { useFolders } from '../../../src/features/notes/infrastructure/FolderContext';
+import { Folder, DEFAULT_FOLDER } from '../../../src/core/domain/entities/Folder';
+import { Spacing, BorderRadius, Shadows } from '../../../src/core/theme/DesignSystem';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 

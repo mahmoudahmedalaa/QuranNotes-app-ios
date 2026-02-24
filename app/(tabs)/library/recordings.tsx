@@ -12,16 +12,16 @@ import {
     ProgressBar,
     SegmentedButtons,
 } from 'react-native-paper';
-import { useRecordingStorage } from '../../../src/presentation/hooks/useRecordingStorage';
-import { useRecordingPlayback } from '../../../src/presentation/hooks/useRecordingPlayback';
-import { useAudioRecorder } from '../../../src/presentation/hooks/useAudioRecorder';
-import { useFolders } from '../../../src/infrastructure/notes/FolderContext';
-import { Recording } from '../../../src/domain/entities/Recording';
-import { FollowAlongSession } from '../../../src/domain/entities/FollowAlongSession';
-import { LocalFollowAlongRepository } from '../../../src/data/local/LocalFollowAlongRepository';
-import { DEFAULT_FOLDER } from '../../../src/domain/entities/Folder';
-import { Spacing, BorderRadius, Shadows } from '../../../src/presentation/theme/DesignSystem';
-import { ModernDropdown } from '../../../src/presentation/components/common/ModernDropdown';
+import { useRecordingStorage } from '../../../src/core/hooks/useRecordingStorage';
+import { useRecordingPlayback } from '../../../src/core/hooks/useRecordingPlayback';
+import { useAudioRecorder } from '../../../src/core/hooks/useAudioRecorder';
+import { useFolders } from '../../../src/features/notes/infrastructure/FolderContext';
+import { Recording } from '../../../src/core/domain/entities/Recording';
+import { FollowAlongSession } from '../../../src/core/domain/entities/FollowAlongSession';
+import { LocalFollowAlongRepository } from '../../../src/core/data/local/LocalFollowAlongRepository';
+import { DEFAULT_FOLDER } from '../../../src/core/domain/entities/Folder';
+import { Spacing, BorderRadius, Shadows } from '../../../src/core/theme/DesignSystem';
+import { ModernDropdown } from '../../../src/core/components/common/ModernDropdown';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 

@@ -6,13 +6,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
+import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
 import {
     Spacing,
     BorderRadius,
     Shadows,
     Gradients,
-} from '../../src/presentation/theme/DesignSystem';
+} from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 const LOCKED_FEATURES = [
@@ -51,7 +51,7 @@ export default function OnboardingLibrary() {
                     transition={{ type: 'timing', duration: 400 }}
                     style={styles.header}>
                     <Text style={[styles.title, { color: theme.colors.onBackground }]}>
-                        Nice work! 🎉
+                        Nice work!
                     </Text>
                     <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
                         Here's your first reflection

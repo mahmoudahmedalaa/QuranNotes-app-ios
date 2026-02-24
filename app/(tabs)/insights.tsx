@@ -3,21 +3,21 @@ import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Spacing, Gradients, BorderRadius } from '../../src/presentation/theme/DesignSystem';
-import { ConsistencyHeatmap } from '../../src/presentation/components/stats/ConsistencyHeatmap';
-import { ActivityChart } from '../../src/presentation/components/stats/ActivityChart';
-import { TopicBreakdown } from '../../src/presentation/components/stats/TopicBreakdown';
-import { StatsWidgetGrid } from '../../src/presentation/components/stats/StatsWidgetGrid';
-import MoodInsightWidget from '../../src/presentation/components/mood/MoodInsightWidget';
-import { useStreaks } from '../../src/infrastructure/auth/StreakContext';
+import { Spacing, Gradients, BorderRadius } from '../../src/core/theme/DesignSystem';
+import { ConsistencyHeatmap } from '../../src/features/user-stats/presentation/ConsistencyHeatmap';
+import { ActivityChart } from '../../src/features/user-stats/presentation/ActivityChart';
+import { TopicBreakdown } from '../../src/features/user-stats/presentation/TopicBreakdown';
+import { StatsWidgetGrid } from '../../src/features/user-stats/presentation/StatsWidgetGrid';
+import MoodInsightWidget from '../../src/features/mood/presentation/MoodInsightWidget';
+import { useStreaks } from '../../src/features/auth/infrastructure/StreakContext';
 
 const { width } = Dimensions.get('window');
 
-import { useInsightsData } from '../../src/presentation/hooks/useInsightsData';
+import { useInsightsData } from '../../src/core/hooks/useInsightsData';
 
 import { Button } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { usePro } from '../../src/infrastructure/auth/ProContext';
+import { usePro } from '../../src/features/auth/infrastructure/ProContext';
 
 // ...
 

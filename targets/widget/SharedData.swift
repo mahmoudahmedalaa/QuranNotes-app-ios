@@ -53,6 +53,11 @@ class WidgetDataStore {
         return try? JSONDecoder().decode(NextPrayerData.self, from: data)
     }
     
+    func getNextPrayers() -> [NextPrayerData]? {
+        guard let data = defaults?.data(forKey: "widgetData_nextPrayers") else { return nil }
+        return try? JSONDecoder().decode([NextPrayerData].self, from: data)
+    }
+    
     func getKhatma() -> KhatmaData? {
         guard let data = defaults?.data(forKey: "widgetData_khatma") else { return nil }
         return try? JSONDecoder().decode(KhatmaData.self, from: data)

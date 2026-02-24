@@ -1,30 +1,29 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, Modal, ScrollView, Dimensions } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
 import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { NoorMascot } from '../../src/presentation/components/mascot/NoorMascot';
-import { Spacing, BorderRadius, Shadows, TAB_BAR_HEIGHT, BrandTokens } from '../../src/presentation/theme/DesignSystem';
+import { NoorMascot } from '../../src/core/components/mascot/NoorMascot';
+import { Spacing, BorderRadius, Shadows, TAB_BAR_HEIGHT, BrandTokens } from '../../src/core/theme/DesignSystem';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { StreakCounter } from '../../src/presentation/components/stats/StreakCounter';
-import MoodCheckInCard from '../../src/presentation/components/mood/MoodCheckInCard';
-import { PrayerTimesCard } from '../../src/presentation/components/prayer/PrayerTimesCard';
-import { usePrayer } from '../../src/infrastructure/prayer/PrayerContext';
-import { DailyVerseCard } from '../../src/presentation/components/home/DailyVerseCard';
-import { ReadingPositionService, ReadingPosition } from '../../src/infrastructure/reading/ReadingPositionService';
-import { useKhatma } from '../../src/infrastructure/khatma/KhatmaContext';
-import { useAudio } from '../../src/infrastructure/audio/AudioContext';
-import { useAdhkar } from '../../src/infrastructure/adhkar/AdhkarContext';
-import { AdhkarScreen } from '../../src/presentation/screens/AdhkarScreen';
-import { useQuran } from '../../src/presentation/hooks/useQuran';
-import { useSettings } from '../../src/infrastructure/settings/SettingsContext';
+import { StreakCounter } from '../../src/features/user-stats/presentation/StreakCounter';
+import MoodCheckInCard from '../../src/features/mood/presentation/MoodCheckInCard';
+import { PrayerTimesCard } from '../../src/features/prayer/presentation/PrayerTimesCard';
+import { usePrayer } from '../../src/features/prayer/infrastructure/PrayerContext';
+import { DailyVerseCard } from '../../src/features/verse-of-the-day/presentation/DailyVerseCard';
+import { ReadingPositionService, ReadingPosition } from '../../src/features/quran-reading/infrastructure/ReadingPositionService';
+import { useKhatma } from '../../src/features/khatma/infrastructure/KhatmaContext';
+import { useAudio } from '../../src/features/audio-player/infrastructure/AudioContext';
+import { useAdhkar } from '../../src/features/adhkar/infrastructure/AdhkarContext';
+import { AdhkarScreen } from '../../src/core/presentation/screens/AdhkarScreen';
+import { useQuran } from '../../src/core/hooks/useQuran';
+import { useSettings } from '../../src/features/settings/infrastructure/SettingsContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GRID_GAP = 10;
@@ -151,7 +150,7 @@ export default function DashboardScreen() {
                             pressed && { opacity: 0.7, transform: [{ scale: 0.92 }] },
                         ]}
                     >
-                        <Ionicons name="settings-outline" size={20} color={theme.colors.onSurfaceVariant} />
+                        <Feather name="settings" size={20} color={theme.colors.onSurfaceVariant} />
                     </Pressable>
                 </MotiView>
 
@@ -165,13 +164,16 @@ export default function DashboardScreen() {
                 >
 
 
-                    {/* ── Prayer Times (full width, collapsible) ── */}
+                    {/* ── 1. Mood Check-In ── */}
+                    <MoodCheckInCard />
+
+                    {/* ── 2. Prayer Times (full width, collapsible) ── */}
                     <PrayerTimesCard />
 
-                    {/* ── Daily Verse (full width, collapsible) ── */}
+                    {/* ── 3. Daily Verse (full width, collapsible) ── */}
                     <DailyVerseCard />
 
-                    {/* ── 2-Column Grid: Khatma + Adhkar ── */}
+                    {/* ── 4. 2-Column Grid: Khatma + Adhkar (Heavier Actions) ── */}
                     <MotiView
                         from={{ opacity: 0, translateY: 10 }}
                         animate={{ opacity: 1, translateY: 0 }}
@@ -187,28 +189,22 @@ export default function DashboardScreen() {
                             style={({ pressed }) => [
                                 styles.gridTile,
                                 { backgroundColor: theme.colors.surface },
-                                Shadows.md,
+                                Shadows.sm,
+                                { borderColor: theme.colors.outline, borderWidth: 1 },
                                 pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                             ]}
                         >
-                            <LinearGradient
-                                colors={theme.dark
-                                    ? ['#1A1340', '#2D1F6E']
-                                    : ['#F8F5FF', '#EDE5FF']
-                                }
-                                style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
-                            />
                             {/* Ring */}
                             <View style={styles.tileRingWrap}>
                                 <Svg width={RING_SIZE} height={RING_SIZE}>
                                     <Circle
                                         cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RADIUS}
-                                        stroke={theme.dark ? '#3C2D80' : '#E0D4F5'}
+                                        stroke={theme.colors.outline}
                                         strokeWidth={STROKE_WIDTH} fill="none"
                                     />
                                     <Circle
                                         cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RADIUS}
-                                        stroke={GOLD} strokeWidth={STROKE_WIDTH} fill="none"
+                                        stroke={theme.colors.primary} strokeWidth={STROKE_WIDTH} fill="none"
                                         strokeLinecap="round"
                                         strokeDasharray={CIRCUMFERENCE}
                                         strokeDashoffset={strokeDashoffset}
@@ -217,7 +213,7 @@ export default function DashboardScreen() {
                                     />
                                 </Svg>
                                 <View style={styles.tileRingCenter}>
-                                    <Text style={[styles.tileRingNum, { color: GOLD }]}>{completedCount}</Text>
+                                    <Text style={[styles.tileRingNum, { color: theme.colors.primary }]}>{completedCount}</Text>
                                     <Text style={[styles.tileRingDenom, { color: theme.colors.onSurfaceVariant }]}>/30</Text>
                                 </View>
                             </View>
@@ -236,38 +232,29 @@ export default function DashboardScreen() {
                             style={({ pressed }) => [
                                 styles.gridTile,
                                 { backgroundColor: theme.colors.surface },
-                                Shadows.md,
+                                Shadows.sm,
+                                { borderColor: theme.colors.outline, borderWidth: 1 },
                                 pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                             ]}
                         >
-                            <LinearGradient
-                                colors={adhkarPeriod === 'morning'
-                                    ? ['#FFFBEB', '#FEF3C7', '#FDE68A']
-                                    : ['#1E1B4B', '#312E81', '#4338CA']
-                                }
-                                style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
-                            />
                             <View style={styles.tileEmojiWrap}>
                                 {adhkarPeriod === 'morning' ? (
-                                    <MaterialCommunityIcons name="weather-sunny" size={28} color="#D97706" />
+                                    <Feather name="sun" size={28} color={theme.colors.primary} />
                                 ) : (
-                                    <MaterialCommunityIcons name="moon-waxing-crescent" size={28} color="#A5B4FC" />
+                                    <Feather name="moon" size={28} color={theme.colors.primary} />
                                 )}
                             </View>
-                            <Text style={[styles.tileLabel, { color: adhkarPeriod === 'morning' ? '#451A03' : '#FFFFFF' }]}>
+                            <Text style={[styles.tileLabel, { color: theme.colors.onSurface }]}>
                                 {adhkarPeriod === 'morning' ? 'Morning' : 'Evening'}
                             </Text>
-                            <Text style={[styles.tileSub, { color: adhkarPeriod === 'morning' ? '#451A03' : '#FFFFFF', fontWeight: '600' }]}>
+                            <Text style={[styles.tileSub, { color: theme.colors.onSurface, fontWeight: '600' }]}>
                                 Adhkar
                             </Text>
-                            <Text style={[styles.tileSub2, { color: adhkarPeriod === 'morning' ? '#78350F' : '#C7D2FE' }]}>
+                            <Text style={[styles.tileSub2, { color: theme.colors.onSurfaceVariant }]}>
                                 {adhkarPct > 0 ? `${adhkarPct}% done` : 'Tap to begin'}
                             </Text>
                         </Pressable>
                     </MotiView>
-
-                    {/* ── Mood Check-In ── */}
-                    <MoodCheckInCard />
 
                     {/* Bottom padding — extra when floating pill is visible */}
                     <View style={{ height: showContinueReading ? 176 : 120 }} />
@@ -305,7 +292,7 @@ export default function DashboardScreen() {
                             pressed && { opacity: 0.85 },
                         ]}
                     >
-                        <MaterialCommunityIcons name="book-open-page-variant" size={18} color={theme.dark ? '#FFFFFF' : theme.colors.primary} />
+                        <Feather name="book-open" size={18} color={theme.colors.surface} />
                         <View style={{ flex: 1 }}>
                             <Text style={[styles.continueTitle, { color: theme.colors.onSurface }]} numberOfLines={1}>
                                 Continue Reading
@@ -328,7 +315,7 @@ export default function DashboardScreen() {
                         hitSlop={8}
                         style={({ pressed }) => [styles.playCircleWrap, pressed && { opacity: 0.7 }]}
                     >
-                        <MaterialCommunityIcons name="play-circle" size={24} color={theme.dark ? '#FFFFFF' : theme.colors.primary} />
+                        <Feather name="play-circle" size={24} color={theme.colors.surface} />
                     </Pressable>
                 </MotiView>
             )}

@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { Redirect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, ActivityIndicator } from 'react-native';
-import { useOnboarding } from '../src/infrastructure/onboarding/OnboardingContext';
-import { useAuth } from '../src/infrastructure/auth/AuthContext';
+import { useOnboarding } from '../src/features/onboarding/infrastructure/OnboardingContext';
+import { useAuth } from '../src/features/auth/infrastructure/AuthContext';
 
 export default function Index() {
     const [hasSeenWelcome, setHasSeenWelcome] = useState<boolean | null>(null);

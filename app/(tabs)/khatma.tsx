@@ -12,21 +12,21 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
-import { useKhatma } from '../../src/infrastructure/khatma/KhatmaContext';
-import { ProgressRing } from '../../src/presentation/components/khatma/ProgressRing';
-import { JuzGrid } from '../../src/presentation/components/khatma/JuzGrid';
-import { JuzSurahList } from '../../src/presentation/components/khatma/TodayReadingCard';
-import { CatchUpBanner } from '../../src/presentation/components/khatma/CatchUpBanner';
-import { StreakBadge } from '../../src/presentation/components/khatma/StreakBadge';
+import { useKhatma } from '../../src/features/khatma/infrastructure/KhatmaContext';
+import { ProgressRing } from '../../src/features/khatma/presentation/ProgressRing';
+import { JuzGrid } from '../../src/features/khatma/presentation/JuzGrid';
+import { JuzSurahList } from '../../src/features/khatma/presentation/TodayReadingCard';
+import { CatchUpBanner } from '../../src/features/khatma/presentation/CatchUpBanner';
+import { StreakBadge } from '../../src/features/khatma/presentation/StreakBadge';
 import {
     Spacing,
     Gradients,
     Shadows,
     BorderRadius,
-} from '../../src/presentation/theme/DesignSystem';
+} from '../../src/core/theme/DesignSystem';
 
 const KhatmaCelebrationModal = React.lazy(() =>
-    import('../../src/presentation/components/khatma/KhatmaCelebrationModal').then(m => ({
+    import('../../src/features/khatma/presentation/KhatmaCelebrationModal').then(m => ({
         default: m.KhatmaCelebrationModal,
     }))
 );

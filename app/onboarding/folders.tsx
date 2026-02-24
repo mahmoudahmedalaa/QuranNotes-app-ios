@@ -6,13 +6,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
+import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
 import {
     Spacing,
     BorderRadius,
     Shadows,
     Gradients,
-} from '../../src/presentation/theme/DesignSystem';
+} from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 const SAMPLE_FOLDERS = [
@@ -74,7 +74,7 @@ export default function OnboardingFolders() {
                     transition={{ type: 'timing', duration: 400 }}
                     style={styles.header}>
                     <View style={[styles.coachBubble, { backgroundColor: theme.colors.primary }]}>
-                        <Text style={styles.coachText}>📁 Organize with Folders</Text>
+                        <Text style={styles.coachText}>Organize with Folders</Text>
                     </View>
                     <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
                         Group reflections by theme, surah, or topic

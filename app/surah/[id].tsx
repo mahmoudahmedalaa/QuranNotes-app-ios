@@ -5,26 +5,26 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IconButton, useTheme, FAB } from 'react-native-paper';
 import { MotiView, AnimatePresence } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
-import { useQuran } from '../../src/presentation/hooks/useQuran';
-import { useAudio } from '../../src/infrastructure/audio/AudioContext';
-import { useAudioRecorder } from '../../src/presentation/hooks/useAudioRecorder';
-import { VerseItem } from '../../src/presentation/components/quran/VerseItem';
-import { useNotes } from '../../src/presentation/hooks/useNotes';
-import { useVoiceFollowAlong } from '../../src/presentation/hooks/useVoiceFollowAlong';
-import { useSettings } from '../../src/infrastructure/settings/SettingsContext';
-import { WaveBackground } from '../../src/presentation/components/animated/WaveBackground';
-import { NoorMascot } from '../../src/presentation/components/mascot/NoorMascot';
-import { StickyAudioPlayer } from '../../src/presentation/components/quran/StickyAudioPlayer';
-import { RecordingIndicatorBar } from '../../src/presentation/components/recording/RecordingIndicatorBar';
-import { VerseTafseerModal } from '../../src/presentation/components/quran/VerseTafseerModal';
-import { RecordingSaveModal } from '../../src/presentation/components/recording/RecordingSaveModal';
-import { VoiceFollowAlongOverlay } from '../../src/presentation/components/voice/VoiceFollowAlongOverlay';
-import { FollowAlongSaveModal } from '../../src/presentation/components/voice/FollowAlongSaveModal';
-import { FollowAlongSession } from '../../src/domain/entities/FollowAlongSession';
+import { useQuran } from '../../src/core/hooks/useQuran';
+import { useAudio } from '../../src/features/audio-player/infrastructure/AudioContext';
+import { useAudioRecorder } from '../../src/core/hooks/useAudioRecorder';
+import { VerseItem } from '../../src/features/quran-reading/presentation/VerseItem';
+import { useNotes } from '../../src/core/hooks/useNotes';
+import { useVoiceFollowAlong } from '../../src/core/hooks/useVoiceFollowAlong';
+import { useSettings } from '../../src/features/settings/infrastructure/SettingsContext';
+import { WaveBackground } from '../../src/core/components/animated/WaveBackground';
+import { NoorMascot } from '../../src/core/components/mascot/NoorMascot';
+import { StickyAudioPlayer } from '../../src/features/quran-reading/presentation/StickyAudioPlayer';
+import { RecordingIndicatorBar } from '../../src/features/recording/presentation/RecordingIndicatorBar';
+import { VerseTafseerModal } from '../../src/features/quran-reading/presentation/VerseTafseerModal';
+import { RecordingSaveModal } from '../../src/features/recording/presentation/RecordingSaveModal';
+import { VoiceFollowAlongOverlay } from '../../src/features/voice/presentation/VoiceFollowAlongOverlay';
+import { FollowAlongSaveModal } from '../../src/features/voice/presentation/FollowAlongSaveModal';
+import { FollowAlongSession } from '../../src/core/domain/entities/FollowAlongSession';
 
-import { Verse } from '../../src/domain/entities/Quran';
-import { ReadingPositionService, ReadingPosition } from '../../src/infrastructure/reading/ReadingPositionService';
-import { ShareCardGenerator, ShareCardHandle, VerseShareData } from '../../src/presentation/components/sharing/ShareCardGenerator';
+import { Verse } from '../../src/core/domain/entities/Quran';
+import { ReadingPositionService, ReadingPosition } from '../../src/features/quran-reading/infrastructure/ReadingPositionService';
+import { ShareCardGenerator, ShareCardHandle, VerseShareData } from '../../src/features/sharing/presentation/ShareCardGenerator';
 
 
 
@@ -33,7 +33,7 @@ import {
     Gradients,
     Shadows,
     BorderRadius,
-} from '../../src/presentation/theme/DesignSystem';
+} from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 const ACCENT_GOLD = '#D4A853';

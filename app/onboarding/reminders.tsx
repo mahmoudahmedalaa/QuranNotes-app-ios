@@ -6,16 +6,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
-import { useSettings } from '../../src/infrastructure/settings/SettingsContext';
-import { NotificationService } from '../../src/infrastructure/notifications/NotificationService';
+import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
+import { useSettings } from '../../src/features/settings/infrastructure/SettingsContext';
+import { NotificationService } from '../../src/features/notifications/infrastructure/NotificationService';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import {
     Spacing,
     BorderRadius,
     Shadows,
     Gradients,
-} from '../../src/presentation/theme/DesignSystem';
+} from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 export default function OnboardingReminders() {
@@ -113,7 +113,7 @@ export default function OnboardingReminders() {
                         Daily Quran Reminder
                     </Text>
                     <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-                        A gentle nudge to keep your heart connected to Allah's words ✨
+                        A gentle nudge to keep your heart connected to Allah's words
                     </Text>
                 </MotiView>
 
@@ -139,7 +139,7 @@ export default function OnboardingReminders() {
                             <View style={styles.toggleRow}>
                                 <View style={styles.toggleInfo}>
                                     <Text style={[styles.toggleTitle, { color: theme.colors.onSurface }]}>
-                                        📿 Daily Reminders
+                                        Daily Reminders
                                     </Text>
                                     <Text style={[styles.toggleDesc, { color: theme.colors.onSurfaceVariant }]}>
                                         Get notified to read Quran daily
@@ -168,11 +168,11 @@ export default function OnboardingReminders() {
                                             Set by prayer time:
                                         </Text>
                                         {[
-                                            { label: 'Fajr', emoji: '🌅', key: 'Fajr', hour: 5, minute: 30, desc: '5:30 AM' },
-                                            { label: 'Dhuhr', emoji: '☀️', key: 'Dhuhr', hour: 12, minute: 30, desc: '12:30 PM' },
-                                            { label: 'Asr', emoji: '🌤️', key: 'Asr', hour: 15, minute: 30, desc: '3:30 PM' },
-                                            { label: 'Maghrib', emoji: '🌇', key: 'Maghrib', hour: 18, minute: 15, desc: '6:15 PM' },
-                                            { label: 'Isha', emoji: '🌙', key: 'Isha', hour: 21, minute: 0, desc: '9:00 PM' },
+                                            { label: 'Fajr', icon: 'partly-sunny-outline', key: 'Fajr', hour: 5, minute: 30, desc: '5:30 AM' },
+                                            { label: 'Dhuhr', icon: 'sunny-outline', key: 'Dhuhr', hour: 12, minute: 30, desc: '12:30 PM' },
+                                            { label: 'Asr', icon: 'time-outline', key: 'Asr', hour: 15, minute: 30, desc: '3:30 PM' },
+                                            { label: 'Maghrib', icon: 'partly-sunny-outline', key: 'Maghrib', hour: 18, minute: 15, desc: '6:15 PM' },
+                                            { label: 'Isha', icon: 'moon-outline', key: 'Isha', hour: 21, minute: 0, desc: '9:00 PM' },
                                         ].map((time) => {
                                             const isActive = selectedChip === time.key;
                                             return (
@@ -190,7 +190,9 @@ export default function OnboardingReminders() {
                                                         d.setHours(time.hour, time.minute, 0, 0);
                                                         setPickerDate(d);
                                                     }}>
-                                                    <Text style={styles.prayerEmoji}>{time.emoji}</Text>
+                                                    <View style={styles.prayerIconContainer}>
+                                                        <Ionicons name={time.icon as any} size={20} color={theme.colors.onSurfaceVariant} />
+                                                    </View>
                                                     <Text style={[styles.prayerLabel, { color: theme.colors.onSurface }]}>
                                                         {time.label}
                                                     </Text>
@@ -212,7 +214,9 @@ export default function OnboardingReminders() {
                                         {/* Custom Time */}
                                         <View style={[styles.customDivider, { backgroundColor: theme.colors.outlineVariant }]} />
                                         <View style={styles.customTimeRow}>
-                                            <Text style={styles.prayerEmoji}>⏰</Text>
+                                            <View style={styles.prayerIconContainer}>
+                                                <Ionicons name="time-outline" size={20} color={theme.colors.onSurfaceVariant} />
+                                            </View>
                                             <Text style={[styles.prayerLabel, {
                                                 color: selectedChip === 'Custom' ? theme.colors.primary : theme.colors.onSurface,
                                                 fontWeight: selectedChip === 'Custom' ? '700' : '500',
@@ -383,10 +387,10 @@ const styles = StyleSheet.create({
         borderRadius: BorderRadius.md,
         marginBottom: 2,
     },
-    prayerEmoji: {
-        fontSize: 18,
+    prayerIconContainer: {
         width: 28,
-        textAlign: 'center',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     prayerLabel: {
         fontSize: 14,

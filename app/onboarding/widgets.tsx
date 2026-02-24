@@ -16,8 +16,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
-import { Spacing, BorderRadius } from '../../src/presentation/theme/DesignSystem';
+import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
+import { Spacing, BorderRadius } from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 const STEP = 4;
@@ -201,7 +201,7 @@ export default function OnboardingWidgets() {
                         Continue
                     </Button>
                     <Text style={[styles.howToTip, { color: theme.colors.onSurfaceVariant }]}>
-                        💡 How to add a widget: long-press your home screen → + → QuranNotes
+                        How to add a widget: long-press your home screen → + → QuranNotes
                     </Text>
                     <Text
                         style={[styles.skipText, { color: theme.colors.onSurfaceVariant }]}

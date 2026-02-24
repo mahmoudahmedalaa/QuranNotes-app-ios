@@ -1,0 +1,4 @@
+src/features/mood/presentation/VerseRecommendationSheet.tsx(160,24): error TS2339: Property 'darkColor' does not exist on type 'MoodConfig'.
+src/features/mood/presentation/VerseRecommendationSheet.tsx(160,61): error TS2339: Property 'darkColor' does not exist on type 'MoodConfig'.
+src/features/mood/presentation/VerseRecommendationSheet.tsx(161,24): error TS2339: Property 'color' does not exist on type 'MoodConfig'.
+src/features/mood/presentation/VerseRecommendationSheet.tsx(161,56): error TS2339: Property 'color' does not exist on type 'MoodConfig'.

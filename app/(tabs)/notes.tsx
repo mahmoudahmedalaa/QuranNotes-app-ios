@@ -13,13 +13,13 @@ import {
     Button,
 } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { useNotes } from '../../src/presentation/hooks/useNotes';
-import { useFolders } from '../../src/infrastructure/notes/FolderContext';
-import { Note } from '../../src/domain/entities/Note';
-import { Spacing } from '../../src/presentation/theme/DesignSystem';
-import { ModernDropdown } from '../../src/presentation/components/common/ModernDropdown';
-import { FolderManagementDialog } from '../../src/presentation/components/common/FolderManagementDialog';
-import { ExportService, ExportFormat } from '../../src/infrastructure/export/ExportService';
+import { useNotes } from '../../src/core/hooks/useNotes';
+import { useFolders } from '../../src/features/notes/infrastructure/FolderContext';
+import { Note } from '../../src/features/notes/domain/Note';
+import { Spacing } from '../../src/core/theme/DesignSystem';
+import { ModernDropdown } from '../../src/core/components/common/ModernDropdown';
+import { FolderManagementDialog } from '../../src/core/components/common/FolderManagementDialog';
+import { ExportService, ExportFormat } from '../../src/core/export/ExportService';
 
 export default function NotesScreen() {
     const router = useRouter();

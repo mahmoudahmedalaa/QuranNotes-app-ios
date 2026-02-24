@@ -1,0 +1,204 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { User } from '../domain/User';
+import { RemoteAuthRepository } from '../data/RemoteAuthRepository';
+import { ReadingPositionService } from '../../quran-reading/infrastructure/ReadingPositionService';
+
+interface AuthContextType {
+    user: User | null;
+    loading: boolean;
+    loginAnonymously: () => Promise<void>;
+    loginWithEmail: (email: string, pass: string) => Promise<void>;
+    loginWithGoogle: () => Promise<void>;
+    loginWithApple: () => Promise<void>;
+    registerWithEmail: (email: string, pass: string) => Promise<void>;
+    resetPassword: (email: string) => Promise<void>;
+    logout: () => Promise<void>;
+    deleteAccount: () => Promise<void>;
+    deleteAccountWithPassword: (password: string) => Promise<void>;
+    getSignInProvider: () => 'google.com' | 'apple.com' | 'password' | 'anonymous' | null;
+}
+
+const AuthContext = createContext<AuthContextType>({
+    user: null,
+    loading: false,
+    loginAnonymously: async () => { },
+    loginWithEmail: async () => { },
+    loginWithGoogle: async () => { },
+    loginWithApple: async () => { },
+    registerWithEmail: async () => { },
+    resetPassword: async () => { },
+    logout: async () => { },
+    deleteAccount: async () => { },
+    deleteAccountWithPassword: async () => { },
+    getSignInProvider: () => null,
+});
+
+export const useAuth = () => useContext(AuthContext);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
+    const authRepo = new RemoteAuthRepository();
+
+    useEffect(() => {
+        // Listen to auth state changes
+        const unsubscribe = authRepo.onAuthStateChanged((authUser) => {
+            setUser(authUser);
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    const loginAnonymously = async () => {
+        setLoading(true);
+        try {
+            await ReadingPositionService.clearAll();
+            const authUser = await authRepo.signInAnonymously();
+            setUser(authUser);
+        } catch (e) {
+            console.error('[AuthContext] loginAnonymously error:', e);
+            throw e;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loginWithEmail = async (email: string, pass: string) => {
+        setLoading(true);
+        try {
+            await ReadingPositionService.clearAll();
+            const authUser = await authRepo.signInWithEmail(email, pass);
+            setUser(authUser);
+        } catch (e) {
+            console.error('[AuthContext] loginWithEmail error:', e);
+            throw e;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loginWithGoogle = async () => {
+        setLoading(true);
+        try {
+            await ReadingPositionService.clearAll();
+            // Force sign out first to ensure clean state
+            await authRepo.signOut();
+            const authUser = await authRepo.signInWithGoogle();
+            setUser(authUser);
+        } catch (e) {
+            console.error('[AuthContext] loginWithGoogle error:', e);
+            throw e;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loginWithApple = async () => {
+        setLoading(true);
+        try {
+            await ReadingPositionService.clearAll();
+            // Force sign out first to ensure clean state
+            await authRepo.signOut();
+            const authUser = await authRepo.signInWithApple();
+            setUser(authUser);
+        } catch (e) {
+            console.error('[AuthContext] loginWithApple error:', e);
+            throw e;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const registerWithEmail = async (email: string, pass: string) => {
+        setLoading(true);
+        try {
+            await ReadingPositionService.clearAll();
+            await authRepo.signUpWithEmail(email, pass);
+        } catch (e) {
+            console.error('[AuthContext] registerWithEmail error:', e);
+            throw e;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const resetPassword = async (email: string) => {
+        try {
+            await authRepo.sendPasswordReset(email);
+        } catch (e) {
+            console.error('[AuthContext] resetPassword error:', e);
+            throw e;
+        }
+    };
+
+    const logout = async () => {
+        setLoading(true);
+        try {
+            await ReadingPositionService.clearAll();
+            await authRepo.signOut();
+            setUser(null);
+
+            // Clear welcome state for next user (Device Global)
+            await AsyncStorage.removeItem('hasSeenWelcome');
+
+        } catch (e) {
+            console.error('[AuthContext] logout error:', e);
+            throw e;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const deleteAccount = async () => {
+        setLoading(true);
+        try {
+            await authRepo.deleteAccount();
+            setUser(null);
+            await AsyncStorage.clear();
+        } catch (e) {
+            console.error('[AuthContext] deleteAccount error:', e);
+            throw e;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const deleteAccountWithPassword = async (password: string) => {
+        setLoading(true);
+        try {
+            await authRepo.reauthenticateWithPasswordAndDelete(password);
+            setUser(null);
+            await AsyncStorage.clear();
+        } catch (e) {
+            console.error('[AuthContext] deleteAccountWithPassword error:', e);
+            throw e;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getSignInProvider = () => authRepo.getSignInProvider();
+
+    const value: AuthContextType = {
+        user,
+        loading,
+        loginAnonymously,
+        loginWithEmail,
+        loginWithGoogle,
+        loginWithApple,
+        registerWithEmail,
+        resetPassword,
+        logout,
+        deleteAccount,
+        deleteAccountWithPassword,
+        getSignInProvider,
+    };
+
+    return (
+        <AuthContext.Provider value={value}>
+            {children}
+        </AuthContext.Provider>
+    );
+};

@@ -17,21 +17,21 @@ import {
     Modal,
     Button,
 } from 'react-native-paper';
-import { useNoteContext } from '../../src/infrastructure/notes/NoteContext';
+import { useNoteContext } from '../../src/features/notes/infrastructure/NoteContext';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useNotes } from '../../src/presentation/hooks/useNotes';
-import { useFolders } from '../../src/infrastructure/notes/FolderContext';
-import { Note } from '../../src/domain/entities/Note';
+import { useNotes } from '../../src/core/hooks/useNotes';
+import { useFolders } from '../../src/features/notes/infrastructure/FolderContext';
+import { Note } from '../../src/features/notes/domain/Note';
 import {
     Spacing,
     BorderRadius,
     Shadows,
     Gradients,
-} from '../../src/presentation/theme/DesignSystem';
-import { FolderPicker } from '../../src/presentation/components/common/FolderPicker';
+} from '../../src/core/theme/DesignSystem';
+import { FolderPicker } from '../../src/core/components/common/FolderPicker';
 import * as Haptics from 'expo-haptics';
 
 export default function NoteEditorScreen() {

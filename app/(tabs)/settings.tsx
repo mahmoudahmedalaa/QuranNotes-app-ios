@@ -5,23 +5,23 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useSettings } from '../../src/infrastructure/settings/SettingsContext';
-import { ReciterPicker } from '../../src/presentation/components/common/ReciterPicker';
-import { getReciterById } from '../../src/domain/entities/Reciter';
-import { getEditionById, getAvailableLanguages, TranslationEdition } from '../../src/domain/entities/TranslationEdition';
+import { useSettings } from '../../src/features/settings/infrastructure/SettingsContext';
+import { ReciterPicker } from '../../src/core/components/common/ReciterPicker';
+import { getReciterById } from '../../src/features/audio-player/domain/Reciter';
+import { getEditionById, getAvailableLanguages, TranslationEdition } from '../../src/core/domain/entities/TranslationEdition';
 import {
     Spacing,
     BorderRadius,
     Shadows,
     Gradients,
     Colors,
-} from '../../src/presentation/theme/DesignSystem';
+} from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
-import { usePro } from '../../src/infrastructure/auth/ProContext';
-import { useAuth } from '../../src/infrastructure/auth/AuthContext';
-import { useMood } from '../../src/infrastructure/mood/MoodContext';
-import { useKhatma } from '../../src/infrastructure/khatma/KhatmaContext';
-import { NotificationService } from '../../src/infrastructure/notifications/NotificationService';
+import { usePro } from '../../src/features/auth/infrastructure/ProContext';
+import { useAuth } from '../../src/features/auth/infrastructure/AuthContext';
+import { useMood } from '../../src/features/mood/infrastructure/MoodContext';
+import { useKhatma } from '../../src/features/khatma/infrastructure/KhatmaContext';
+import { NotificationService } from '../../src/features/notifications/infrastructure/NotificationService';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
 // Enable LayoutAnimation on Android
@@ -30,11 +30,11 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 }
 
 const PRAYER_TIMES = [
-    { label: 'Fajr', emoji: '🌅', key: 'Fajr', hour: 5, minute: 30, desc: '5:30 AM' },
-    { label: 'Dhuhr', emoji: '☀️', key: 'Dhuhr', hour: 12, minute: 30, desc: '12:30 PM' },
-    { label: 'Asr', emoji: '🌤️', key: 'Asr', hour: 15, minute: 30, desc: '3:30 PM' },
-    { label: 'Maghrib', emoji: '🌇', key: 'Maghrib', hour: 18, minute: 15, desc: '6:15 PM' },
-    { label: 'Isha', emoji: '🌙', key: 'Isha', hour: 21, minute: 0, desc: '9:00 PM' },
+    { label: 'Fajr', icon: 'partly-sunny-outline' as const, key: 'Fajr', hour: 5, minute: 30, desc: '5:30 AM' },
+    { label: 'Dhuhr', icon: 'sunny-outline' as const, key: 'Dhuhr', hour: 12, minute: 30, desc: '12:30 PM' },
+    { label: 'Asr', icon: 'partly-sunny-outline' as const, key: 'Asr', hour: 15, minute: 30, desc: '3:30 PM' },
+    { label: 'Maghrib', icon: 'moon-outline' as const, key: 'Maghrib', hour: 18, minute: 15, desc: '6:15 PM' },
+    { label: 'Isha', icon: 'moon-outline' as const, key: 'Isha', hour: 21, minute: 0, desc: '9:00 PM' },
 ];
 
 export default function SettingsScreen() {
@@ -507,7 +507,7 @@ export default function SettingsScreen() {
                                                             LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                                                             setTranslationPickerExpanded(false);
                                                         }}>
-                                                        <Text style={styles.prayerEmoji}>{edition.flag}</Text>
+                                                        <Ionicons name="globe-outline" size={20} color={theme.colors.onSurfaceVariant} style={{ marginRight: Spacing.sm }} />
                                                         <Text style={[styles.prayerLabel, { color: theme.colors.onSurface }]}>
                                                             {edition.languageName}
                                                         </Text>
@@ -656,7 +656,7 @@ export default function SettingsScreen() {
                                                 ]}>
                                                 {selectedChip === 'Custom'
                                                     ? `Custom · ${reminderTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`
-                                                    : `${PRAYER_TIMES.find(p => p.key === selectedChip)?.emoji || '🕌'} ${selectedChip} · ${PRAYER_TIMES.find(p => p.key === selectedChip)?.desc || ''}`}
+                                                    : `${selectedChip} · ${PRAYER_TIMES.find(p => p.key === selectedChip)?.desc || ''}`}
                                             </Text>
                                         </View>
                                         <Ionicons
@@ -694,7 +694,7 @@ export default function SettingsScreen() {
                                                             LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                                                             setTimePickerExpanded(false);
                                                         }}>
-                                                        <Text style={styles.prayerEmoji}>{time.emoji}</Text>
+                                                        <Ionicons name={time.icon} size={20} color={isActive ? theme.colors.primary : theme.colors.onSurfaceVariant} style={{ marginRight: Spacing.sm }} />
                                                         <Text style={[styles.prayerLabel, { color: theme.colors.onSurface }]}>
                                                             {time.label}
                                                         </Text>
@@ -716,7 +716,7 @@ export default function SettingsScreen() {
                                             {/* Custom time option */}
                                             <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant }]} />
                                             <View style={styles.customTimeRow}>
-                                                <Text style={styles.prayerEmoji}>⏰</Text>
+                                                <Ionicons name="time-outline" size={20} color={selectedChip === 'Custom' ? theme.colors.primary : theme.colors.onSurfaceVariant} style={{ marginRight: Spacing.sm }} />
                                                 <Text style={[styles.prayerLabel, {
                                                     color: selectedChip === 'Custom' ? theme.colors.primary : theme.colors.onSurface,
                                                     fontWeight: selectedChip === 'Custom' ? '700' : '500',

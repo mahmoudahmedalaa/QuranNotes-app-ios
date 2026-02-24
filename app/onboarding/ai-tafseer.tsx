@@ -4,14 +4,15 @@ import { Text, useTheme, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
+import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
 import {
     Spacing,
     BorderRadius,
     Shadows,
     Gradients,
-} from '../../src/presentation/theme/DesignSystem';
+} from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 const TOTAL_STEPS = 15;
@@ -35,10 +36,10 @@ export default function OnboardingAiTafseer() {
     };
 
     const features = [
-        { emoji: '💡', title: 'Instant Explanations', desc: 'Tap the lightbulb on any verse for AI-powered tafseer' },
-        { emoji: '🧠', title: 'Context & Wisdom', desc: 'Learn when and why each verse was revealed' },
-        { emoji: '📚', title: 'Practical Lessons', desc: 'Discover how to apply Quranic guidance daily' },
-        { emoji: '⚡', title: 'Smart Caching', desc: 'Explanations are saved for instant access offline' },
+        { icon: 'bulb-outline' as const, title: 'Instant Explanations', desc: 'Tap the lightbulb on any verse for AI-powered tafseer' },
+        { icon: 'library-outline' as const, title: 'Context & Wisdom', desc: 'Learn when and why each verse was revealed' },
+        { icon: 'book-outline' as const, title: 'Practical Lessons', desc: 'Discover how to apply Quranic guidance daily' },
+        { icon: 'flash-outline' as const, title: 'Smart Caching', desc: 'Explanations are saved for instant access offline' },
     ];
 
     return (
@@ -75,7 +76,7 @@ export default function OnboardingAiTafseer() {
                             styles.iconCircle,
                             { backgroundColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(212,168,83,0.1)' },
                         ]}>
-                        <Text style={{ fontSize: 44 }}>🤖</Text>
+                        <Ionicons name="hardware-chip-outline" size={44} color={theme.colors.primary} />
                     </View>
                     <Text style={[styles.title, { color: theme.colors.onBackground }]}>
                         AI Verse Explanation
@@ -112,7 +113,7 @@ export default function OnboardingAiTafseer() {
                                             borderBottomColor: theme.colors.outlineVariant,
                                         },
                                     ]}>
-                                    <Text style={styles.featureEmoji}>{feature.emoji}</Text>
+                                    <Ionicons name={feature.icon as keyof typeof Ionicons.glyphMap} size={28} color={theme.colors.primary} style={styles.featureEmoji} />
                                     <View style={styles.featureInfo}>
                                         <Text style={[styles.featureTitle, { color: theme.colors.onSurface }]}>
                                             {feature.title}
@@ -133,7 +134,7 @@ export default function OnboardingAiTafseer() {
                         transition={{ type: 'timing', duration: 500, delay: 800 }}
                         style={styles.disclaimerContainer}>
                         <Text style={[styles.disclaimerText, { color: theme.colors.onSurfaceVariant }]}>
-                            💡 AI explanations complement — not replace — traditional scholarly tafseer
+                            <Ionicons name="information-circle-outline" size={12} color={theme.colors.onSurfaceVariant} /> AI explanations complement — not replace — traditional scholarly tafseer
                         </Text>
                     </MotiView>
                 </ScrollView>

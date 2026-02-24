@@ -4,14 +4,15 @@ import { Text, useTheme, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
+import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
 import {
     Spacing,
     BorderRadius,
     Shadows,
     Gradients,
-} from '../../src/presentation/theme/DesignSystem';
+} from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 const TOTAL_STEPS = 15;
@@ -35,11 +36,11 @@ export default function OnboardingTopics() {
     };
 
     const features = [
-        { emoji: '🤲', title: 'Patience & Gratitude', desc: 'Find strength in verses about perseverance' },
-        { emoji: '💚', title: 'Love & Mercy', desc: 'Discover Allah\'s boundless compassion' },
-        { emoji: '🛡️', title: 'Protection', desc: 'Seek refuge with powerful Quranic ayahs' },
-        { emoji: '🌟', title: 'Guidance & Knowledge', desc: 'Illuminate your path with divine wisdom' },
-        { emoji: '📿', title: '15 Topics', desc: 'From Du\'a to Justice — explore the Quran thematically' },
+        { icon: 'hands-outline' as const, title: 'Patience & Gratitude', desc: 'Find strength in verses about perseverance' },
+        { icon: 'heart-outline' as const, title: 'Love & Mercy', desc: 'Discover Allah\'s boundless compassion' },
+        { icon: 'shield-outline' as const, title: 'Protection', desc: 'Seek refuge with powerful Quranic ayahs' },
+        { icon: 'star-outline' as const, title: 'Guidance & Knowledge', desc: 'Illuminate your path with divine wisdom' },
+        { icon: 'list-outline' as const, title: '15 Topics', desc: 'From Du\'a to Justice — explore the Quran thematically' },
     ];
 
     return (
@@ -76,7 +77,7 @@ export default function OnboardingTopics() {
                             styles.iconCircle,
                             { backgroundColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(91,127,255,0.1)' },
                         ]}>
-                        <Text style={{ fontSize: 44 }}>📖</Text>
+                        <Ionicons name="book-outline" size={44} color={theme.colors.primary} />
                     </View>
                     <Text style={[styles.title, { color: theme.colors.onBackground }]}>
                         Browse by Topic
@@ -113,7 +114,7 @@ export default function OnboardingTopics() {
                                             borderBottomColor: theme.colors.outlineVariant,
                                         },
                                     ]}>
-                                    <Text style={styles.featureEmoji}>{feature.emoji}</Text>
+                                    <Ionicons name={feature.icon as keyof typeof Ionicons.glyphMap} size={28} color={theme.colors.primary} style={styles.featureEmoji} />
                                     <View style={styles.featureInfo}>
                                         <Text style={[styles.featureTitle, { color: theme.colors.onSurface }]}>
                                             {feature.title}

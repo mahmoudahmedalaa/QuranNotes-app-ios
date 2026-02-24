@@ -6,11 +6,11 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useTheme, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { getTopicById } from '../../src/domain/entities/QuranTopics';
-import { Spacing, BorderRadius, Shadows } from '../../src/presentation/theme/DesignSystem';
+import { getTopicById } from '../../src/features/verse-of-the-day/domain/QuranTopics';
+import { Spacing, BorderRadius, Shadows } from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 export default function TopicDetailScreen() {
@@ -53,7 +53,7 @@ export default function TopicDetailScreen() {
                     iconColor={theme.colors.onSurface}
                 />
                 <View style={styles.headerTitleGroup}>
-                    <Text style={[styles.headerEmoji]}>{topic.emoji}</Text>
+                    <Ionicons name={topic.icon as any} size={28} color={topic.color} style={{ marginRight: Spacing.xs }} />
                     <View>
                         <Text style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
                             {topic.name}

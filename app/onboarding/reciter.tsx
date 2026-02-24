@@ -7,15 +7,15 @@ import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Audio } from 'expo-av';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
+import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
 import {
     Spacing,
     BorderRadius,
     Shadows,
     Gradients,
-} from '../../src/presentation/theme/DesignSystem';
-import { RECITERS, getReciterById } from '../../src/domain/entities/Reciter';
-import { useSettings } from '../../src/infrastructure/settings/SettingsContext';
+} from '../../src/core/theme/DesignSystem';
+import { RECITERS, getReciterById } from '../../src/features/audio-player/domain/Reciter';
+import { useSettings } from '../../src/features/settings/infrastructure/SettingsContext';
 import * as Haptics from 'expo-haptics';
 
 const { width } = Dimensions.get('window');

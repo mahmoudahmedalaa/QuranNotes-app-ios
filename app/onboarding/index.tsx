@@ -6,8 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
-import { Spacing, BorderRadius, Gradients, BrandTokens } from '../../src/presentation/theme/DesignSystem';
+import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
+import { Spacing, BorderRadius, Gradients, BrandTokens } from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 const { width, height } = Dimensions.get('window');

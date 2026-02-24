@@ -5,14 +5,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { useRouter } from 'expo-router';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
+import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
 import {
     Spacing,
     BorderRadius,
     Shadows,
     Gradients,
     BrandTokens,
-} from '../../src/presentation/theme/DesignSystem';
+} from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 const { width } = Dimensions.get('window');
@@ -54,7 +54,7 @@ export default function OnboardingPickSurah() {
                     transition={{ type: 'timing', duration: 400 }}
                     style={styles.header}>
                     <View style={[styles.coachBubble, { backgroundColor: theme.colors.primary }]}>
-                        <Text style={styles.coachText}>👆 Tap a Surah to explore</Text>
+                        <Text style={styles.coachText}>Tap a Surah to explore</Text>
                     </View>
                     <View style={[styles.coachArrow, { borderTopColor: theme.colors.primary }]} />
                 </MotiView>

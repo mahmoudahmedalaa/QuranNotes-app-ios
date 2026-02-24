@@ -82,6 +82,11 @@ export const WidgetBridge = {
         return setWidgetData('nextPrayer', data);
     },
 
+    /** Update the widget with a full schedule of upcoming prayers */
+    setNextPrayers(data: NextPrayerWidgetData[]): boolean {
+        return setWidgetData('nextPrayers', data);
+    },
+
     /** Update the Khatma progress widget data */
     setKhatma(data: KhatmaWidgetData): boolean {
         return setWidgetData('khatma', data);

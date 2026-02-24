@@ -24,22 +24,36 @@ struct PrayerProvider: TimelineProvider {
                 timestamp: Date().timeIntervalSince1970 + 8100),
             palette: .current())
     }
-    func getSnapshot(in context: Context, completion: @escaping (NextPrayerEntry) -> Void) {
-        completion(NextPrayerEntry(date: Date(),
-            prayer: WidgetDataStore.shared.getNextPrayer(), palette: .current()))
+    
+    private func getActivePrayer(at date: Date, from prayers: [NextPrayerData]) -> NextPrayerData? {
+        if prayers.isEmpty { return WidgetDataStore.shared.getNextPrayer() }
+        // The active prayer is the first one whose timestamp is AFTER 'date'
+        return prayers.first { $0.timestamp > date.timeIntervalSince1970 } ?? prayers.last
     }
+
+    func getSnapshot(in context: Context, completion: @escaping (NextPrayerEntry) -> Void) {
+        let prayers = WidgetDataStore.shared.getNextPrayers() ?? []
+        let active = getActivePrayer(at: Date(), from: prayers)
+        completion(NextPrayerEntry(date: Date(), prayer: active, palette: .current()))
+    }
+    
     func getTimeline(in context: Context, completion: @escaping (Timeline<NextPrayerEntry>) -> Void) {
-        let prayer = WidgetDataStore.shared.getNextPrayer()
+        let prayers = WidgetDataStore.shared.getNextPrayers() ?? []
         let now = Date()
         var entries: [NextPrayerEntry] = []
-        for offset in 0..<4 {
+        
+        // Generate an entry every 15 minutes for the next 12 hours
+        for offset in 0..<48 {
             if let d = Calendar.current.date(byAdding: .minute, value: offset * 15, to: now) {
-                entries.append(NextPrayerEntry(date: d, prayer: prayer,
+                let active = getActivePrayer(at: d, from: prayers)
+                entries.append(NextPrayerEntry(date: d, prayer: active,
                     palette: TimePalette.forHour(Calendar.current.component(.hour, from: d))))
             }
         }
-        completion(Timeline(entries: entries,
-            policy: .after(Calendar.current.date(byAdding: .minute, value: 15, to: now) ?? now)))
+        
+        // Refresh timeline after 6 hours or when finished
+        let refreshDate = Calendar.current.date(byAdding: .hour, value: 6, to: now) ?? now.addingTimeInterval(3600 * 6)
+        completion(Timeline(entries: entries, policy: .after(refreshDate)))
     }
 }
 

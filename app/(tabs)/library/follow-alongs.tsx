@@ -12,9 +12,9 @@ import { useTheme, Surface } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MotiView, AnimatePresence } from 'moti';
-import { FollowAlongSession } from '../../../src/domain/entities/FollowAlongSession';
-import { LocalFollowAlongRepository } from '../../../src/data/local/LocalFollowAlongRepository';
-import { Spacing, BorderRadius, Shadows } from '../../../src/presentation/theme/DesignSystem';
+import { FollowAlongSession } from '../../../src/core/domain/entities/FollowAlongSession';
+import { LocalFollowAlongRepository } from '../../../src/core/data/local/LocalFollowAlongRepository';
+import { Spacing, BorderRadius, Shadows } from '../../../src/core/theme/DesignSystem';
 
 export default function FollowAlongsTab() {
     const theme = useTheme();

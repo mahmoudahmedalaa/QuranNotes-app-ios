@@ -6,13 +6,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
+import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
 import {
     Spacing,
     BorderRadius,
     Shadows,
     Gradients,
-} from '../../src/presentation/theme/DesignSystem';
+} from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 export default function OnboardingAdhkar() {
@@ -33,10 +33,10 @@ export default function OnboardingAdhkar() {
     };
 
     const features = [
-        { icon: 'sunny-outline' as const, emoji: '🌅', title: 'Morning Adhkar', desc: 'Start your day with remembrance' },
-        { icon: 'moon-outline' as const, emoji: '🌙', title: 'Evening Adhkar', desc: 'End your day in peace' },
-        { icon: 'checkmark-circle-outline' as const, emoji: '📿', title: 'Track Progress', desc: 'Mark completed dhikr with a counter' },
-        { icon: 'trophy-outline' as const, emoji: '✨', title: 'Daily Streaks', desc: 'Build a consistent habit' },
+        { icon: 'sunny-outline' as const, title: 'Morning Adhkar', desc: 'Start your day with remembrance' },
+        { icon: 'moon-outline' as const, title: 'Evening Adhkar', desc: 'End your day in peace' },
+        { icon: 'checkmark-circle-outline' as const, title: 'Track Progress', desc: 'Mark completed dhikr with a counter' },
+        { icon: 'trophy-outline' as const, title: 'Daily Streaks', desc: 'Build a consistent habit' },
     ];
 
     return (
@@ -73,7 +73,7 @@ export default function OnboardingAdhkar() {
                             styles.iconCircle,
                             { backgroundColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(91,127,255,0.1)' },
                         ]}>
-                        <Text style={{ fontSize: 44 }}>📿</Text>
+                        <Ionicons name="time-outline" size={44} color={theme.colors.primary} />
                     </View>
                     <Text style={[styles.title, { color: theme.colors.onBackground }]}>
                         Morning & Evening Adhkar
@@ -108,7 +108,7 @@ export default function OnboardingAdhkar() {
                                         borderBottomColor: theme.colors.outlineVariant,
                                     },
                                 ]}>
-                                    <Text style={styles.featureEmoji}>{feature.emoji}</Text>
+                                    <Ionicons name={feature.icon as keyof typeof Ionicons.glyphMap} size={28} color={theme.colors.primary} style={styles.featureEmoji} />
                                     <View style={styles.featureInfo}>
                                         <Text style={[styles.featureTitle, { color: theme.colors.onSurface }]}>
                                             {feature.title}

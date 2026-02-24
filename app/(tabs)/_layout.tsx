@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 import { Tabs } from 'expo-router';
-import { FloatingTabBar } from '../../src/presentation/components/navigation/FloatingTabBar';
-import { GlobalMiniPlayer } from '../../src/presentation/components/audio/GlobalMiniPlayer';
+import { FloatingTabBar } from '../../src/core/navigation/FloatingTabBar';
+import { GlobalMiniPlayer } from '../../src/features/audio-player/presentation/GlobalMiniPlayer';
 
 export default function TabsLayout() {
     return (

@@ -4,10 +4,10 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
-import { Spacing, BorderRadius, Gradients } from '../src/presentation/theme/DesignSystem';
-import { useOnboarding } from '../src/infrastructure/onboarding/OnboardingContext';
-import { useAuth } from '../src/infrastructure/auth/AuthContext';
-import { NoorMascot } from '../src/presentation/components/mascot/NoorMascot';
+import { Spacing, BorderRadius, Gradients } from '../src/core/theme/DesignSystem';
+import { useOnboarding } from '../src/features/onboarding/infrastructure/OnboardingContext';
+import { useAuth } from '../src/features/auth/infrastructure/AuthContext';
+import { NoorMascot } from '../src/core/components/mascot/NoorMascot';
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

@@ -6,19 +6,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
+import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
 import {
     Spacing,
     BorderRadius,
     Shadows,
     Gradients,
     BrandTokens,
-} from '../../src/presentation/theme/DesignSystem';
+} from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
-import { revenueCatService, PurchasesOffering } from '../../src/infrastructure/payments/RevenueCatService';
-import { usePro } from '../../src/infrastructure/auth/ProContext';
-import { isRamadanSeason } from '../../src/utils/ramadanUtils';
-import RamadanPaywallScreen from '../../src/presentation/components/paywall/RamadanPaywallScreen';
+import { revenueCatService, PurchasesOffering } from '../../src/features/payments/infrastructure/RevenueCatService';
+import { usePro } from '../../src/features/auth/infrastructure/ProContext';
+import { isRamadanSeason } from '../../src/core/utils/ramadanUtils';
+import RamadanPaywallScreen from '../../src/features/payments/presentation/RamadanPaywallScreen';
 
 const { width } = Dimensions.get('window');
 

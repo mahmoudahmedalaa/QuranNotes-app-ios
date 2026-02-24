@@ -3,8 +3,8 @@ import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } f
 import { Text, TextInput, Button, IconButton, useTheme, HelperText } from 'react-native-paper';
 import { useRouter, Link, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Spacing, BorderRadius, Colors } from '../../src/presentation/theme/DesignSystem';
-import { useAuth } from '../../src/infrastructure/auth/AuthContext';
+import { Spacing, BorderRadius, Colors } from '../../src/core/theme/DesignSystem';
+import { useAuth } from '../../src/features/auth/infrastructure/AuthContext';
 import { MotiView } from 'moti';
 
 export default function LoginScreen() {
@@ -39,29 +39,7 @@ export default function LoginScreen() {
         try {
             await loginWithEmail(email, password);
 
-            // Check if email is verified using Firebase compat API
-            const firebase = require('firebase/compat/app').default;
-            const currentUser = firebase.auth().currentUser;
 
-            if (currentUser && !currentUser.emailVerified) {
-                // Allow Apple review account to bypass email verification
-                const isReviewAccount = currentUser.email?.toLowerCase() === 'mahmoudahmedalaa+review@gmail.com';
-                if (!isReviewAccount) {
-                    // Sign out unverified user
-                    await firebase.auth().signOut();
-
-                    // Show toast notification
-                    const Toast = require('react-native-toast-message').default;
-                    Toast.show({
-                        type: 'info',
-                        text1: 'Email Not Verified',
-                        text2: 'Please verify your email before signing in. Check spam/junk folder.',
-                        visibilityTime: 5000,
-                        position: 'top',
-                    });
-                    return;
-                }
-            }
 
             // Let index.tsx handle routing — OnboardingContext uses per-user state
             // New users will have shouldShowOnboarding=true, returning users will have it false

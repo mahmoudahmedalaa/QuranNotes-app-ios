@@ -6,15 +6,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
-import { useSettings } from '../../src/infrastructure/settings/SettingsContext';
-import { getAvailableLanguages, getEditionById } from '../../src/domain/entities/TranslationEdition';
+import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
+import { useSettings } from '../../src/features/settings/infrastructure/SettingsContext';
+import { getAvailableLanguages, getEditionById } from '../../src/core/domain/entities/TranslationEdition';
 import {
     Spacing,
     BorderRadius,
     Shadows,
     Gradients,
-} from '../../src/presentation/theme/DesignSystem';
+} from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 export default function OnboardingLanguages() {
