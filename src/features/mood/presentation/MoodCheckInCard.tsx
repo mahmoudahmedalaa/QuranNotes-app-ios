@@ -25,8 +25,8 @@ import { MoodVerse } from '../../../core/domain/entities/Mood';
 // Constants for Carousel
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CAROUSEL_WIDTH = SCREEN_WIDTH;
-const ITEM_WIDTH = 140;
-const ITEM_HEIGHT = 200; // Increased to ensure labels aren't cut off
+const ITEM_WIDTH = 90;
+const ITEM_HEIGHT = 120;
 
 export default function MoodCheckInCard() {
     const theme = useTheme();
@@ -69,14 +69,14 @@ export default function MoodCheckInCard() {
         // value: 0 = center, -1 = left, 1 = right
         const scale = interpolate(
             value,
-            [-2, -1, 0, 1, 2],
-            [0.55, 0.75, 1.0, 0.75, 0.55],
+            [-3, -2, -1, 0, 1, 2, 3],
+            [0.5, 0.6, 0.8, 1.0, 0.8, 0.6, 0.5],
             Extrapolation.CLAMP
         );
         const translateX = interpolate(
             value,
-            [-2, -1, 0, 1, 2],
-            [-ITEM_WIDTH * 1.6, -ITEM_WIDTH * 0.85, 0, ITEM_WIDTH * 0.85, ITEM_WIDTH * 1.6],
+            [-3, -2, -1, 0, 1, 2, 3],
+            [-ITEM_WIDTH * 2.7, -ITEM_WIDTH * 1.8, -ITEM_WIDTH * 0.9, 0, ITEM_WIDTH * 0.9, ITEM_WIDTH * 1.8, ITEM_WIDTH * 2.7],
             Extrapolation.CLAMP
         );
         const translateY = interpolate(
@@ -87,8 +87,8 @@ export default function MoodCheckInCard() {
         );
         const opacity = interpolate(
             value,
-            [-2.5, -1.5, -0.5, 0, 0.5, 1.5, 2.5],
-            [0, 0.4, 0.9, 1, 0.9, 0.4, 0],
+            [-3, -2, -1, 0, 1, 2, 3],
+            [0.2, 0.4, 0.7, 1, 0.7, 0.4, 0.2],
             Extrapolation.CLAMP
         );
 
@@ -183,7 +183,7 @@ export default function MoodCheckInCard() {
                         </View>
                     ) : (
                         /* ── Mood Carousel ── */
-                        <View style={{ height: ITEM_HEIGHT, alignItems: 'center', justifyContent: 'center', marginTop: -20 }}>
+                        <View style={{ height: ITEM_HEIGHT, alignItems: 'center', justifyContent: 'center' }}>
                             <Carousel
                                 width={ITEM_WIDTH}
                                 height={ITEM_HEIGHT}
@@ -252,20 +252,20 @@ const styles = StyleSheet.create({
     },
     moodBubble: {
         alignItems: 'center',
-        justifyContent: 'flex-start',
+        justifyContent: 'center',
         width: ITEM_WIDTH,
         height: ITEM_HEIGHT,
     },
     moodImage: {
-        width: ITEM_WIDTH + 45,
-        height: ITEM_WIDTH + 45,
+        width: 80,
+        height: 80,
     },
     moodLabel: {
-        fontSize: 15,
+        fontSize: 13,
         fontWeight: '600',
         textAlign: 'center',
         letterSpacing: 0.2,
-        marginTop: -25, // Stronger offset for the bottom padding in the PNG to prevent cutoff
+        marginTop: 4,
     },
     // ── Selected mood pill ──
     todayPill: {
