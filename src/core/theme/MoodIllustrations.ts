@@ -9,7 +9,6 @@ import { ImageSourcePropType } from 'react-native';
 import { MoodType } from '../domain/entities/Mood';
 
 export const MOOD_ILLUSTRATIONS: Record<MoodType, ImageSourcePropType> = {
-    grateful: require('../../../assets/mood-icons/grateful.png'),
     anxious: require('../../../assets/mood-icons/anxious.png'),
     sad: require('../../../assets/mood-icons/sad.png'),
     hopeful: require('../../../assets/mood-icons/hopeful.png'),
@@ -18,7 +17,7 @@ export const MOOD_ILLUSTRATIONS: Record<MoodType, ImageSourcePropType> = {
     lost: require('../../../assets/mood-icons/lost.png'),
     heartbroken: require('../../../assets/mood-icons/heartbroken.png'),
     confused: require('../../../assets/mood-icons/confused.png'),
-    peaceful: require('../../../assets/mood-icons/peaceful.png'),
+    calm: require('../../../assets/mood-icons/calm.png'),
     lonely: require('../../../assets/mood-icons/lonely.png'),
     inspired: require('../../../assets/mood-icons/inspired.png'),
 };

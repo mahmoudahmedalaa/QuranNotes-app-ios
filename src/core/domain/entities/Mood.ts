@@ -3,7 +3,6 @@
  */
 
 export type MoodType =
-    | 'grateful'
     | 'anxious'
     | 'sad'
     | 'hopeful'
@@ -12,7 +11,7 @@ export type MoodType =
     | 'lost'
     | 'heartbroken'
     | 'confused'
-    | 'peaceful'
+    | 'calm'
     | 'lonely'
     | 'inspired';
 
@@ -41,23 +40,22 @@ export interface MoodConfig {
 }
 
 export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
-    grateful: { icon: 'heart-outline', label: 'Grateful', imageSource: require('../../../../assets/moods/grateful.png') },
-    anxious: { icon: 'pulse-outline', label: 'Anxious', imageSource: require('../../../../assets/moods/anxious.png') },
-    sad: { icon: 'water-outline', label: 'Sad', imageSource: require('../../../../assets/moods/sad.png') },
     hopeful: { icon: 'leaf-outline', label: 'Hopeful', imageSource: require('../../../../assets/moods/hopeful.png') },
-    strong: { icon: 'barbell-outline', label: 'Strong', imageSource: require('../../../../assets/moods/strong.png') },
-    frustrated: { icon: 'flash-outline', label: 'Frustrated', imageSource: require('../../../../assets/moods/frustrated.png') },
-    lost: { icon: 'help-circle-outline', label: 'Lost', imageSource: require('../../../../assets/moods/lost.png') },
-    heartbroken: { icon: 'heart-half-outline', label: 'Heartbroken', imageSource: require('../../../../assets/moods/heartbroken.png') },
-    confused: { icon: 'help-outline', label: 'Confused', imageSource: require('../../../../assets/moods/confused.png') },
-    peaceful: { icon: 'moon-outline', label: 'Peaceful', imageSource: require('../../../../assets/moods/peaceful.png') },
-    lonely: { icon: 'person-outline', label: 'Lonely', imageSource: require('../../../../assets/moods/lonely.png') },
+    calm: { icon: 'moon-outline', label: 'Calm', imageSource: require('../../../../assets/moods/calm.png') },
     inspired: { icon: 'bulb-outline', label: 'Inspired', imageSource: require('../../../../assets/moods/inspired.png') },
+    strong: { icon: 'barbell-outline', label: 'Strong', imageSource: require('../../../../assets/moods/strong.png') },
+    anxious: { icon: 'pulse-outline', label: 'Anxious', imageSource: require('../../../../assets/moods/anxious.png') },
+    confused: { icon: 'help-outline', label: 'Confused', imageSource: require('../../../../assets/moods/confused.png') },
+    lost: { icon: 'help-circle-outline', label: 'Lost', imageSource: require('../../../../assets/moods/lost.png') },
+    sad: { icon: 'water-outline', label: 'Sad', imageSource: require('../../../../assets/moods/sad.png') },
+    frustrated: { icon: 'flash-outline', label: 'Frustrated', imageSource: require('../../../../assets/moods/frustrated.png') },
+    heartbroken: { icon: 'heart-half-outline', label: 'Heartbroken', imageSource: require('../../../../assets/moods/heartbroken.png') },
+    lonely: { icon: 'person-outline', label: 'Lonely', imageSource: require('../../../../assets/moods/lonely.png') },
 };
 
 export const MOOD_LIST: MoodType[] = [
-    // ── Positive / uplifting ──
-    'grateful', 'hopeful', 'peaceful', 'inspired', 'strong',
+    // ── Positive / uplifting (shown first) ──
+    'hopeful', 'calm', 'inspired', 'strong',
     // ── Neutral / challenged ──
     'anxious', 'confused', 'lost',
     // ── Heavier emotions ──
