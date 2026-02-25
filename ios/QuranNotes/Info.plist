@@ -57,13 +57,13 @@
       <true/>
     </dict>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your location</string>
+    <string>QuranNotes uses your location to calculate accurate prayer times for your area, for example to show the next upcoming prayer and countdown on your dashboard and home screen widgets.</string>
     <key>NSLocationAlwaysUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your location</string>
+    <string>QuranNotes uses your location to calculate accurate prayer times for your area, for example to show the next upcoming prayer and countdown on your dashboard and home screen widgets.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your location</string>
+    <string>QuranNotes uses your location to calculate accurate prayer times for your area, for example to show the next upcoming prayer and countdown on your dashboard and home screen widgets.</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Allow QuranNotes to use the microphone for voice recordings</string>
+    <string>QuranNotes uses the microphone for voice follow-along recitation, allowing you to recite Quran verses and track your progress.</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Allow QuranNotes to access your photo library to select a profile picture</string>
     <key>NSSpeechRecognitionUsageDescription</key>
