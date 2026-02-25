@@ -25,8 +25,8 @@ import { MoodVerse } from '../../../core/domain/entities/Mood';
 // Constants for Carousel
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CAROUSEL_WIDTH = SCREEN_WIDTH;
-const ITEM_WIDTH = 90;
-const ITEM_HEIGHT = 120;
+const ITEM_WIDTH = 100;
+const ITEM_HEIGHT = 140;
 
 export default function MoodCheckInCard() {
     const theme = useTheme();
@@ -70,7 +70,7 @@ export default function MoodCheckInCard() {
         const scale = interpolate(
             value,
             [-3, -2, -1, 0, 1, 2, 3],
-            [0.5, 0.6, 0.8, 1.0, 0.8, 0.6, 0.5],
+            [0.45, 0.55, 0.75, 1.0, 0.75, 0.55, 0.45],
             Extrapolation.CLAMP
         );
         const translateX = interpolate(
@@ -87,8 +87,8 @@ export default function MoodCheckInCard() {
         );
         const opacity = interpolate(
             value,
-            [-3, -2, -1, 0, 1, 2, 3],
-            [0.2, 0.4, 0.7, 1, 0.7, 0.4, 0.2],
+            [-3, -2.5, -1.5, -0.5, 0, 0.5, 1.5, 2.5, 3],
+            [0, 0.3, 0.5, 0.85, 1, 0.85, 0.5, 0.3, 0],
             Extrapolation.CLAMP
         );
 
@@ -257,15 +257,15 @@ const styles = StyleSheet.create({
         height: ITEM_HEIGHT,
     },
     moodImage: {
-        width: 80,
-        height: 80,
+        width: 95,
+        height: 95,
     },
     moodLabel: {
-        fontSize: 13,
+        fontSize: 14,
         fontWeight: '600',
         textAlign: 'center',
         letterSpacing: 0.2,
-        marginTop: 4,
+        marginTop: 2,
     },
     // ── Selected mood pill ──
     todayPill: {
