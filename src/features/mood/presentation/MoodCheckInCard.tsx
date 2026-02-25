@@ -25,8 +25,8 @@ import { MoodVerse } from '../../../core/domain/entities/Mood';
 // Constants for Carousel
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CAROUSEL_WIDTH = SCREEN_WIDTH;
-const ITEM_WIDTH = 100;
-const ITEM_HEIGHT = 140;
+const ITEM_WIDTH = 108;
+const ITEM_HEIGHT = 130;
 
 export default function MoodCheckInCard() {
     const theme = useTheme();
@@ -69,14 +69,14 @@ export default function MoodCheckInCard() {
         // value: 0 = center, -1 = left, 1 = right
         const scale = interpolate(
             value,
-            [-3, -2, -1, 0, 1, 2, 3],
-            [0.45, 0.55, 0.75, 1.0, 0.75, 0.55, 0.45],
+            [-2, -1, 0, 1, 2],
+            [0.6, 0.8, 1.0, 0.8, 0.6],
             Extrapolation.CLAMP
         );
         const translateX = interpolate(
             value,
-            [-3, -2, -1, 0, 1, 2, 3],
-            [-ITEM_WIDTH * 2.7, -ITEM_WIDTH * 1.8, -ITEM_WIDTH * 0.9, 0, ITEM_WIDTH * 0.9, ITEM_WIDTH * 1.8, ITEM_WIDTH * 2.7],
+            [-2, -1, 0, 1, 2],
+            [-ITEM_WIDTH * 1.6, -ITEM_WIDTH * 0.95, 0, ITEM_WIDTH * 0.95, ITEM_WIDTH * 1.6],
             Extrapolation.CLAMP
         );
         const translateY = interpolate(
@@ -87,8 +87,8 @@ export default function MoodCheckInCard() {
         );
         const opacity = interpolate(
             value,
-            [-3, -2.5, -1.5, -0.5, 0, 0.5, 1.5, 2.5, 3],
-            [0, 0.3, 0.5, 0.85, 1, 0.85, 0.5, 0.3, 0],
+            [-2.5, -1.5, -0.5, 0, 0.5, 1.5, 2.5],
+            [0, 0.5, 0.85, 1, 0.85, 0.5, 0],
             Extrapolation.CLAMP
         );
 
@@ -255,17 +255,18 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         width: ITEM_WIDTH,
         height: ITEM_HEIGHT,
+        gap: 8,
     },
     moodImage: {
-        width: 95,
-        height: 95,
+        width: ITEM_WIDTH - 8,
+        height: ITEM_WIDTH - 8,
+        borderRadius: (ITEM_WIDTH - 8) / 2,
     },
     moodLabel: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: '600',
         textAlign: 'center',
         letterSpacing: 0.2,
-        marginTop: 2,
     },
     // ── Selected mood pill ──
     todayPill: {
