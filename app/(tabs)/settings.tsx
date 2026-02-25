@@ -1216,11 +1216,7 @@ const styles = StyleSheet.create({
         marginHorizontal: Spacing.sm,
         borderRadius: BorderRadius.md,
     },
-    prayerEmoji: {
-        fontSize: 18,
-        width: 28,
-        textAlign: 'center',
-    },
+
     prayerLabel: {
         fontSize: 14,
         fontWeight: '500',

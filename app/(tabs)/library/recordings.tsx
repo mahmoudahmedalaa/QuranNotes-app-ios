@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, FlatList, StyleSheet, Alert, Pressable } from 'react-native';
+import { View, FlatList, StyleSheet, Alert, Pressable, Platform } from 'react-native';
 import {
     Text,
     useTheme,
@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
     filterBar: { padding: Spacing.md },
     list: {
         paddingHorizontal: Spacing.md,
-        paddingBottom: 100,
+        paddingBottom: Platform.OS === 'ios' ? 180 : 160,
     },
     card: {
         flexDirection: 'row',
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
     emptyText: { fontSize: 14, textAlign: 'center', marginTop: Spacing.xs },
     recordingTimer: {
         position: 'absolute',
-        bottom: 80,
+        bottom: Platform.OS === 'ios' ? 210 : 190,
         left: Spacing.lg,
         right: Spacing.lg,
         padding: Spacing.md,
@@ -636,7 +636,7 @@ const styles = StyleSheet.create({
     fab: {
         position: 'absolute',
         right: Spacing.lg,
-        bottom: Spacing.lg,
+        bottom: Platform.OS === 'ios' ? 140 : 120,
     },
     folderSelectRow: { marginTop: Spacing.sm },
     folderChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

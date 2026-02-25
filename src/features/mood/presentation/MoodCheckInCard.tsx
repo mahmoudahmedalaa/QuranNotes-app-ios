@@ -4,27 +4,34 @@
  * Shows as a collapsible card below StreakCounter.
  */
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, Pressable, ScrollView, Dimensions, Image } from 'react-native';
+import { View, StyleSheet, Pressable, Dimensions } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, Feather } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
+import Carousel from 'react-native-reanimated-carousel';
+import { interpolate } from 'react-native-reanimated';
 import { MoodType, MOOD_CONFIGS, MOOD_LIST } from '../../../core/domain/entities/Mood';
 import { useMood } from '../infrastructure/MoodContext';
 import { usePro } from '../../auth/infrastructure/ProContext';
 import { Spacing, BorderRadius, Shadows, Typography } from '../../../core/theme/DesignSystem';
 import VerseRecommendationSheet from './VerseRecommendationSheet';
 import { MoodVerse } from '../../../core/domain/entities/Mood';
+import { MoodGradientSquare } from './components/MoodGradientSquare';
 
+// Constants for Carousel
 const SCREEN_WIDTH = Dimensions.get('window').width;
+const CAROUSEL_WIDTH = SCREEN_WIDTH - Spacing.md * 4; // Padding left/right
+const ITEM_WIDTH = 80;
+const ITEM_HEIGHT = 100;
 
 export default function MoodCheckInCard() {
     const theme = useTheme();
     const router = useRouter();
     const { isPro } = usePro();
-    const { checkIn, canCheckIn, freeUsesRemaining, todayMood, todayVerses, resetToday } = useMood();
+    const { checkIn, canCheckIn, freeUsesRemaining, todayMood, todayVerses } = useMood();
     const [selectedVerses, setSelectedVerses] = useState<MoodVerse[]>([]);
     const [sheetVisible, setSheetVisible] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -56,6 +63,25 @@ export default function MoodCheckInCard() {
         setSelectedVerses(todayVerses);
         setSheetVisible(true);
     }, [todayVerses]);
+
+    const animationStyle = useCallback((value: number) => {
+        'worklet';
+        const scale = interpolate(value, [-2, -1, 0, 1, 2], [0.6, 0.8, 1.1, 0.8, 0.6]);
+        const translateY = interpolate(value, [-2, -1, 0, 1, 2], [20, 10, -5, 10, 20]);
+        const opacity = interpolate(value, [-2, -1, 0, 1, 2], [0.3, 0.6, 1, 0.6, 0.3]);
+        const rotateY = interpolate(value, [-2, -1, 0, 1, 2], [30, 15, 0, -15, -30]);
+
+        return {
+            transform: [
+                { scale },
+                { translateY },
+                { perspective: 500 },
+                { rotateY: `${rotateY}deg` },
+            ],
+            opacity,
+            zIndex: interpolate(value, [-1, 0, 1], [0, 10, 0]),
+        };
+    }, []);
 
     return (
         <>
@@ -107,22 +133,18 @@ export default function MoodCheckInCard() {
                                     pressed && { opacity: 0.8 },
                                 ]}
                             >
-                                <LinearGradient
-                                    colors={(theme.dark
-                                        ? MOOD_CONFIGS[todayMood].darkGradient
-                                        : MOOD_CONFIGS[todayMood].gradient) as [string, string]}
-                                    start={{ x: 0, y: 0 }}
-                                    end={{ x: 1, y: 1 }}
-                                    style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
+                                <MoodGradientSquare
+                                    palette={MOOD_CONFIGS[todayMood].palette}
+                                    width={SCREEN_WIDTH - Spacing.md * 4}
+                                    height={80}
+                                    borderRadius={BorderRadius.lg}
+                                    style={StyleSheet.absoluteFill}
                                 />
-                                <View style={styles.todayEmojiContainer}>
-                                    <Ionicons name={MOOD_CONFIGS[todayMood].icon as any} size={32} color="#FFF" />
-                                </View>
                                 <View style={styles.todayTextGroup}>
-                                    <Text style={[styles.todayLabel, { color: theme.colors.onSurface }]}>
+                                    <Text style={[styles.todayLabel, { color: '#000' }]}>
                                         {MOOD_CONFIGS[todayMood].label}
                                     </Text>
-                                    <Text style={[styles.todayHint, { color: theme.colors.onSurfaceVariant }]}>
+                                    <Text style={[styles.todayHint, { color: 'rgba(0,0,0,0.7)' }]}>
                                         Tap to view your verses
                                     </Text>
                                 </View>
@@ -139,66 +161,56 @@ export default function MoodCheckInCard() {
                             </Pressable>
                         </View>
                     ) : (
-                        /* Mood grid */
-                        <View>
+                        /* Mood Carousel */
+                        <View style={{ height: ITEM_HEIGHT + 20, alignItems: 'center', justifyContent: 'center' }}>
                             {isEditingMood && (
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.xs, paddingHorizontal: 4 }}>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.xs, paddingHorizontal: 4, width: '100%' }}>
                                     <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 13 }}>Select a new mood</Text>
                                     <Pressable onPress={() => setIsEditingMood(false)} hitSlop={10}>
                                         <Text style={{ color: theme.colors.primary, fontSize: 13, fontWeight: '600' }}>Cancel</Text>
                                     </Pressable>
                                 </View>
                             )}
-                            <ScrollView
-                                horizontal
-                                showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={styles.moodGrid}
-                            >
-                                {MOOD_LIST.map((mood, idx) => {
-                                    const config = MOOD_CONFIGS[mood];
+                            <Carousel
+                                width={ITEM_WIDTH}
+                                height={ITEM_HEIGHT}
+                                style={{
+                                    width: CAROUSEL_WIDTH,
+                                    height: ITEM_HEIGHT + 20,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                }}
+                                loop={true}
+                                autoPlay={false}
+                                data={MOOD_LIST}
+                                customAnimation={animationStyle}
+                                renderItem={({ item, index }) => {
+                                    const config = MOOD_CONFIGS[item];
                                     return (
-                                        <MotiView
-                                            key={mood}
-                                            from={{ opacity: 0, scale: 0.8 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            transition={{
-                                                type: 'spring',
-                                                damping: 14,
-                                                delay: 80 + idx * 40,
-                                            }}
+                                        <Pressable
+                                            onPress={() => handleMoodSelect(item)}
+                                            disabled={loading}
+                                            style={styles.moodBubble}
                                         >
-                                            <Pressable
-                                                onPress={() => handleMoodSelect(mood)}
-                                                disabled={loading}
-                                                style={({ pressed }) => [
-                                                    styles.moodBubble,
-                                                    pressed && {
-                                                        transform: [{ scale: 0.9 }],
-                                                        opacity: 0.8,
-                                                    },
+                                            <MoodGradientSquare
+                                                palette={config.palette}
+                                                width={ITEM_WIDTH}
+                                                height={ITEM_WIDTH}
+                                                borderRadius={BorderRadius.lg}
+                                            />
+                                            <Text
+                                                style={[
+                                                    styles.moodLabel,
+                                                    { color: theme.colors.onSurface },
                                                 ]}
+                                                numberOfLines={1}
                                             >
-                                                <LinearGradient
-                                                    colors={(theme.dark ? config.darkGradient : config.gradient) as [string, string]}
-                                                    start={{ x: 0, y: 0 }}
-                                                    end={{ x: 1, y: 1 }}
-                                                    style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg }]}
-                                                />
-                                                <Ionicons name={config.icon as any} size={28} color={theme.colors.onSurface} style={{ marginBottom: 4 }} />
-                                                <Text
-                                                    style={[
-                                                        styles.moodLabel,
-                                                        { color: theme.colors.onSurface },
-                                                    ]}
-                                                    numberOfLines={1}
-                                                >
-                                                    {config.label}
-                                                </Text>
-                                            </Pressable>
-                                        </MotiView>
+                                                {config.label}
+                                            </Text>
+                                        </Pressable>
                                     );
-                                })}
-                            </ScrollView>
+                                }}
+                            />
                         </View>
                     )}
                 </View>
@@ -233,49 +245,39 @@ const styles = StyleSheet.create({
         ...Typography.caption,
         fontWeight: '600',
     },
-    moodGrid: {
-        flexDirection: 'row',
-        gap: Spacing.sm,
-        paddingVertical: Spacing.xs,
-        paddingRight: Spacing.md,
-    },
     moodBubble: {
         alignItems: 'center',
         justifyContent: 'center',
-        width: 80,
-        height: 96,
-        borderRadius: BorderRadius.lg,
-        gap: 4,
-        paddingTop: 6,
+        width: ITEM_WIDTH,
+        height: ITEM_HEIGHT,
+        gap: 8,
     },
     moodLabel: {
         fontSize: 13,
         fontWeight: '500',
         textAlign: 'center',
+        marginTop: 4,
     },
     todaySummary: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: Spacing.md,
+        height: 80, // Fixed height for the banner
         borderRadius: BorderRadius.lg,
         gap: Spacing.md,
-    },
-    todayEmojiContainer: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        alignItems: 'center',
-        justifyContent: 'center',
+        overflow: 'hidden',
     },
     todayTextGroup: {
         flex: 1,
+        paddingHorizontal: Spacing.sm,
     },
     todayLabel: {
         ...Typography.titleMedium,
+        fontWeight: '700',
     },
     todayHint: {
         ...Typography.caption,
+        fontWeight: '500',
         marginTop: 2,
     },
 });

@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { View, FlatList, StyleSheet, Pressable } from 'react-native';
+import { View, FlatList, StyleSheet, Pressable, Platform } from 'react-native';
 import { Text, useTheme, Searchbar, IconButton, FAB } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useNotes } from '../../../src/core/hooks/useNotes';
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     },
     list: {
         paddingHorizontal: Spacing.md,
-        paddingBottom: 100,
+        paddingBottom: Platform.OS === 'ios' ? 180 : 160,
     },
     card: {
         padding: Spacing.md,
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         margin: 16,
         right: 0,
-        bottom: 16,
+        bottom: Platform.OS === 'ios' ? 130 : 110,
         borderRadius: BorderRadius.xl,
     },
 });

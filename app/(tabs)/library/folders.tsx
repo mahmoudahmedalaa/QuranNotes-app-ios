@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, FlatList, StyleSheet, Alert, Pressable, Dimensions } from 'react-native';
+import { View, FlatList, StyleSheet, Alert, Pressable, Dimensions, Platform } from 'react-native';
 import {
     Text,
     useTheme,
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     },
     list: {
         paddingHorizontal: Spacing.md,
-        paddingBottom: 100,
+        paddingBottom: Platform.OS === 'ios' ? 180 : 160,
     },
     card: {
         flexDirection: 'row',
@@ -236,6 +236,6 @@ const styles = StyleSheet.create({
     fab: {
         position: 'absolute',
         right: Spacing.lg,
-        bottom: Spacing.lg,
+        bottom: Platform.OS === 'ios' ? 140 : 120,
     },
 });

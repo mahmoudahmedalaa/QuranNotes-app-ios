@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MoodType, MoodVerse, MoodEntry } from '../../../core/domain/entities/Mood';
 import { usePro } from '../../auth/infrastructure/ProContext';
 import { useAuth } from '../../auth/infrastructure/AuthContext';
+import { useStreaks } from '../../auth/infrastructure/StreakContext';
 import moodVerses from '../data/moodVerses.json';
 
 /** Build user-scoped storage keys */
@@ -77,6 +78,7 @@ function todayKey(): string {
 export const MoodProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { isPro } = usePro();
     const { user } = useAuth();
+    const { recordActivity } = useStreaks();
     const [freeUsesRemaining, setFreeUsesRemaining] = useState(MAX_FREE_USES);
     const [todayMood, setTodayMood] = useState<MoodType | null>(null);
     const [todayVerses, setTodayVerses] = useState<MoodVerse[]>([]);
@@ -183,8 +185,11 @@ export const MoodProvider: React.FC<{ children: React.ReactNode }> = ({ children
             })),
         ]);
 
+        // Record streak activity
+        await recordActivity();
+
         return selected;
-    }, [canCheckIn, isPro, freeUsesRemaining, moodHistory, uid]);
+    }, [canCheckIn, isPro, freeUsesRemaining, moodHistory, uid, recordActivity]);
 
     const resetToday = useCallback(() => {
         setTodayMood(null);

@@ -71,7 +71,7 @@ export default function OnboardingLanguages() {
                             styles.iconCircle,
                             { backgroundColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(91,127,255,0.1)' },
                         ]}>
-                        <Text style={{ fontSize: 44 }}>🌍</Text>
+                        <Ionicons name="earth" size={44} color={theme.colors.primary} />
                     </View>
                     <Text style={[styles.title, { color: theme.colors.onBackground }]}>
                         Read in Your Language

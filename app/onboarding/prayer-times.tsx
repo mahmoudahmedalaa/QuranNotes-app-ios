@@ -36,10 +36,10 @@ export default function OnboardingPrayerTimes() {
     };
 
     const features = [
-        { emoji: '🕌', title: 'Accurate Times', desc: 'Prayer times based on your precise location' },
-        { emoji: '📿', title: 'Hijri Calendar', desc: 'See today\'s Islamic date at a glance' },
-        { emoji: '⏰', title: 'Smart Countdown', desc: 'Know exactly when the next prayer is' },
-        { emoji: '📍', title: 'Auto Location', desc: 'Automatically detects your city' },
+        { icon: 'moon-outline' as const, title: 'Accurate Times', desc: 'Prayer times based on your precise location' },
+        { icon: 'calendar-outline' as const, title: 'Hijri Calendar', desc: 'See today\'s Islamic date at a glance' },
+        { icon: 'time-outline' as const, title: 'Smart Countdown', desc: 'Know exactly when the next prayer is' },
+        { icon: 'location-outline' as const, title: 'Auto Location', desc: 'Automatically detects your city' },
     ];
 
     return (
@@ -76,7 +76,7 @@ export default function OnboardingPrayerTimes() {
                             styles.iconCircle,
                             { backgroundColor: theme.dark ? 'rgba(255,255,255,0.1)' : 'rgba(91,127,255,0.1)' },
                         ]}>
-                        <Text style={{ fontSize: 44 }}>🕌</Text>
+                        <Ionicons name="moon" size={44} color={theme.colors.primary} />
                     </View>
                     <Text style={[styles.title, { color: theme.colors.onBackground }]}>
                         Prayer Times
@@ -113,7 +113,9 @@ export default function OnboardingPrayerTimes() {
                                             borderBottomColor: theme.colors.outlineVariant,
                                         },
                                     ]}>
-                                    <Text style={styles.featureEmoji}>{feature.emoji}</Text>
+                                    <View style={styles.featureIconContainer}>
+                                        <Ionicons name={feature.icon} size={28} color={theme.colors.primary} />
+                                    </View>
                                     <View style={styles.featureInfo}>
                                         <Text style={[styles.featureTitle, { color: theme.colors.onSurface }]}>
                                             {feature.title}
@@ -185,7 +187,11 @@ const styles = StyleSheet.create({
         paddingVertical: Spacing.md,
         gap: Spacing.md,
     },
-    featureEmoji: { fontSize: 28 },
+    featureIconContainer: {
+        width: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     featureInfo: { flex: 1 },
     featureTitle: { fontSize: 16, fontWeight: '700', marginBottom: 2 },
     featureDesc: { fontSize: 13, lineHeight: 18 },

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserStreak, INITIAL_STREAK } from '../domain/entities/UserStreak';
 import { StreakService } from '../application/services/StreakService';
@@ -11,6 +12,16 @@ export const useStreak = () => {
 
     useEffect(() => {
         loadStreak();
+
+        const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+            if (nextAppState === 'active') {
+                loadStreak();
+            }
+        });
+
+        return () => {
+            subscription.remove();
+        };
     }, []);
 
     const loadStreak = async () => {

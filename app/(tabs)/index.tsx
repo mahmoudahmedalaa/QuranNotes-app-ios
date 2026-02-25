@@ -24,6 +24,8 @@ import { useAdhkar } from '../../src/features/adhkar/infrastructure/AdhkarContex
 import { AdhkarScreen } from '../../src/core/presentation/screens/AdhkarScreen';
 import { useQuran } from '../../src/core/hooks/useQuran';
 import { useSettings } from '../../src/features/settings/infrastructure/SettingsContext';
+import { useTimeOfDayPhase } from '../../src/core/hooks/useTimeOfDayPhase';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GRID_GAP = 10;
@@ -52,6 +54,7 @@ export default function DashboardScreen() {
     // Reliable bottom offset: Math.max(insets.bottom, 16) + 8 (tab margin) + 64 (strict tab height) + 8 (gap) = 80
     const pillBottom = Math.max(insets.bottom, 16) + 80;
     const { getCompletionPercentage } = useAdhkar();
+    const timePhase = useTimeOfDayPhase();
 
     // Smart Adhkar timing: Morning = Fajr until Asr begins. Evening = Asr onwards.
     // If prayer data available, use it; otherwise fall back to hour < 15 heuristic.
@@ -115,8 +118,21 @@ export default function DashboardScreen() {
 
     const showContinueReading = globalPosition && !playingVerse && !completedSurahs.includes(globalPosition.surah);
 
+    // Ambient background phases
+    const getAmbientGlow = (): readonly [string, string, ...string[]] => {
+        if (theme.dark) {
+            return timePhase === 'morning' ? ['#09090B', '#18181B'] :
+                timePhase === 'evening' ? ['#130A19', '#09090B'] : // Very dark plum sunset tint
+                    ['#050508', '#09090B'];  // Deepest night
+        }
+        return timePhase === 'morning' ? ['#FFFFFF', '#F8F5FF'] : // Fresh morning light
+            timePhase === 'evening' ? ['#FDF4FF', '#F8F5FF'] : // Soft sunset blush
+                ['#F0EFFF', '#F8F5FF'];  // Cool evening/night slate
+    };
+
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={styles.container}>
+            <LinearGradient colors={getAmbientGlow()} style={StyleSheet.absoluteFillObject} />
             <SafeAreaView style={styles.safeArea} edges={['top']}>
                 <StatusBar style={theme.dark ? 'light' : 'dark'} />
 
@@ -167,17 +183,11 @@ export default function DashboardScreen() {
                     {/* ── 1. Mood Check-In ── */}
                     <MoodCheckInCard />
 
-                    {/* ── 2. Prayer Times (full width, collapsible) ── */}
-                    <PrayerTimesCard />
-
-                    {/* ── 3. Daily Verse (full width, collapsible) ── */}
-                    <DailyVerseCard />
-
-                    {/* ── 4. 2-Column Grid: Khatma + Adhkar (Heavier Actions) ── */}
+                    {/* ── 2. 2-Column Grid: Khatma + Adhkar ── */}
                     <MotiView
                         from={{ opacity: 0, translateY: 10 }}
                         animate={{ opacity: 1, translateY: 0 }}
-                        transition={{ type: 'spring', damping: 18, delay: 140 }}
+                        transition={{ type: 'spring', damping: 18, delay: 100 }}
                         style={styles.gridRow}
                     >
                         {/* Khatma Tile */}
@@ -188,9 +198,8 @@ export default function DashboardScreen() {
                             }}
                             style={({ pressed }) => [
                                 styles.gridTile,
-                                { backgroundColor: theme.colors.surface },
+                                { backgroundColor: theme.colors.primaryContainer },
                                 Shadows.sm,
-                                { borderColor: theme.colors.outline, borderWidth: 1 },
                                 pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                             ]}
                         >
@@ -199,7 +208,7 @@ export default function DashboardScreen() {
                                 <Svg width={RING_SIZE} height={RING_SIZE}>
                                     <Circle
                                         cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RADIUS}
-                                        stroke={theme.colors.outline}
+                                        stroke={theme.colors.primary} strokeOpacity={0.2}
                                         strokeWidth={STROKE_WIDTH} fill="none"
                                     />
                                     <Circle
@@ -214,11 +223,11 @@ export default function DashboardScreen() {
                                 </Svg>
                                 <View style={styles.tileRingCenter}>
                                     <Text style={[styles.tileRingNum, { color: theme.colors.primary }]}>{completedCount}</Text>
-                                    <Text style={[styles.tileRingDenom, { color: theme.colors.onSurfaceVariant }]}>/30</Text>
+                                    <Text style={[styles.tileRingDenom, { color: theme.colors.onPrimaryContainer }]}>/30</Text>
                                 </View>
                             </View>
-                            <Text style={[styles.tileLabel, { color: theme.colors.onSurface }]}>Khatma</Text>
-                            <Text style={[styles.tileSub, { color: theme.colors.onSurfaceVariant }]}>
+                            <Text style={[styles.tileLabel, { color: theme.colors.onPrimaryContainer }]}>Khatma</Text>
+                            <Text style={[styles.tileSub, { color: theme.colors.onPrimaryContainer, opacity: 0.8 }]}>
                                 {completedCount === 0 ? 'Start journey' : `${30 - completedCount} remaining`}
                             </Text>
                         </Pressable>
@@ -231,30 +240,35 @@ export default function DashboardScreen() {
                             }}
                             style={({ pressed }) => [
                                 styles.gridTile,
-                                { backgroundColor: theme.colors.surface },
+                                { backgroundColor: theme.colors.secondaryContainer },
                                 Shadows.sm,
-                                { borderColor: theme.colors.outline, borderWidth: 1 },
                                 pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                             ]}
                         >
                             <View style={styles.tileEmojiWrap}>
                                 {adhkarPeriod === 'morning' ? (
-                                    <Feather name="sun" size={28} color={theme.colors.primary} />
+                                    <Feather name="sun" size={28} color={theme.colors.onSecondaryContainer} />
                                 ) : (
-                                    <Feather name="moon" size={28} color={theme.colors.primary} />
+                                    <Feather name="moon" size={28} color={theme.colors.onSecondaryContainer} />
                                 )}
                             </View>
-                            <Text style={[styles.tileLabel, { color: theme.colors.onSurface }]}>
+                            <Text style={[styles.tileLabel, { color: theme.colors.onSecondaryContainer }]}>
                                 {adhkarPeriod === 'morning' ? 'Morning' : 'Evening'}
                             </Text>
-                            <Text style={[styles.tileSub, { color: theme.colors.onSurface, fontWeight: '600' }]}>
+                            <Text style={[styles.tileSub, { color: theme.colors.onSecondaryContainer, fontWeight: '600' }]}>
                                 Adhkar
                             </Text>
-                            <Text style={[styles.tileSub2, { color: theme.colors.onSurfaceVariant }]}>
+                            <Text style={[styles.tileSub2, { color: theme.colors.onSecondaryContainer, opacity: 0.8 }]}>
                                 {adhkarPct > 0 ? `${adhkarPct}% done` : 'Tap to begin'}
                             </Text>
                         </Pressable>
                     </MotiView>
+
+                    {/* ── 3. Prayer Times (full width, collapsible) ── */}
+                    <PrayerTimesCard />
+
+                    {/* ── 4. Daily Verse (full width, collapsible) ── */}
+                    <DailyVerseCard />
 
                     {/* Bottom padding — extra when floating pill is visible */}
                     <View style={{ height: showContinueReading ? 176 : 120 }} />
@@ -337,7 +351,7 @@ const styles = StyleSheet.create({
     container: { flex: 1 },
     safeArea: { flex: 1 },
     scrollView: { flex: 1 },
-    scrollContent: { paddingTop: Spacing.xs },
+    scrollContent: { paddingTop: Spacing.lg },
 
     // ── Header ──
     header: {

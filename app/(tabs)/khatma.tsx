@@ -153,7 +153,7 @@ function ActiveTrackerView() {
                         <View style={styles.onboardingContent}>
                             <MaterialCommunityIcons name="information-outline" size={18} color={theme.colors.primary} />
                             <Text style={[styles.onboardingText, { color: theme.colors.primary }]}>
-                                Read one surah at a time. Your Juz progress fills in automatically as you go. 📖
+                                Read one surah at a time. Your Juz progress fills in automatically as you go.
                             </Text>
                         </View>
                         <Pressable onPress={dismissOnboarding} hitSlop={12}>

@@ -50,6 +50,18 @@ export const PrayerTimesCard: React.FC = () => {
         setExpanded(!expanded);
     };
 
+    const getFeatherIcon = (name: string): keyof typeof Feather.glyphMap => {
+        switch (name) {
+            case 'Fajr': return 'sunrise';
+            case 'Sunrise': return 'sun';
+            case 'Dhuhr': return 'sun';
+            case 'Asr': return 'clock';
+            case 'Maghrib': return 'sunset';
+            case 'Isha': return 'moon';
+            default: return 'clock';
+        }
+    };
+
     return (
         <MotiView
             from={{ opacity: 0, translateY: 15 }}
@@ -63,7 +75,7 @@ export const PrayerTimesCard: React.FC = () => {
                     pressed && { opacity: 0.95, transform: [{ scale: 0.99 }] },
                 ]}
             >
-                <View style={[styles.card, Shadows.md]}>
+                <View style={[styles.card, { backgroundColor: theme.colors.surface }, Shadows.md]}>
                     {/* Hijri Date row — always shows chevron as collapse affordance */}
                     <View style={styles.hijriRow}>
                         {prayerTimes.hijriDate ? (
@@ -90,7 +102,7 @@ export const PrayerTimesCard: React.FC = () => {
                         <View style={styles.nextPrayerRow}>
                             <View style={[styles.nextPrayerIcon, { backgroundColor: theme.colors.primaryContainer }]}>
                                 <Feather
-                                    name={nextPrayer.icon as keyof typeof Feather.glyphMap}
+                                    name={getFeatherIcon(nextPrayer.name)}
                                     size={24}
                                     color={theme.colors.primary}
                                 />
@@ -133,7 +145,7 @@ export const PrayerTimesCard: React.FC = () => {
                                         prayer.isNext && { backgroundColor: theme.colors.primaryContainer },
                                     ]}>
                                         <Feather
-                                            name={prayer.icon as keyof typeof Feather.glyphMap}
+                                            name={getFeatherIcon(prayer.name)}
                                             size={18}
                                             color={prayer.isNext ? theme.colors.primary : prayer.isPast ? theme.colors.onSurfaceVariant : theme.colors.onSurface}
                                         />

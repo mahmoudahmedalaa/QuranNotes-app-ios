@@ -89,7 +89,7 @@ export const DailyVerseCard: React.FC = () => {
     const router = useRouter();
     const [verse, setVerse] = useState<TopicVerse | null>(null);
     const [loading, setLoading] = useState(true);
-    const [expanded, setExpanded] = useState(false);
+    const [expanded, setExpanded] = useState(true);
     const [currentHour, setCurrentHour] = useState(new Date().getHours());
 
     useEffect(() => {

@@ -85,7 +85,7 @@ export default function OnboardingLibraryTour() {
                     transition={{ type: 'timing', duration: 400 }}
                     style={styles.header}>
                     <View style={[styles.coachBubble, { backgroundColor: theme.colors.primary }]}>
-                        <Text style={styles.coachText}>📚 Your Library - All in one place</Text>
+                        <Text style={styles.coachText}>Your Library - All in one place</Text>
                     </View>
                 </MotiView>
 
@@ -359,7 +359,7 @@ export default function OnboardingLibraryTour() {
                     transition={{ type: 'timing', delay: 600 }}
                     style={styles.hintContainer}>
                     <Text style={[styles.hintText, { color: theme.colors.onSurfaceVariant }]}>
-                        👆 Tap the tabs above to explore
+                        Tap the tabs above to explore
                     </Text>
                 </MotiView>
 
