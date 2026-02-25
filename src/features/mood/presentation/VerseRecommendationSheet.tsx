@@ -12,10 +12,10 @@ import {
     Modal,
     Pressable,
     ScrollView,
-    Image,
     Dimensions,
     ActivityIndicator,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Text, useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -155,9 +155,6 @@ export default function VerseRecommendationSheet({
 
     if (!mood || verses.length === 0) return null;
 
-    // Gradient header — 3-stop so the mood colour is clearly visible
-    const headerGradient = [theme.colors.primaryContainer, theme.colors.background] as const;
-
     return (
         <Modal
             visible={visible}
@@ -168,7 +165,7 @@ export default function VerseRecommendationSheet({
             <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
                 {/* Gradient header */}
                 <LinearGradient
-                    colors={headerGradient as unknown as readonly [string, string]}
+                    colors={[moodConfig?.color ? `${moodConfig.color}40` : theme.colors.primaryContainer, theme.colors.background] as unknown as readonly [string, string]}
                     style={[styles.gradientHeader, { paddingTop: insets.top + Spacing.md }]}
                 >
                     {/* Close button — visible frosted glass */}
@@ -203,8 +200,10 @@ export default function VerseRecommendationSheet({
                         style={styles.moodHeader}
                     >
                         {mood && <Image
-                            source={MOOD_ILLUSTRATIONS[mood]}
+                            source={moodConfig?.imageSource}
                             style={styles.moodIllustration}
+                            contentFit="contain"
+                            transition={200}
                         />}
                         <Text style={[styles.moodLabel, { color: theme.colors.onSurface }]}>
                             {moodConfig?.label}
@@ -349,9 +348,9 @@ const styles = StyleSheet.create({
         marginTop: Spacing.sm,
     },
     moodIllustration: {
-        width: 72,
-        height: 72,
-        borderRadius: 36,
+        width: 180,
+        height: 180,
+        borderRadius: 90,
         marginBottom: Spacing.xs,
     },
     moodLabel: {

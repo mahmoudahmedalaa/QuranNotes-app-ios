@@ -25,8 +25,8 @@ import { MoodVerse } from '../../../core/domain/entities/Mood';
 // Constants for Carousel
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CAROUSEL_WIDTH = SCREEN_WIDTH;
-const ITEM_WIDTH = 108;
-const ITEM_HEIGHT = 130;
+const ITEM_WIDTH = 110;
+const ITEM_HEIGHT = 170; // Increased to ensure labels aren't cut off
 
 export default function MoodCheckInCard() {
     const theme = useTheme();
@@ -70,25 +70,25 @@ export default function MoodCheckInCard() {
         const scale = interpolate(
             value,
             [-2, -1, 0, 1, 2],
-            [0.6, 0.8, 1.0, 0.8, 0.6],
+            [0.55, 0.75, 1.0, 0.75, 0.55],
             Extrapolation.CLAMP
         );
         const translateX = interpolate(
             value,
             [-2, -1, 0, 1, 2],
-            [-ITEM_WIDTH * 1.6, -ITEM_WIDTH * 0.95, 0, ITEM_WIDTH * 0.95, ITEM_WIDTH * 1.6],
+            [-ITEM_WIDTH * 1.6, -ITEM_WIDTH * 0.85, 0, ITEM_WIDTH * 0.85, ITEM_WIDTH * 1.6],
             Extrapolation.CLAMP
         );
         const translateY = interpolate(
             value,
             [-2, -1, 0, 1, 2],
-            [14, 7, 0, 7, 14],
+            [0, 0, 0, 0, 0],
             Extrapolation.CLAMP
         );
         const opacity = interpolate(
             value,
             [-2.5, -1.5, -0.5, 0, 0.5, 1.5, 2.5],
-            [0, 0.5, 0.85, 1, 0.85, 0.5, 0],
+            [0, 0.4, 0.9, 1, 0.9, 0.4, 0],
             Extrapolation.CLAMP
         );
 
@@ -114,7 +114,7 @@ export default function MoodCheckInCard() {
                 <View style={{ backgroundColor: 'transparent' }}>
                     {/* Header */}
                     <View style={[styles.header, { paddingHorizontal: Spacing.md }]}>
-                        <View>
+                        <View style={{ flex: 1 }}>
                             <Text style={[styles.title, { color: theme.colors.onSurface }]}>
                                 How are you feeling today?
                             </Text>
@@ -124,15 +124,19 @@ export default function MoodCheckInCard() {
                                 </Text>
                             )}
                         </View>
-                        {!isPro && !todayMood && freeUsesRemaining === 0 && (
-                            <Pressable onPress={() => router.push('/paywall?reason=mood')}>
+                        {isEditingMood ? (
+                            <Pressable onPress={() => setIsEditingMood(false)} hitSlop={10} style={{ paddingLeft: Spacing.sm }}>
+                                <Text style={{ color: theme.colors.primary, fontSize: 14, fontWeight: '600' }}>Cancel</Text>
+                            </Pressable>
+                        ) : (!isPro && !todayMood && freeUsesRemaining === 0) ? (
+                            <Pressable onPress={() => router.push('/paywall?reason=mood')} style={{ paddingLeft: Spacing.sm }}>
                                 <Text style={[styles.upgradeLink, {
                                     color: theme.colors.primary,
                                 }]}>
                                     Upgrade to Pro
                                 </Text>
                             </Pressable>
-                        )}
+                        ) : null}
                     </View>
 
                     {todayMood && !isEditingMood ? (
@@ -142,28 +146,28 @@ export default function MoodCheckInCard() {
                                 onPress={handleViewTodayVerses}
                                 style={({ pressed }) => [
                                     styles.todayPill,
-                                    { backgroundColor: theme.colors.primaryContainer },
+                                    { backgroundColor: 'transparent' },
                                     pressed && { opacity: 0.85, transform: [{ scale: 0.99 }] },
                                 ]}
                             >
                                 {/* Mood PNG circle */}
                                 <Image
                                     source={MOOD_CONFIGS[todayMood].imageSource}
-                                    style={styles.todayPillImage}
+                                    style={{ width: 100, height: 100, borderRadius: 50 }}
                                     contentFit="contain"
                                     transition={300}
                                 />
                                 {/* Text */}
                                 <View style={styles.todayPillText}>
-                                    <Text style={[styles.todayLabel, { color: theme.colors.onPrimaryContainer }]}>
+                                    <Text style={[styles.todayLabel, { color: theme.colors.onSurface }]}>
                                         {MOOD_CONFIGS[todayMood].label}
                                     </Text>
-                                    <Text style={[styles.todayHint, { color: theme.colors.onPrimaryContainer, opacity: 0.7 }]}>
+                                    <Text style={[styles.todayHint, { color: theme.colors.onSurfaceVariant, fontSize: 13 }]}>
                                         Tap to view your verses
                                     </Text>
                                 </View>
                                 {/* Chevron */}
-                                <Feather name="chevron-right" size={18} color={theme.colors.onPrimaryContainer} style={{ opacity: 0.6 }} />
+                                <Feather name="chevron-right" size={20} color={theme.colors.onSurfaceVariant} style={{ opacity: 0.6 }} />
                             </Pressable>
 
                             <Pressable
@@ -179,20 +183,13 @@ export default function MoodCheckInCard() {
                         </View>
                     ) : (
                         /* ── Mood Carousel ── */
-                        <View style={{ height: ITEM_HEIGHT + 20, alignItems: 'center', justifyContent: 'center' }}>
-                            {isEditingMood && (
-                                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 4, paddingHorizontal: Spacing.md, width: '100%' }}>
-                                    <Pressable onPress={() => setIsEditingMood(false)} hitSlop={10}>
-                                        <Text style={{ color: theme.colors.primary, fontSize: 13, fontWeight: '600' }}>Cancel</Text>
-                                    </Pressable>
-                                </View>
-                            )}
+                        <View style={{ height: ITEM_HEIGHT, alignItems: 'center', justifyContent: 'center', marginTop: -20 }}>
                             <Carousel
                                 width={ITEM_WIDTH}
                                 height={ITEM_HEIGHT}
                                 style={{
                                     width: CAROUSEL_WIDTH,
-                                    height: ITEM_HEIGHT + 20,
+                                    height: ITEM_HEIGHT,
                                     justifyContent: 'center',
                                     alignItems: 'center',
                                 }}
@@ -255,21 +252,20 @@ const styles = StyleSheet.create({
     },
     moodBubble: {
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         width: ITEM_WIDTH,
         height: ITEM_HEIGHT,
-        gap: 8,
     },
     moodImage: {
-        width: ITEM_WIDTH - 8,
-        height: ITEM_WIDTH - 8,
-        borderRadius: (ITEM_WIDTH - 8) / 2,
+        width: ITEM_WIDTH + 45,
+        height: ITEM_WIDTH + 45,
     },
     moodLabel: {
-        fontSize: 12,
+        fontSize: 15,
         fontWeight: '600',
         textAlign: 'center',
         letterSpacing: 0.2,
+        marginTop: -25, // Stronger offset for the bottom padding in the PNG to prevent cutoff
     },
     // ── Selected mood pill ──
     todayPill: {
@@ -281,9 +277,9 @@ const styles = StyleSheet.create({
         gap: Spacing.sm,
     },
     todayPillImage: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
+        width: 80,
+        height: 80,
+        borderRadius: 40,
     },
     todayPillText: {
         flex: 1,
@@ -291,7 +287,8 @@ const styles = StyleSheet.create({
     },
     todayLabel: {
         ...Typography.titleMedium,
-        fontWeight: '700',
+        fontSize: 26,
+        fontWeight: '800',
     },
     todayHint: {
         fontSize: 12,

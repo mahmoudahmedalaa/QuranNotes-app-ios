@@ -37,20 +37,21 @@ export interface MoodConfig {
     icon: string;
     label: string;
     imageSource: any;
+    color: string;
 }
 
 export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
-    hopeful: { icon: 'leaf-outline', label: 'Hopeful', imageSource: require('../../../../assets/moods/hopeful.png') },
-    calm: { icon: 'moon-outline', label: 'Calm', imageSource: require('../../../../assets/moods/calm.png') },
-    inspired: { icon: 'bulb-outline', label: 'Inspired', imageSource: require('../../../../assets/moods/inspired.png') },
-    strong: { icon: 'barbell-outline', label: 'Strong', imageSource: require('../../../../assets/moods/strong.png') },
-    anxious: { icon: 'pulse-outline', label: 'Anxious', imageSource: require('../../../../assets/moods/anxious.png') },
-    confused: { icon: 'help-outline', label: 'Confused', imageSource: require('../../../../assets/moods/confused.png') },
-    lost: { icon: 'help-circle-outline', label: 'Lost', imageSource: require('../../../../assets/moods/lost.png') },
-    sad: { icon: 'water-outline', label: 'Sad', imageSource: require('../../../../assets/moods/sad.png') },
-    frustrated: { icon: 'flash-outline', label: 'Frustrated', imageSource: require('../../../../assets/moods/frustrated.png') },
-    heartbroken: { icon: 'heart-half-outline', label: 'Heartbroken', imageSource: require('../../../../assets/moods/heartbroken.png') },
-    lonely: { icon: 'person-outline', label: 'Lonely', imageSource: require('../../../../assets/moods/lonely.png') },
+    hopeful: { icon: 'leaf-outline', label: 'Hopeful', imageSource: require('../../../../assets/moods/hopeful.png'), color: '#34d399' },
+    calm: { icon: 'moon-outline', label: 'Calm', imageSource: require('../../../../assets/moods/calm.png'), color: '#a78bfa' },
+    inspired: { icon: 'bulb-outline', label: 'Inspired', imageSource: require('../../../../assets/moods/inspired.png'), color: '#fcd34d' },
+    strong: { icon: 'barbell-outline', label: 'Strong', imageSource: require('../../../../assets/moods/strong.png'), color: '#fb923c' },
+    anxious: { icon: 'pulse-outline', label: 'Anxious', imageSource: require('../../../../assets/moods/anxious.png'), color: '#f472b6' },
+    confused: { icon: 'help-outline', label: 'Confused', imageSource: require('../../../../assets/moods/confused.png'), color: '#c084fc' },
+    lost: { icon: 'help-circle-outline', label: 'Lost', imageSource: require('../../../../assets/moods/lost.png'), color: '#94a3b8' },
+    sad: { icon: 'water-outline', label: 'Sad', imageSource: require('../../../../assets/moods/sad.png'), color: '#60a5fa' },
+    frustrated: { icon: 'flash-outline', label: 'Frustrated', imageSource: require('../../../../assets/moods/frustrated.png'), color: '#f87171' },
+    heartbroken: { icon: 'heart-half-outline', label: 'Heartbroken', imageSource: require('../../../../assets/moods/heartbroken.png'), color: '#fb7185' },
+    lonely: { icon: 'person-outline', label: 'Lonely', imageSource: require('../../../../assets/moods/lonely.png'), color: '#818cf8' },
 };
 
 export const MOOD_LIST: MoodType[] = [
