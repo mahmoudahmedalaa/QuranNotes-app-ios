@@ -23,6 +23,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
+import ViewShot from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 import { MoodType, MoodVerse, MOOD_CONFIGS } from '../../../core/domain/entities/Mood';
 import { useAudio } from '../../audio-player/infrastructure/AudioContext';
 import { useQuran } from '../../../core/hooks/useQuran';
@@ -60,6 +62,10 @@ export default function VerseRecommendationSheet({
     // Runtime-enriched verses with full text from API
     const [enrichedVerses, setEnrichedVerses] = useState<MoodVerse[]>([]);
     const [loadingText, setLoadingText] = useState(false);
+
+    // For sharing
+    const viewShotRefs = useRef<Array<ViewShot | null>>([]);
+    const [capturingVerseKey, setCapturingVerseKey] = useState<string | null>(null);
 
     // Cache to avoid re-fetching surahs we've already loaded
     const surahCacheRef = useRef<Map<number, { text: string; translation: string }[]>>(new Map());
@@ -170,6 +176,30 @@ export default function VerseRecommendationSheet({
         router.push(`/surah/${surah}?verse=${verse}&autoplay=true`);
     }, [onDismiss, router, stop]);
 
+    const handleShareVerse = async (verseKey: string, idx: number) => {
+        const ref = viewShotRefs.current[idx];
+        if (!ref) return;
+
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        setCapturingVerseKey(verseKey);
+
+        setTimeout(async () => {
+            try {
+                const uri = await ref.capture?.();
+                if (uri) {
+                    await Sharing.shareAsync(uri, {
+                        dialogTitle: 'Share Verse',
+                        mimeType: 'image/png'
+                    });
+                }
+            } catch (err) {
+                if (__DEV__) console.error('Error sharing verse:', err);
+            } finally {
+                setCapturingVerseKey(null);
+            }
+        }, 150);
+    };
+
     if (!mood || verses.length === 0) return null;
 
     return (
@@ -259,82 +289,107 @@ export default function VerseRecommendationSheet({
                                     delay: 200 + idx * 120,
                                 }}
                             >
-                                <View style={[
-                                    styles.verseCard,
-                                    { backgroundColor: theme.colors.surface },
-                                    Shadows.sm,
-                                ]}>
-                                    {/* Arabic text — full verse from API, or snippet fallback */}
-                                    <Text style={[styles.arabicText, { color: theme.colors.onSurface }]}>
-                                        {displayArabic}
-                                    </Text>
+                                <ViewShot
+                                    ref={el => { viewShotRefs.current[idx] = el; }}
+                                    options={{ format: 'png', quality: 1.0 }}
+                                    style={capturingVerseKey === verseKey ? { backgroundColor: theme.colors.background, padding: Spacing.md, borderRadius: BorderRadius.xl } : {}}
+                                >
+                                    <View style={[
+                                        styles.verseCard,
+                                        { backgroundColor: theme.colors.surface },
+                                        Shadows.sm,
+                                    ]}>
+                                        {/* Arabic text — full verse from API, or snippet fallback */}
+                                        <Text style={[styles.arabicText, { color: theme.colors.onSurface }]}>
+                                            {displayArabic}
+                                        </Text>
 
-                                    {/* Divider */}
-                                    <View style={[styles.divider, { backgroundColor: `${theme.colors.outline}30` }]} />
+                                        {/* Divider */}
+                                        <View style={[styles.divider, { backgroundColor: `${theme.colors.outline}30` }]} />
 
-                                    {/* Translation — full from API, or snippet fallback */}
-                                    <Text style={[styles.translation, { color: theme.colors.onSurfaceVariant }]}>
-                                        {displayTranslation}
-                                    </Text>
+                                        {/* Translation — full from API, or snippet fallback */}
+                                        <Text style={[styles.translation, { color: theme.colors.onSurfaceVariant }]}>
+                                            {displayTranslation}
+                                        </Text>
 
-                                    {/* Theme badge + Actions */}
-                                    <View style={styles.verseFooter}>
-                                        <View style={[styles.themeBadge, {
-                                            backgroundColor: theme.dark ? '#FFFFFF15' : '#00000008',
-                                        }]}>
-                                            <Text style={[styles.themeText, {
-                                                color: theme.colors.onSurfaceVariant,
+                                        {/* Theme badge + Actions */}
+                                        <View style={styles.verseFooter}>
+                                            <View style={[styles.themeBadge, {
+                                                backgroundColor: theme.dark ? '#FFFFFF15' : '#00000008',
                                             }]}>
-                                                {verse.theme}
-                                            </Text>
-                                        </View>
-
-                                        <View style={styles.actionButtons}>
-                                            {/* Play verse inline */}
-                                            <Pressable
-                                                onPress={() => handlePlayVerse(verse.surah, verse.verse)}
-                                                style={({ pressed }) => [
-                                                    styles.playButton,
-                                                    {
-                                                        backgroundColor: isCurrentlyPlaying && isPlaying
-                                                            ? theme.colors.primary
-                                                            : theme.dark ? '#FFFFFF15' : '#00000008',
-                                                    },
-                                                    pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
-                                                ]}
-                                            >
-                                                {isLoading ? (
-                                                    <ActivityIndicator size={14} color={theme.colors.primary} />
-                                                ) : (
-                                                    <MaterialCommunityIcons
-                                                        name={isCurrentlyPlaying && isPlaying ? 'pause' : 'play'}
-                                                        size={16}
-                                                        color={isCurrentlyPlaying && isPlaying ? '#FFFFFF' : theme.colors.primary}
-                                                    />
-                                                )}
-                                            </Pressable>
-
-                                            {/* Open in Surah */}
-                                            <Pressable
-                                                onPress={() => handleOpenSurah(verse.surah, verse.verse)}
-                                                style={({ pressed }) => [
-                                                    styles.openButton,
-                                                    { backgroundColor: theme.colors.primary },
-                                                    pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
-                                                ]}
-                                            >
-                                                <MaterialCommunityIcons
-                                                    name="book-open-page-variant"
-                                                    size={14}
-                                                    color="#FFFFFF"
-                                                />
-                                                <Text style={[styles.openButtonText, { color: '#FFFFFF' }]}>
-                                                    Read in Quran
+                                                <Text style={[styles.themeText, {
+                                                    color: theme.colors.onSurfaceVariant,
+                                                }]}>
+                                                    {verse.theme}
                                                 </Text>
-                                            </Pressable>
+                                            </View>
+
+                                            <View style={styles.actionButtons}>
+                                                {/* Share Button */}
+                                                <Pressable
+                                                    onPress={() => handleShareVerse(verseKey, idx)}
+                                                    style={({ pressed }) => [
+                                                        styles.shareButton,
+                                                        { backgroundColor: theme.dark ? '#FFFFFF15' : '#00000008' },
+                                                        pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
+                                                    ]}
+                                                >
+                                                    <MaterialCommunityIcons name="share-variant" size={16} color={theme.colors.onSurfaceVariant} />
+                                                </Pressable>
+
+                                                {/* Play verse inline */}
+                                                <Pressable
+                                                    onPress={() => handlePlayVerse(verse.surah, verse.verse)}
+                                                    style={({ pressed }) => [
+                                                        styles.playButton,
+                                                        {
+                                                            backgroundColor: isCurrentlyPlaying && isPlaying
+                                                                ? theme.colors.primary
+                                                                : theme.dark ? '#FFFFFF15' : '#00000008',
+                                                        },
+                                                        pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
+                                                    ]}
+                                                >
+                                                    {isLoading ? (
+                                                        <ActivityIndicator size={14} color={theme.colors.primary} />
+                                                    ) : (
+                                                        <MaterialCommunityIcons
+                                                            name={isCurrentlyPlaying && isPlaying ? 'pause' : 'play'}
+                                                            size={16}
+                                                            color={isCurrentlyPlaying && isPlaying ? '#FFFFFF' : theme.colors.primary}
+                                                        />
+                                                    )}
+                                                </Pressable>
+
+                                                {/* Open in Surah */}
+                                                <Pressable
+                                                    onPress={() => handleOpenSurah(verse.surah, verse.verse)}
+                                                    style={({ pressed }) => [
+                                                        styles.openButton,
+                                                        { backgroundColor: theme.colors.primary },
+                                                        pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
+                                                    ]}
+                                                >
+                                                    <MaterialCommunityIcons
+                                                        name="book-open-page-variant"
+                                                        size={14}
+                                                        color="#FFFFFF"
+                                                    />
+                                                    <Text style={[styles.openButtonText, { color: '#FFFFFF' }]}>
+                                                        Read
+                                                    </Text>
+                                                </Pressable>
+                                            </View>
                                         </View>
+
+                                        {/* Watermark for sharing */}
+                                        {capturingVerseKey === verseKey && (
+                                            <View style={styles.watermarkContainer}>
+                                                <Text style={[styles.watermarkText, { color: theme.colors.onSurfaceVariant }]}>QuranNotes App</Text>
+                                            </View>
+                                        )}
                                     </View>
-                                </View>
+                                </ViewShot>
                             </MotiView>
                         );
                     })}
@@ -369,15 +424,18 @@ const styles = StyleSheet.create({
         height: 180,
         borderRadius: 90,
         marginBottom: -Spacing.sm, // Negative margin to pull title closer to the image
+        alignSelf: 'center',
     },
     moodLabel: {
         ...Typography.displayMedium,
         fontSize: 42,
         lineHeight: 46, // Tighter line height
         marginBottom: 0, // Removed bottom margin to pull subtitle closer
+        textAlign: 'center',
     },
     subtitle: {
         ...Typography.bodyMedium,
+        textAlign: 'center',
     },
     scrollContent: {
         paddingHorizontal: Spacing.md,
@@ -444,4 +502,23 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: '600' as const,
     },
+    shareButton: {
+        width: 36,
+        height: 36,
+        borderRadius: BorderRadius.full,
+        alignItems: 'center' as const,
+        justifyContent: 'center' as const,
+    },
+    watermarkContainer: {
+        marginTop: Spacing.lg,
+        alignItems: 'center',
+        paddingTop: Spacing.md,
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(0,0,0,0.05)',
+    },
+    watermarkText: {
+        ...Typography.labelMedium,
+        letterSpacing: 2,
+        textTransform: 'uppercase',
+    }
 });

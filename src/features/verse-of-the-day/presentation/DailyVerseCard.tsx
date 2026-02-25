@@ -11,9 +11,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QURAN_TOPICS, TopicVerse } from '../domain/QuranTopics';
-import { Spacing, BorderRadius, Shadows } from '../../../core/theme/DesignSystem';
+import { Spacing, BorderRadius, Shadows, Typography } from '../../../core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 import { WidgetBridge } from '../../../../modules/widget-bridge/src';
+import ViewShot from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 
 const STORAGE_KEY = 'daily_verse_data';
 const HISTORY_KEY = 'daily_verse_history';
@@ -92,6 +94,10 @@ export const DailyVerseCard: React.FC = () => {
     const [expanded, setExpanded] = useState(true);
     const [currentHour, setCurrentHour] = useState(new Date().getHours());
 
+    // For sharing
+    const viewShotRef = React.useRef<ViewShot>(null);
+    const [isCapturing, setIsCapturing] = useState(false);
+
     useEffect(() => {
         const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
             if (nextAppState === 'active') {
@@ -162,6 +168,34 @@ export const DailyVerseCard: React.FC = () => {
         router.push(`/surah/${verse.surah}?verse=${verse.verse}` as any);
     };
 
+    const handleShare = async () => {
+        if (!viewShotRef.current) return;
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+        // Temporarily expand and show watermark for the capture
+        const wasExpanded = expanded;
+        setExpanded(true);
+        setIsCapturing(true);
+
+        // Wait for state to apply and UI to render
+        setTimeout(async () => {
+            try {
+                const uri = await viewShotRef.current?.capture?.();
+                if (uri) {
+                    await Sharing.shareAsync(uri, {
+                        dialogTitle: 'Share Verse of the Day',
+                        mimeType: 'image/png'
+                    });
+                }
+            } catch (err) {
+                if (__DEV__) console.error('Error sharing verse:', err);
+            } finally {
+                setExpanded(wasExpanded);
+                setIsCapturing(false);
+            }
+        }, 150); // slight delay to ensure render
+    };
+
     if (loading || !verse) return null;
 
     // Render atmospheric gradient for the Sky window.
@@ -179,91 +213,110 @@ export const DailyVerseCard: React.FC = () => {
             transition={{ type: 'spring', damping: 18, delay: 120 }}
             style={{ paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}
         >
-            <Pressable
-                onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setExpanded(!expanded);
-                }}
-                style={({ pressed }) => [
-                    pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
-                ]}
-            >
-                <View style={[styles.card, Shadows.md]}>
-                    <LinearGradient
-                        colors={gradientColors}
-                        style={[styles.gradientOverlay, { borderRadius: BorderRadius.lg }]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                    />
+            <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1.0 }} style={isCapturing ? { backgroundColor: theme.colors.background } : {}}>
+                <Pressable
+                    onPress={() => {
+                        if (isCapturing) return;
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setExpanded(!expanded);
+                    }}
+                    style={({ pressed }) => [
+                        pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
+                    ]}
+                >
+                    <View style={[styles.card, Shadows.md]}>
+                        <LinearGradient
+                            colors={gradientColors}
+                            style={[styles.gradientOverlay, { borderRadius: BorderRadius.lg }]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                        />
 
-                    {/* Header — always visible */}
-                    <View style={styles.cardHeader}>
-                        <View style={styles.labelRow}>
-                            <Text style={[styles.label, { color: '#D4A853' }]}>✦ Verse of the Day</Text>
+                        {/* Header — always visible */}
+                        <View style={styles.cardHeader}>
+                            <View style={styles.labelRow}>
+                                <Text style={[styles.label, { color: '#D4A853' }]}>✦ Verse of the Day</Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                <IconButton
+                                    icon="refresh"
+                                    size={18}
+                                    onPress={handleRefresh}
+                                    iconColor={textColorSecondary}
+                                    style={styles.refreshButton}
+                                />
+                                <IconButton
+                                    icon="share-variant"
+                                    size={18}
+                                    onPress={handleShare}
+                                    iconColor={textColorSecondary}
+                                    style={styles.actionButton}
+                                />
+                                {!isCapturing && (
+                                    <Feather
+                                        name={expanded ? 'chevron-up' : 'chevron-down'}
+                                        size={20}
+                                        color={textColorSecondary}
+                                    />
+                                )}
+                            </View>
                         </View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                            <IconButton
-                                icon="refresh"
-                                size={18}
-                                onPress={handleRefresh}
-                                iconColor={textColorSecondary}
-                                style={styles.refreshButton}
-                            />
-                            <Feather
-                                name={expanded ? 'chevron-up' : 'chevron-down'}
-                                size={20}
-                                color={textColorSecondary}
-                            />
-                        </View>
+
+                        {/* Compact: just the reference */}
+                        {!expanded && (
+                            <View style={styles.referenceRow}>
+                                <Feather
+                                    name="chevron-right"
+                                    size={16}
+                                    color={textColorTertiary}
+                                />
+                                <Text style={[styles.referenceText, { color: textColorSecondary }]} numberOfLines={1}>
+                                    {verse.surahName} · Verse {verse.verse}
+                                </Text>
+                                <Text style={[styles.translationText, { color: textColorPrimary, marginBottom: 0, flex: 1 }]} numberOfLines={1}>
+                                    {verse.translation}
+                                </Text>
+                            </View>
+                        )}
+
+                        {/* Expanded: Arabic + translation + reference */}
+                        {expanded && (
+                            <>
+                                <Text style={[styles.arabicText, { color: textColorPrimary }]}>
+                                    {verse.arabicSnippet}
+                                </Text>
+                                <Text style={[styles.translationText, { color: textColorSecondary }]}>
+                                    {verse.translation}
+                                </Text>
+                                <Pressable onPress={handlePress}>
+                                    <View style={styles.referenceRow}>
+                                        <Feather
+                                            name="book-open"
+                                            size={14}
+                                            color={textColorTertiary}
+                                        />
+                                        <Text style={[styles.referenceText, { color: textColorSecondary }]}>
+                                            {verse.surahName} · Verse {verse.verse}
+                                        </Text>
+                                        <Feather
+                                            name="chevron-right"
+                                            size={16}
+                                            color={textColorTertiary}
+                                        />
+                                    </View>
+                                </Pressable>
+                            </>
+                        )}
+
+                        {/* Watermark for sharing */}
+                        {isCapturing && (
+                            <View style={styles.watermarkContainer}>
+                                <Text style={styles.watermarkText}>QuranNotes App</Text>
+                            </View>
+                        )}
                     </View>
-
-                    {/* Compact: just the reference */}
-                    {!expanded && (
-                        <View style={styles.referenceRow}>
-                            <Feather
-                                name="chevron-right"
-                                size={16}
-                                color={textColorTertiary}
-                            />
-                            <Text style={[styles.referenceText, { color: textColorSecondary }]} numberOfLines={1}>
-                                {verse.surahName} · Verse {verse.verse}
-                            </Text>
-                            <Text style={[styles.translationText, { color: textColorPrimary, marginBottom: 0, flex: 1 }]} numberOfLines={1}>
-                                {verse.translation}
-                            </Text>
-                        </View>
-                    )}
-
-                    {/* Expanded: Arabic + translation + reference */}
-                    {expanded && (
-                        <>
-                            <Text style={[styles.arabicText, { color: textColorPrimary }]}>
-                                {verse.arabicSnippet}
-                            </Text>
-                            <Text style={[styles.translationText, { color: textColorSecondary }]}>
-                                {verse.translation}
-                            </Text>
-                            <Pressable onPress={handlePress}>
-                                <View style={styles.referenceRow}>
-                                    <Feather
-                                        name="book-open"
-                                        size={14}
-                                        color={textColorTertiary}
-                                    />
-                                    <Text style={[styles.referenceText, { color: textColorSecondary }]}>
-                                        {verse.surahName} · Verse {verse.verse}
-                                    </Text>
-                                    <Feather
-                                        name="chevron-right"
-                                        size={16}
-                                        color={textColorTertiary}
-                                    />
-                                </View>
-                            </Pressable>
-                        </>
-                    )}
-                </View>
-            </Pressable>
+                </Pressable>
+            </ViewShot>
         </MotiView>
     );
 };
@@ -320,4 +373,20 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '500',
     },
+    actionButton: {
+        margin: 0,
+    },
+    watermarkContainer: {
+        marginTop: Spacing.lg,
+        alignItems: 'center',
+        paddingTop: Spacing.md,
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(255,255,255,0.15)',
+    },
+    watermarkText: {
+        ...Typography.labelMedium,
+        color: 'rgba(255,255,255,0.7)',
+        letterSpacing: 2,
+        textTransform: 'uppercase',
+    }
 });
