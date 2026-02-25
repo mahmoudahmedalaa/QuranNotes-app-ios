@@ -166,8 +166,6 @@ export default function MoodCheckInCard() {
                                         Tap to view your verses
                                     </Text>
                                 </View>
-                                {/* Chevron */}
-                                <Feather name="chevron-right" size={20} color={theme.colors.onSurfaceVariant} style={{ opacity: 0.6 }} />
                             </Pressable>
 
                             <Pressable
@@ -269,29 +267,25 @@ const styles = StyleSheet.create({
     },
     // ── Selected mood pill ──
     todayPill: {
-        flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: Spacing.sm,
         paddingHorizontal: Spacing.md,
         borderRadius: BorderRadius.xl,
         gap: Spacing.sm,
     },
-    todayPillImage: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-    },
     todayPillText: {
-        flex: 1,
+        alignItems: 'center',
         gap: 2,
     },
     todayLabel: {
         ...Typography.titleMedium,
         fontSize: 26,
         fontWeight: '800',
+        textAlign: 'center',
     },
     todayHint: {
         fontSize: 12,
         fontWeight: '500',
+        textAlign: 'center',
     },
 });
