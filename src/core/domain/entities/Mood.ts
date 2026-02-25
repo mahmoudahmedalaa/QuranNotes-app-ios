@@ -38,20 +38,21 @@ export interface MoodConfig {
     label: string;
     imageSource: any;
     color: string;
+    subtitles?: string[];
 }
 
 export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
-    hopeful: { icon: 'leaf-outline', label: 'Hopeful', imageSource: require('../../../../assets/moods/hopeful.png'), color: '#34d399' },
-    calm: { icon: 'moon-outline', label: 'Calm', imageSource: require('../../../../assets/moods/calm.png'), color: '#a78bfa' },
-    inspired: { icon: 'bulb-outline', label: 'Inspired', imageSource: require('../../../../assets/moods/inspired.png'), color: '#fcd34d' },
-    strong: { icon: 'barbell-outline', label: 'Strong', imageSource: require('../../../../assets/moods/strong.png'), color: '#fb923c' },
-    anxious: { icon: 'pulse-outline', label: 'Anxious', imageSource: require('../../../../assets/moods/anxious.png'), color: '#f472b6' },
-    confused: { icon: 'help-outline', label: 'Confused', imageSource: require('../../../../assets/moods/confused.png'), color: '#c084fc' },
-    lost: { icon: 'help-circle-outline', label: 'Lost', imageSource: require('../../../../assets/moods/lost.png'), color: '#94a3b8' },
-    sad: { icon: 'water-outline', label: 'Sad', imageSource: require('../../../../assets/moods/sad.png'), color: '#60a5fa' },
-    frustrated: { icon: 'flash-outline', label: 'Frustrated', imageSource: require('../../../../assets/moods/frustrated.png'), color: '#f87171' },
-    heartbroken: { icon: 'heart-half-outline', label: 'Heartbroken', imageSource: require('../../../../assets/moods/heartbroken.png'), color: '#fb7185' },
-    lonely: { icon: 'person-outline', label: 'Lonely', imageSource: require('../../../../assets/moods/lonely.png'), color: '#818cf8' },
+    hopeful: { icon: 'leaf-outline', label: 'Hopeful', imageSource: require('../../../../assets/moods/hopeful.png'), color: '#34d399', subtitles: ['Let hope bloom with these words', 'Your optimism has roots in the Quran', 'Seeds of hope, planted just for you'] },
+    calm: { icon: 'moon-outline', label: 'Calm', imageSource: require('../../../../assets/moods/calm.png'), color: '#a78bfa', subtitles: ['Breathe deep. These verses are your stillness', 'Embrace the peace within', 'Let tranquility wash over you'] },
+    inspired: { icon: 'bulb-outline', label: 'Inspired', imageSource: require('../../../../assets/moods/inspired.png'), color: '#fcd34d', subtitles: ['Fuel your fire with divine wisdom', 'Let inspiration light the way', 'Words to elevate your spirit'] },
+    strong: { icon: 'barbell-outline', label: 'Strong', imageSource: require('../../../../assets/moods/strong.png'), color: '#fb923c', subtitles: ['Stand tall. Strength is from Allah', 'Your resilience echoes through these verses', 'Power flows through patience'] },
+    anxious: { icon: 'pulse-outline', label: 'Anxious', imageSource: require('../../../../assets/moods/anxious.png'), color: '#f472b6', subtitles: ['Let these words ease your heart', 'Allah is closer than you think', 'Lay your worries down here'] },
+    confused: { icon: 'help-outline', label: 'Confused', imageSource: require('../../../../assets/moods/confused.png'), color: '#c084fc', subtitles: ['Clarity is a verse away', 'When the path feels unclear, look here', 'Guidance for the searching soul'] },
+    lost: { icon: 'help-circle-outline', label: 'Lost', imageSource: require('../../../../assets/moods/lost.png'), color: '#94a3b8', subtitles: ['You are never truly lost with Allah', 'Every wanderer finds their way home', 'A compass for the soul'] },
+    sad: { icon: 'water-outline', label: 'Sad', imageSource: require('../../../../assets/moods/sad.png'), color: '#60a5fa', subtitles: ['Even rain nourishes the earth', 'Comfort for the heavy heart', 'Allah sees every silent tear'] },
+    frustrated: { icon: 'flash-outline', label: 'Frustrated', imageSource: require('../../../../assets/moods/frustrated.png'), color: '#f87171', subtitles: ['Patience is a quiet superpower', 'Release tension with these words', 'Ease follows hardship — always'] },
+    heartbroken: { icon: 'heart-half-outline', label: 'Heartbroken', imageSource: require('../../../../assets/moods/heartbroken.png'), color: '#fb7185', subtitles: ['Hearts heal in His care', 'Mending starts with remembrance', 'Broken hearts find refuge here'] },
+    lonely: { icon: 'person-outline', label: 'Lonely', imageSource: require('../../../../assets/moods/lonely.png'), color: '#818cf8', subtitles: ['You are never alone with Allah', 'His presence fills every silence', 'Company for the solitary heart'] },
 };
 
 export const MOOD_LIST: MoodType[] = [

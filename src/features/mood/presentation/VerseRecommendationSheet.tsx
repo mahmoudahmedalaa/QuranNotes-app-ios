@@ -38,6 +38,9 @@ interface Props {
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+// Keep track of which subtitle to show next for each mood globally
+const subtitleIndices: Partial<Record<MoodType, number>> = {};
+
 export default function VerseRecommendationSheet({
     visible,
     verses,
@@ -51,6 +54,9 @@ export default function VerseRecommendationSheet({
     const { loadSurah } = useQuran();
     const [loadingVerse, setLoadingVerse] = useState<string | null>(null);
 
+    // Dynamic subtitle
+    const [currentSubtitle, setCurrentSubtitle] = useState('');
+
     // Runtime-enriched verses with full text from API
     const [enrichedVerses, setEnrichedVerses] = useState<MoodVerse[]>([]);
     const [loadingText, setLoadingText] = useState(false);
@@ -59,6 +65,17 @@ export default function VerseRecommendationSheet({
     const surahCacheRef = useRef<Map<number, { text: string; translation: string }[]>>(new Map());
 
     const moodConfig = mood ? MOOD_CONFIGS[mood] : null;
+
+    // Cycle through subtitles dynamically
+    useEffect(() => {
+        if (visible && mood && moodConfig?.subtitles?.length) {
+            const idx = subtitleIndices[mood] || 0;
+            setCurrentSubtitle(moodConfig.subtitles[idx % moodConfig.subtitles.length]);
+            subtitleIndices[mood] = idx + 1;
+        } else {
+            setCurrentSubtitle('Here are some verses for you');
+        }
+    }, [visible, mood]);
 
     // Fetch full verse text when the sheet opens
     useEffect(() => {
@@ -209,7 +226,7 @@ export default function VerseRecommendationSheet({
                             {moodConfig?.label}
                         </Text>
                         <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-                            Here are some verses for you
+                            {currentSubtitle}
                         </Text>
                     </MotiView>
                 </LinearGradient>
@@ -355,6 +372,8 @@ const styles = StyleSheet.create({
     },
     moodLabel: {
         ...Typography.displayMedium,
+        fontSize: 42,
+        lineHeight: 50,
         marginBottom: 4,
     },
     subtitle: {

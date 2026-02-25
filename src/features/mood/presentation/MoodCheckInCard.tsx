@@ -25,8 +25,8 @@ import { MoodVerse } from '../../../core/domain/entities/Mood';
 // Constants for Carousel
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CAROUSEL_WIDTH = SCREEN_WIDTH;
-const ITEM_WIDTH = 110;
-const ITEM_HEIGHT = 170; // Increased to ensure labels aren't cut off
+const ITEM_WIDTH = 140;
+const ITEM_HEIGHT = 200; // Increased to ensure labels aren't cut off
 
 export default function MoodCheckInCard() {
     const theme = useTheme();
