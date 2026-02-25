@@ -18,19 +18,27 @@ function timeToMinutes(t: string): number {
 
 /**
  * Determine which prayer is next based on current time.
+ * When all prayers have passed (late night after Isha), Fajr is marked as next.
  */
 function markNextPrayer(prayers: PrayerTime[]): PrayerTime[] {
     const now = new Date();
     const nowMinutes = now.getHours() * 60 + now.getMinutes();
     let foundNext = false;
 
-    return prayers.map(p => {
+    const result = prayers.map(p => {
         const prayerMinutes = timeToMinutes(p.time);
         const isPast = prayerMinutes <= nowMinutes;
         const isNext = !foundNext && prayerMinutes > nowMinutes;
         if (isNext) foundNext = true;
         return { ...p, isPast, isNext };
     });
+
+    // If no prayer is upcoming today (all passed), mark Fajr as next (tomorrow)
+    if (!foundNext && result.length > 0) {
+        result[0] = { ...result[0], isNext: true };
+    }
+
+    return result;
 }
 
 export class AladhanAPI {
@@ -119,6 +127,7 @@ export class AladhanAPI {
 
     /**
      * Compute seconds until the next prayer.
+     * Handles next-day wrap (e.g. Fajr tomorrow when all prayers have passed).
      */
     static getSecondsToNextPrayer(prayers: PrayerTime[]): number {
         const next = prayers.find(p => p.isNext);
@@ -126,9 +135,14 @@ export class AladhanAPI {
 
         const now = new Date();
         const [h, m] = next.time.split(':').map(Number);
-        const prayerMs = new Date(
+        let prayerMs = new Date(
             now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0
         ).getTime();
+
+        // If the prayer time is in the past, it means next prayer is tomorrow
+        if (prayerMs <= now.getTime()) {
+            prayerMs += 24 * 60 * 60 * 1000; // Add 24 hours
+        }
 
         return Math.max(0, Math.floor((prayerMs - now.getTime()) / 1000));
     }

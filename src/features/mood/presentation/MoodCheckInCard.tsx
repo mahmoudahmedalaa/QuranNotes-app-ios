@@ -153,7 +153,7 @@ export default function MoodCheckInCard() {
                                 {/* Mood PNG circle */}
                                 <Image
                                     source={MOOD_CONFIGS[todayMood].imageSource}
-                                    style={{ width: 100, height: 100, borderRadius: 50 }}
+                                    style={{ width: 80, height: 80, borderRadius: 40 }}
                                     contentFit="contain"
                                     transition={300}
                                 />
@@ -162,10 +162,12 @@ export default function MoodCheckInCard() {
                                     <Text style={[styles.todayLabel, { color: theme.colors.onSurface }]}>
                                         {MOOD_CONFIGS[todayMood].label}
                                     </Text>
-                                    <Text style={[styles.todayHint, { color: theme.colors.onSurfaceVariant, fontSize: 13 }]}>
+                                    <Text style={[styles.todayHint, { color: theme.colors.onSurfaceVariant }]}>
                                         Tap to view your verses
                                     </Text>
                                 </View>
+                                {/* Chevron */}
+                                <Feather name="chevron-right" size={20} color={theme.colors.onSurfaceVariant} style={{ opacity: 0.6 }} />
                             </Pressable>
 
                             <Pressable
@@ -267,25 +269,24 @@ const styles = StyleSheet.create({
     },
     // ── Selected mood pill ──
     todayPill: {
+        flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: Spacing.sm,
-        paddingHorizontal: Spacing.md,
+        paddingVertical: Spacing.xs,
+        paddingHorizontal: Spacing.sm,
         borderRadius: BorderRadius.xl,
-        gap: Spacing.sm,
+        gap: Spacing.md,
     },
     todayPillText: {
-        alignItems: 'center',
+        flex: 1,
         gap: 2,
     },
     todayLabel: {
         ...Typography.titleMedium,
         fontSize: 26,
         fontWeight: '800',
-        textAlign: 'center',
     },
     todayHint: {
-        fontSize: 12,
+        fontSize: 13,
         fontWeight: '500',
-        textAlign: 'center',
     },
 });
