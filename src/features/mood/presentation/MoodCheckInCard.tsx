@@ -12,7 +12,7 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import Carousel from 'react-native-reanimated-carousel';
-import { interpolate } from 'react-native-reanimated';
+import { interpolate, Extrapolation } from 'react-native-reanimated';
 import { MoodType, MOOD_CONFIGS, MOOD_LIST } from '../../../core/domain/entities/Mood';
 import { useMood } from '../infrastructure/MoodContext';
 import { usePro } from '../../auth/infrastructure/ProContext';
@@ -66,15 +66,44 @@ export default function MoodCheckInCard() {
 
     const animationStyle = useCallback((value: number) => {
         'worklet';
-        const scale = interpolate(value, [-2, -1, 0, 1, 2], [0.6, 0.8, 1.1, 0.8, 0.6]);
-        const translateY = interpolate(value, [-2, -1, 0, 1, 2], [20, 10, -5, 10, 20]);
-        const opacity = interpolate(value, [-2, -1, 0, 1, 2], [0.3, 0.6, 1, 0.6, 0.3]);
-        const rotateY = interpolate(value, [-2, -1, 0, 1, 2], [30, 15, 0, -15, -30]);
+        // The value represents the offset from the center item (0).
+        // -1 is the item to the left, 1 is the item to the right.
+        const translateX = interpolate(
+            value,
+            [-2, -1, 0, 1, 2],
+            [-ITEM_WIDTH * 1.8, -ITEM_WIDTH * 1.1, 0, ITEM_WIDTH * 1.1, ITEM_WIDTH * 1.8],
+            Extrapolation.CLAMP
+        );
+        const scale = interpolate(
+            value,
+            [-2, -1, 0, 1, 2],
+            [0.7, 0.85, 1.1, 0.85, 0.7],
+            Extrapolation.CLAMP
+        );
+        const translateY = interpolate(
+            value,
+            [-2, -1, 0, 1, 2],
+            [20, 10, -5, 10, 20],
+            Extrapolation.CLAMP
+        );
+        const opacity = interpolate(
+            value,
+            [-2, -1, 0, 1, 2],
+            [0.3, 0.6, 1, 0.6, 0.3],
+            Extrapolation.CLAMP
+        );
+        const rotateY = interpolate(
+            value,
+            [-2, -1, 0, 1, 2],
+            [30, 15, 0, -15, -30],
+            Extrapolation.CLAMP
+        );
 
         return {
             transform: [
-                { scale },
+                { translateX },
                 { translateY },
+                { scale },
                 { perspective: 500 },
                 { rotateY: `${rotateY}deg` },
             ],
@@ -110,7 +139,7 @@ export default function MoodCheckInCard() {
                     {/* Header */}
                     <View style={styles.header}>
                         <Text style={[styles.title, { color: theme.colors.onSurface }]}>
-                            {todayMood ? 'Today\'s Reflection' : 'How are you feeling?'}
+                            {todayMood ? 'Today\'s Reflection' : 'How are you feeling today?'}
                         </Text>
                         {!isPro && !todayMood && freeUsesRemaining === 0 && (
                             <Pressable onPress={() => router.push('/paywall?reason=mood')}>
