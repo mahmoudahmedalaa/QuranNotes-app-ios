@@ -225,7 +225,7 @@ export default function VerseRecommendationSheet({
                         <Text style={[styles.moodLabel, { color: theme.colors.onSurface }]}>
                             {moodConfig?.label}
                         </Text>
-                        <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
+                        <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant, marginTop: -4 }]}>
                             {currentSubtitle}
                         </Text>
                     </MotiView>
@@ -368,13 +368,13 @@ const styles = StyleSheet.create({
         width: 180,
         height: 180,
         borderRadius: 90,
-        marginBottom: Spacing.xs,
+        marginBottom: -Spacing.sm, // Negative margin to pull title closer to the image
     },
     moodLabel: {
         ...Typography.displayMedium,
         fontSize: 42,
-        lineHeight: 50,
-        marginBottom: 4,
+        lineHeight: 46, // Tighter line height
+        marginBottom: 0, // Removed bottom margin to pull subtitle closer
     },
     subtitle: {
         ...Typography.bodyMedium,
