@@ -156,9 +156,7 @@ export default function VerseRecommendationSheet({
     if (!mood || verses.length === 0) return null;
 
     // Gradient header — 3-stop so the mood colour is clearly visible
-    const headerGradient = theme.dark
-        ? [moodConfig?.darkGradient[0] || '#1A1F26', (moodConfig?.darkGradient[0] || '#1A1F26') + 'AA', theme.colors.background] as const
-        : [moodConfig?.gradient[0] || '#F8FAFB', moodConfig?.gradient[0] || '#F8FAFB', theme.colors.background + '00'] as const;
+    const headerGradient = [theme.colors.primaryContainer, theme.colors.background] as const;
 
     return (
         <Modal

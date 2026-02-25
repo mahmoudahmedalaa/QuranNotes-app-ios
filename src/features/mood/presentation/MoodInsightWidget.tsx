@@ -107,7 +107,7 @@ export default function MoodInsightWidget() {
                                             <View style={[
                                                 styles.dot,
                                                 {
-                                                    backgroundColor: theme.dark ? config.darkGradient[0] : config.gradient[0],
+                                                    backgroundColor: theme.colors.primary,
                                                 },
                                             ]} />
                                             {!isLast && (
@@ -153,7 +153,7 @@ export default function MoodInsightWidget() {
                                                 }]}>
                                                     <View style={[styles.freqFill, {
                                                         width: `${Math.max(pct, 8)}%`,
-                                                        backgroundColor: theme.dark ? config.darkGradient[0] : config.gradient[0],
+                                                        backgroundColor: theme.colors.primary,
                                                     }]} />
                                                 </View>
                                                 <Text style={[styles.freqCount, { color: theme.colors.onSurfaceVariant }]}>

@@ -223,11 +223,11 @@ export default function DashboardScreen() {
                                 </Svg>
                                 <View style={styles.tileRingCenter}>
                                     <Text style={[styles.tileRingNum, { color: theme.colors.primary }]}>{completedCount}</Text>
-                                    <Text style={[styles.tileRingDenom, { color: theme.colors.onPrimaryContainer }]}>/30</Text>
+                                    <Text style={[styles.tileRingDenom, { color: theme.colors.primary }]}>/30</Text>
                                 </View>
                             </View>
-                            <Text style={[styles.tileLabel, { color: theme.colors.onPrimaryContainer }]}>Khatma</Text>
-                            <Text style={[styles.tileSub, { color: theme.colors.onPrimaryContainer, opacity: 0.8 }]}>
+                            <Text style={[styles.tileLabel, { color: theme.colors.primary }]}>Khatma</Text>
+                            <Text style={[styles.tileSub, { color: theme.colors.primary, opacity: 0.8 }]}>
                                 {completedCount === 0 ? 'Start journey' : `${30 - completedCount} remaining`}
                             </Text>
                         </Pressable>
@@ -240,25 +240,25 @@ export default function DashboardScreen() {
                             }}
                             style={({ pressed }) => [
                                 styles.gridTile,
-                                { backgroundColor: theme.colors.secondaryContainer },
+                                { backgroundColor: theme.colors.primaryContainer },
                                 Shadows.sm,
                                 pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                             ]}
                         >
                             <View style={styles.tileEmojiWrap}>
                                 {adhkarPeriod === 'morning' ? (
-                                    <Feather name="sun" size={28} color={theme.colors.onSecondaryContainer} />
+                                    <Feather name="sun" size={28} color={theme.colors.primary} />
                                 ) : (
-                                    <Feather name="moon" size={28} color={theme.colors.onSecondaryContainer} />
+                                    <Feather name="moon" size={28} color={theme.colors.primary} />
                                 )}
                             </View>
-                            <Text style={[styles.tileLabel, { color: theme.colors.onSecondaryContainer }]}>
+                            <Text style={[styles.tileLabel, { color: theme.colors.primary }]}>
                                 {adhkarPeriod === 'morning' ? 'Morning' : 'Evening'}
                             </Text>
-                            <Text style={[styles.tileSub, { color: theme.colors.onSecondaryContainer, fontWeight: '600' }]}>
+                            <Text style={[styles.tileSub, { color: theme.colors.primary, fontWeight: '600' }]}>
                                 Adhkar
                             </Text>
-                            <Text style={[styles.tileSub2, { color: theme.colors.onSecondaryContainer, opacity: 0.8 }]}>
+                            <Text style={[styles.tileSub2, { color: theme.colors.primary, opacity: 0.8 }]}>
                                 {adhkarPct > 0 ? `${adhkarPct}% done` : 'Tap to begin'}
                             </Text>
                         </Pressable>

@@ -9,8 +9,9 @@ import { Text, useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
+
 import { Feather } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import Carousel from 'react-native-reanimated-carousel';
 import { interpolate, Extrapolation } from 'react-native-reanimated';
 import { MoodType, MOOD_CONFIGS, MOOD_LIST } from '../../../core/domain/entities/Mood';
@@ -19,11 +20,11 @@ import { usePro } from '../../auth/infrastructure/ProContext';
 import { Spacing, BorderRadius, Shadows, Typography } from '../../../core/theme/DesignSystem';
 import VerseRecommendationSheet from './VerseRecommendationSheet';
 import { MoodVerse } from '../../../core/domain/entities/Mood';
-import { MoodGradientSquare } from './components/MoodGradientSquare';
+
 
 // Constants for Carousel
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const CAROUSEL_WIDTH = SCREEN_WIDTH - Spacing.md * 4; // Padding left/right
+const CAROUSEL_WIDTH = SCREEN_WIDTH;
 const ITEM_WIDTH = 80;
 const ITEM_HEIGHT = 100;
 
@@ -118,29 +119,21 @@ export default function MoodCheckInCard() {
                 from={{ opacity: 0, translateY: 15 }}
                 animate={{ opacity: 1, translateY: 0 }}
                 transition={{ type: 'spring', damping: 18, delay: 120 }}
-                style={{ paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}
+                style={{ marginBottom: Spacing.sm }}
             >
-                <View style={[
-                    styles.card,
-                    { backgroundColor: 'transparent' }, // Let gradient show through
-                    Shadows.sm,
-                ]}>
-                    {/* Calming Twilight Gradient */}
-                    <LinearGradient
-                        colors={theme.dark
-                            ? ['#1A1340', '#2D1F6E'] // Deep space violet (calm)
-                            : ['#F8F5FF', '#EDE5FF'] // Suble dawn violet (calm)
-                        }
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 0, y: 1 }}
-                        style={StyleSheet.absoluteFill}
-                    />
-
+                <View style={{ backgroundColor: 'transparent' }}>
                     {/* Header */}
-                    <View style={styles.header}>
-                        <Text style={[styles.title, { color: theme.colors.onSurface }]}>
-                            {todayMood ? 'Today\'s Reflection' : 'How are you feeling today?'}
-                        </Text>
+                    <View style={[styles.header, { paddingHorizontal: Spacing.md }]}>
+                        <View>
+                            <Text style={[styles.title, { color: theme.colors.onSurface }]}>
+                                How are you feeling today?
+                            </Text>
+                            {(!todayMood || isEditingMood) && (
+                                <Text style={{ fontSize: 13, color: theme.colors.onSurfaceVariant, marginTop: 2 }}>
+                                    Choose a mood
+                                </Text>
+                            )}
+                        </View>
                         {!isPro && !todayMood && freeUsesRemaining === 0 && (
                             <Pressable onPress={() => router.push('/paywall?reason=mood')}>
                                 <Text style={[styles.upgradeLink, {
@@ -154,7 +147,7 @@ export default function MoodCheckInCard() {
 
                     {todayMood && !isEditingMood ? (
                         /* Already checked in — show summary */
-                        <View style={{ gap: Spacing.sm }}>
+                        <View style={{ gap: Spacing.sm, paddingHorizontal: Spacing.md }}>
                             <Pressable
                                 onPress={handleViewTodayVerses}
                                 style={({ pressed }) => [
@@ -162,12 +155,11 @@ export default function MoodCheckInCard() {
                                     pressed && { opacity: 0.8 },
                                 ]}
                             >
-                                <MoodGradientSquare
-                                    palette={MOOD_CONFIGS[todayMood].palette}
-                                    width={SCREEN_WIDTH - Spacing.md * 4}
-                                    height={80}
-                                    borderRadius={BorderRadius.lg}
-                                    style={StyleSheet.absoluteFill}
+                                <Image
+                                    source={MOOD_CONFIGS[todayMood].imageSource}
+                                    style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg, width: SCREEN_WIDTH - Spacing.md * 2, height: 80 }]}
+                                    contentFit="cover"
+                                    transition={200}
                                 />
                                 <View style={styles.todayTextGroup}>
                                     <Text style={[styles.todayLabel, { color: '#000' }]}>
@@ -191,10 +183,9 @@ export default function MoodCheckInCard() {
                         </View>
                     ) : (
                         /* Mood Carousel */
-                        <View style={{ height: ITEM_HEIGHT + 20, alignItems: 'center', justifyContent: 'center' }}>
+                        <View style={{ height: ITEM_HEIGHT + 40, alignItems: 'center', justifyContent: 'center' }}>
                             {isEditingMood && (
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.xs, paddingHorizontal: 4, width: '100%' }}>
-                                    <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 13 }}>Select a new mood</Text>
+                                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginBottom: Spacing.xs, paddingHorizontal: Spacing.md, width: '100%' }}>
                                     <Pressable onPress={() => setIsEditingMood(false)} hitSlop={10}>
                                         <Text style={{ color: theme.colors.primary, fontSize: 13, fontWeight: '600' }}>Cancel</Text>
                                     </Pressable>
@@ -205,7 +196,7 @@ export default function MoodCheckInCard() {
                                 height={ITEM_HEIGHT}
                                 style={{
                                     width: CAROUSEL_WIDTH,
-                                    height: ITEM_HEIGHT + 20,
+                                    height: ITEM_HEIGHT + 40,
                                     justifyContent: 'center',
                                     alignItems: 'center',
                                 }}
@@ -221,11 +212,11 @@ export default function MoodCheckInCard() {
                                             disabled={loading}
                                             style={styles.moodBubble}
                                         >
-                                            <MoodGradientSquare
-                                                palette={config.palette}
-                                                width={ITEM_WIDTH}
-                                                height={ITEM_WIDTH}
-                                                borderRadius={BorderRadius.lg}
+                                            <Image
+                                                source={config.imageSource}
+                                                style={{ width: ITEM_WIDTH, height: ITEM_WIDTH, borderRadius: BorderRadius.lg }}
+                                                contentFit="contain"
+                                                transition={200}
                                             />
                                             <Text
                                                 style={[
