@@ -157,7 +157,7 @@ export default function MoodCheckInCard() {
                             >
                                 <Image
                                     source={MOOD_CONFIGS[todayMood].imageSource}
-                                    style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg, width: SCREEN_WIDTH - Spacing.md * 2, height: 80 }]}
+                                    style={[StyleSheet.absoluteFill, { borderRadius: BorderRadius.lg, width: SCREEN_WIDTH - Spacing.md * 2, height: 80, opacity: 0.3 }]}
                                     contentFit="cover"
                                     transition={200}
                                 />
@@ -214,7 +214,7 @@ export default function MoodCheckInCard() {
                                         >
                                             <Image
                                                 source={config.imageSource}
-                                                style={{ width: ITEM_WIDTH, height: ITEM_WIDTH, borderRadius: BorderRadius.lg }}
+                                                style={{ width: ITEM_WIDTH, height: ITEM_WIDTH, borderRadius: ITEM_WIDTH / 2 }}
                                                 contentFit="contain"
                                                 transition={200}
                                             />
