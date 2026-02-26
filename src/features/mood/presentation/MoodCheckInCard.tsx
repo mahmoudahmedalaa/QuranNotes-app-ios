@@ -3,8 +3,8 @@
  * Headspace/Calm-inspired: soft rounded bubbles with custom illustrations + label.
  * Shows as a collapsible card below StreakCounter.
  */
-import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, Pressable, Dimensions } from 'react-native';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { View, StyleSheet, Pressable, Dimensions, Animated as RNAnimated, Easing as RNEasing } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
 import * as Haptics from 'expo-haptics';
@@ -13,20 +13,115 @@ import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import Carousel from 'react-native-reanimated-carousel';
-import { interpolate, Extrapolation } from 'react-native-reanimated';
-import { MoodType, MOOD_CONFIGS, MOOD_LIST } from '../../../core/domain/entities/Mood';
+import {
+    interpolate,
+    Extrapolation,
+} from 'react-native-reanimated';
+import { MoodType, MOOD_CONFIGS, MOOD_LIST, MoodVerse } from '../../../core/domain/entities/Mood';
 import { useMood } from '../infrastructure/MoodContext';
 import { usePro } from '../../auth/infrastructure/ProContext';
 import { Spacing, BorderRadius, Typography } from '../../../core/theme/DesignSystem';
 import VerseRecommendationSheet from './VerseRecommendationSheet';
-import { MoodVerse } from '../../../core/domain/entities/Mood';
 
 
-// Constants for Carousel
+
+// ── Layout constants ────────────────────────────────────────────────────
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CAROUSEL_WIDTH = SCREEN_WIDTH;
 const ITEM_WIDTH = 110;
-const ITEM_HEIGHT = 170; // Increased to ensure labels aren't cut off
+const ITEM_HEIGHT = 170;
+const MOOD_ICON_SIZE = 80;
+
+/**
+ * AnimatedMoodPill — Headspace-inspired breathing icon.
+ * Uses RN core Animated.loop + Animated.sequence (guaranteed to work).
+ * Icon breathes: scale 1.2 → 2.2 → 1.2 over 3s. Halo is tight (1.3×) and faint.
+ */
+function AnimatedMoodPill({
+    mood,
+    onPress,
+    onChangeMood,
+}: {
+    mood: MoodType;
+    onPress: () => void;
+    onChangeMood: () => void;
+}) {
+    const theme = useTheme();
+    const config = MOOD_CONFIGS[mood];
+    const moodColor = config.color;
+
+    // Core RN Animated — guaranteed loop
+    const scaleAnim = useRef(new RNAnimated.Value(1.2)).current;
+
+    useEffect(() => {
+        const breatheLoop = RNAnimated.loop(
+            RNAnimated.sequence([
+                RNAnimated.timing(scaleAnim, {
+                    toValue: 2.2,
+                    duration: 3000,
+                    easing: RNEasing.inOut(RNEasing.ease),
+                    useNativeDriver: true,
+                }),
+                RNAnimated.timing(scaleAnim, {
+                    toValue: 1.2,
+                    duration: 3000,
+                    easing: RNEasing.inOut(RNEasing.ease),
+                    useNativeDriver: true,
+                }),
+            ])
+        );
+        breatheLoop.start();
+        return () => breatheLoop.stop();
+    }, [scaleAnim]);
+
+    return (
+        <View style={{ gap: Spacing.xs, paddingHorizontal: Spacing.md }}>
+            <Pressable
+                onPress={onPress}
+                style={({ pressed }) => [
+                    styles.todayPill,
+                    { backgroundColor: 'transparent' },
+                    pressed && { opacity: 0.85 },
+                ]}
+            >
+                {/* Breathing icon */}
+                <View style={styles.iconContainer}>
+                    <RNAnimated.View style={{ transform: [{ scale: scaleAnim }] }}>
+                        <Image
+                            source={config.imageSource}
+                            style={styles.todayIcon}
+                            contentFit="contain"
+                            transition={300}
+                        />
+                    </RNAnimated.View>
+                </View>
+
+                {/* Text */}
+                <View style={styles.todayPillText}>
+                    <Text style={[styles.todayLabel, { color: theme.colors.onSurface }]}>
+                        {config.label}
+                    </Text>
+                    <Text style={[styles.todayHint, { color: theme.colors.onSurfaceVariant }]}>
+                        Tap to view your verses
+                    </Text>
+                </View>
+                {/* Chevron */}
+                <Feather name="chevron-right" size={20} color={theme.colors.onSurfaceVariant} style={{ opacity: 0.6 }} />
+            </Pressable>
+
+            <Pressable
+                onPress={onChangeMood}
+                style={({ pressed }) => [
+                    styles.changeMoodBtn,
+                    pressed && { opacity: 0.7 }
+                ]}
+            >
+                <Feather name="edit-2" size={13} color={theme.colors.onSurfaceVariant} />
+                <Text style={[styles.changeMoodText, { color: theme.colors.onSurfaceVariant }]}>Change Mood</Text>
+            </Pressable>
+        </View>
+    );
+}
 
 export default function MoodCheckInCard() {
     const theme = useTheme();
@@ -109,7 +204,6 @@ export default function MoodCheckInCard() {
                 from={{ opacity: 0, translateY: 15 }}
                 animate={{ opacity: 1, translateY: 0 }}
                 transition={{ type: 'spring', damping: 18, delay: 120 }}
-                style={{ marginBottom: Spacing.sm }}
             >
                 <View style={{ backgroundColor: 'transparent' }}>
                     {/* Header */}
@@ -140,47 +234,12 @@ export default function MoodCheckInCard() {
                     </View>
 
                     {todayMood && !isEditingMood ? (
-                        /* ── Already checked in — pill summary ── */
-                        <View style={{ gap: Spacing.xs, paddingHorizontal: Spacing.md }}>
-                            <Pressable
-                                onPress={handleViewTodayVerses}
-                                style={({ pressed }) => [
-                                    styles.todayPill,
-                                    { backgroundColor: 'transparent' },
-                                    pressed && { opacity: 0.85, transform: [{ scale: 0.99 }] },
-                                ]}
-                            >
-                                {/* Mood PNG circle */}
-                                <Image
-                                    source={MOOD_CONFIGS[todayMood].imageSource}
-                                    style={{ width: 80, height: 80, borderRadius: 40 }}
-                                    contentFit="contain"
-                                    transition={300}
-                                />
-                                {/* Text */}
-                                <View style={styles.todayPillText}>
-                                    <Text style={[styles.todayLabel, { color: theme.colors.onSurface }]}>
-                                        {MOOD_CONFIGS[todayMood].label}
-                                    </Text>
-                                    <Text style={[styles.todayHint, { color: theme.colors.onSurfaceVariant }]}>
-                                        Tap to view your verses
-                                    </Text>
-                                </View>
-                                {/* Chevron */}
-                                <Feather name="chevron-right" size={20} color={theme.colors.onSurfaceVariant} style={{ opacity: 0.6 }} />
-                            </Pressable>
-
-                            <Pressable
-                                onPress={() => setIsEditingMood(true)}
-                                style={({ pressed }) => [
-                                    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.xs, gap: 6 },
-                                    pressed && { opacity: 0.7 }
-                                ]}
-                            >
-                                <Feather name="edit-2" size={13} color={theme.colors.onSurfaceVariant} />
-                                <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 13, fontWeight: '500' }}>Change Mood</Text>
-                            </Pressable>
-                        </View>
+                        /* ── Already checked in — animated mood pill ── */
+                        <AnimatedMoodPill
+                            mood={todayMood}
+                            onPress={handleViewTodayVerses}
+                            onChangeMood={() => setIsEditingMood(true)}
+                        />
                     ) : (
                         /* ── Mood Carousel ── */
                         <View style={{ height: ITEM_HEIGHT, alignItems: 'center', justifyContent: 'center', marginTop: -20 }}>
@@ -274,19 +333,40 @@ const styles = StyleSheet.create({
         paddingVertical: Spacing.xs,
         paddingHorizontal: Spacing.sm,
         borderRadius: BorderRadius.xl,
-        gap: Spacing.md,
+        gap: Spacing.sm,
+    },
+    iconContainer: {
+        width: MOOD_ICON_SIZE,
+        height: MOOD_ICON_SIZE,
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'visible',
+    },
+
+    todayIcon: {
+        width: MOOD_ICON_SIZE,
+        height: MOOD_ICON_SIZE,
     },
     todayPillText: {
         flex: 1,
-        gap: 2,
+        gap: Spacing.xs / 2,
     },
     todayLabel: {
         ...Typography.titleMedium,
-        fontSize: 26,
-        fontWeight: '800',
+        fontSize: 20,
+        fontWeight: '700',
     },
     todayHint: {
-        fontSize: 13,
-        fontWeight: '500',
+        ...Typography.labelMedium,
+    },
+    changeMoodBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: Spacing.xs,
+        gap: Spacing.xs,
+    },
+    changeMoodText: {
+        ...Typography.labelMedium,
     },
 });

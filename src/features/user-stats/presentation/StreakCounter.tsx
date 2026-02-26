@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Text, useTheme, Surface } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useStreaks } from '../../auth/infrastructure/StreakContext';
@@ -31,7 +31,7 @@ export const StreakCounter: React.FC = () => {
                             duration: 2000,
                             type: 'timing',
                         }}>
-                        <MaterialCommunityIcons name="fire" size={24} color="#FF9500" />
+                        <MaterialCommunityIcons name="fire" size={18} color="#FF9500" />
                     </MotiView>
                     <View style={styles.textContainer}>
                         <Text style={styles.count}>{streak.currentStreak}</Text>
@@ -45,11 +45,11 @@ export const StreakCounter: React.FC = () => {
 
 const styles = StyleSheet.create({
     container: {
-        paddingHorizontal: Spacing.md,
-        paddingVertical: Spacing.sm,
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: Spacing.xs,
         borderRadius: BorderRadius.full,
         ...Shadows.sm,
-        marginVertical: Spacing.md,
+        marginVertical: Spacing.xs,
         alignSelf: 'center',
     },
     content: {
@@ -63,12 +63,12 @@ const styles = StyleSheet.create({
     },
     count: {
         fontWeight: '900',
-        fontSize: 18,
+        fontSize: 15,
         color: '#FF9500',
-        marginRight: 4,
+        marginRight: 3,
     },
     label: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: '600',
         color: BrandTokens.light.textSecondary,
     },

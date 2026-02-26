@@ -8,7 +8,7 @@ import { BlurView } from 'expo-blur';
 import Svg, { Circle } from 'react-native-svg';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { NoorMascot } from '../../src/core/components/mascot/NoorMascot';
-import { Spacing, BorderRadius, Shadows, TAB_BAR_HEIGHT, BrandTokens } from '../../src/core/theme/DesignSystem';
+import { Spacing, BorderRadius, Shadows } from '../../src/core/theme/DesignSystem';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
     container: { flex: 1 },
     safeArea: { flex: 1 },
     scrollView: { flex: 1 },
-    scrollContent: { paddingTop: Spacing.lg },
+    scrollContent: { paddingTop: Spacing.sm, gap: Spacing.md },
 
     // ── Header ──
     header: {
@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         paddingHorizontal: GRID_PAD,
         gap: GRID_GAP,
-        marginBottom: GRID_GAP,
+        marginBottom: 0,
     },
     gridTile: {
         flex: 1,

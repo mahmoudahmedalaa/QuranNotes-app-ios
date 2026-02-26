@@ -18,6 +18,8 @@ import {
     ScrollView,
     Dimensions,
     ActivityIndicator,
+    Animated as RNAnimated,
+    Easing as RNEasing,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { Text, useTheme } from 'react-native-paper';
@@ -43,6 +45,46 @@ const DIVIDER_DOT_SIZE = 5;
 // ── Arabic text style (not in DesignSystem — unique to Quran rendering) ─
 const ARABIC_FONT_SIZE = 22;
 const ARABIC_LINE_HEIGHT = 38;
+
+/**
+ * BreathingIcon — Same soothing scale animation as the dashboard mood pill.
+ * Scale 1.2 → 2.2 → 1.2, 3s each direction (6s full cycle).
+ */
+function BreathingIcon({ imageSource, size }: { imageSource: any; size: number }) {
+    const scaleAnim = useRef(new RNAnimated.Value(1.2)).current;
+
+    useEffect(() => {
+        const loop = RNAnimated.loop(
+            RNAnimated.sequence([
+                RNAnimated.timing(scaleAnim, {
+                    toValue: 2.2,
+                    duration: 3000,
+                    easing: RNEasing.inOut(RNEasing.ease),
+                    useNativeDriver: true,
+                }),
+                RNAnimated.timing(scaleAnim, {
+                    toValue: 1.2,
+                    duration: 3000,
+                    easing: RNEasing.inOut(RNEasing.ease),
+                    useNativeDriver: true,
+                }),
+            ])
+        );
+        loop.start();
+        return () => loop.stop();
+    }, [scaleAnim]);
+
+    return (
+        <RNAnimated.View style={{ transform: [{ scale: scaleAnim }] }}>
+            <Image
+                source={imageSource}
+                style={{ width: size, height: size }}
+                contentFit="contain"
+                transition={200}
+            />
+        </RNAnimated.View>
+    );
+}
 
 interface Props {
     visible: boolean;
@@ -249,12 +291,11 @@ export default function VerseRecommendationSheet({
                     transition={{ type: 'spring', ...Springs.gentle, delay: 100 }}
                     style={styles.moodHeader}
                 >
-                    {mood && <Image
-                        source={moodConfig?.imageSource}
-                        style={styles.moodIllustration}
-                        contentFit="contain"
-                        transition={200}
-                    />}
+                    {mood && (
+                        <View style={{ width: ILLUSTRATION_SIZE, height: ILLUSTRATION_SIZE, alignItems: 'center', justifyContent: 'center', overflow: 'visible' as const }}>
+                            <BreathingIcon imageSource={moodConfig?.imageSource} size={ILLUSTRATION_SIZE} />
+                        </View>
+                    )}
                     <Text style={[styles.moodLabel, { color: theme.colors.onSurface }]}>
                         {moodConfig?.label}
                     </Text>
@@ -272,14 +313,18 @@ export default function VerseRecommendationSheet({
                     }}
                     style={({ pressed }) => [
                         styles.closeButton,
-                        { backgroundColor: `${theme.colors.onSurface}10` },
+                        {
+                            backgroundColor: theme.dark
+                                ? 'rgba(255,255,255,0.12)'
+                                : 'rgba(0,0,0,0.06)',
+                        },
                         pressed && { opacity: 0.6 },
                     ]}
                 >
                     <MaterialCommunityIcons
                         name="close"
                         size={20}
-                        color={theme.colors.onSurface}
+                        color={theme.dark ? '#FFFFFF' : '#333333'}
                     />
                 </Pressable>
 
@@ -454,13 +499,12 @@ const styles = StyleSheet.create({
     },
     moodHeader: {
         alignItems: 'center',
-        paddingHorizontal: Spacing.md,
-        marginBottom: Spacing.xs,
+        marginTop: Spacing.sm,
+        marginBottom: Spacing.sm,
     },
     moodIllustration: {
         width: ILLUSTRATION_SIZE,
         height: ILLUSTRATION_SIZE,
-        marginBottom: -Spacing.sm,
     },
     moodLabel: {
         ...Typography.displayLarge,
@@ -469,7 +513,7 @@ const styles = StyleSheet.create({
     subtitle: {
         ...Typography.bodyMedium,
         textAlign: 'center',
-        marginTop: Spacing.xs / 2,
+        marginTop: Spacing.xs,
     },
     scrollContent: {
         paddingHorizontal: Spacing.md,

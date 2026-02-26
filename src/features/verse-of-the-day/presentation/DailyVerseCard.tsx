@@ -211,7 +211,7 @@ export const DailyVerseCard: React.FC = () => {
             from={{ opacity: 0, translateY: 15 }}
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ type: 'spring', damping: 18, delay: 120 }}
-            style={{ paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}
+            style={{ paddingHorizontal: Spacing.md }}
         >
             <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1.0 }} style={isCapturing ? { backgroundColor: theme.colors.background } : {}}>
                 <Pressable

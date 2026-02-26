@@ -23,7 +23,7 @@ export const PrayerTimesCard: React.FC = () => {
                 from={{ opacity: 0, translateY: 15 }}
                 animate={{ opacity: 1, translateY: 0 }}
                 transition={{ type: 'spring', damping: 18, delay: 100 }}
-                style={{ paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}
+                style={{ paddingHorizontal: Spacing.md }}
             >
                 <View style={[styles.card, Shadows.md]}>
                     <View style={styles.loadingRow}>
@@ -67,7 +67,7 @@ export const PrayerTimesCard: React.FC = () => {
             from={{ opacity: 0, translateY: 15 }}
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ type: 'spring', damping: 18, delay: 100 }}
-            style={{ paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}
+            style={{ paddingHorizontal: Spacing.md }}
         >
             <Pressable
                 onPress={toggleExpand}
