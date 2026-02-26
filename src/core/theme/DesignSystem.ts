@@ -89,7 +89,7 @@ const darkColors = {
 
     // Primary Brand
     primary: '#A78BFA', // Soft spiritual violet
-    primaryContainer: '#2D1F6E',
+    primaryContainer: '#1E1A2E', // Muted dark purple — blends with dark surface
     onPrimary: '#FFFFFF',
     onPrimaryContainer: '#EDE9FE',
 

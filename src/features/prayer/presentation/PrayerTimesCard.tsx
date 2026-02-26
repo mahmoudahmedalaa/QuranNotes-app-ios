@@ -54,8 +54,8 @@ export const PrayerTimesCard: React.FC = () => {
         switch (name) {
             case 'Fajr': return 'sunrise';
             case 'Sunrise': return 'sun';
-            case 'Dhuhr': return 'sun';
-            case 'Asr': return 'clock';
+            case 'Dhuhr': return 'cloud';
+            case 'Asr': return 'sun';
             case 'Maghrib': return 'sunset';
             case 'Isha': return 'moon';
             default: return 'clock';

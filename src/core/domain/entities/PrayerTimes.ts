@@ -22,8 +22,8 @@ export interface PrayerTimesData {
 export const PRAYER_ICONS: Record<string, string> = {
     Fajr: 'sunrise',
     Sunrise: 'sun',
-    Dhuhr: 'sun',
-    Asr: 'clock', // Feather is minimal, clock represents afternoon well
+    Dhuhr: 'cloud',    // Midday — unique from Sunrise's 'sun'
+    Asr: 'sun',        // Afternoon sun — more intuitive than 'clock'
     Maghrib: 'sunset',
     Isha: 'moon',
 };
