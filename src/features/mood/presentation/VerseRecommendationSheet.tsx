@@ -5,6 +5,9 @@
  *  - Habiba's mood PNG illustrations
  *  - Warm, elevated verse cards with mood-colored accents
  *  - Inline audio playback, share, and "Read in Surah" actions
+ *
+ * All styling uses DesignSystem tokens (Spacing, BorderRadius, Typography, Shadows).
+ * Theme colors come from react-native-paper useTheme() — no raw hex codes.
  */
 import React, { useRef, useCallback, useState, useEffect } from 'react';
 import {
@@ -29,7 +32,17 @@ import * as Sharing from 'expo-sharing';
 import { MoodType, MoodVerse, MOOD_CONFIGS } from '../../../core/domain/entities/Mood';
 import { useAudio } from '../../audio-player/infrastructure/AudioContext';
 import { useQuran } from '../../../core/hooks/useQuran';
-import { Spacing, BorderRadius, Shadows, Typography } from '../../../core/theme/DesignSystem';
+import { Spacing, BorderRadius, Shadows, Typography, Springs } from '../../../core/theme/DesignSystem';
+
+// ── Layout constants (avoids magic numbers throughout) ──────────────────
+const ICON_BUTTON_SIZE = 36;
+const ACTION_BUTTON_SIZE = 38;
+const ILLUSTRATION_SIZE = 180;
+const DIVIDER_DOT_SIZE = 5;
+
+// ── Arabic text style (not in DesignSystem — unique to Quran rendering) ─
+const ARABIC_FONT_SIZE = 22;
+const ARABIC_LINE_HEIGHT = 38;
 
 interface Props {
     visible: boolean;
@@ -37,8 +50,6 @@ interface Props {
     mood: MoodType | null;
     onDismiss: () => void;
 }
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // Keep track of which subtitle to show next for each mood globally
 const subtitleIndices: Partial<Record<MoodType, number>> = {};
@@ -49,9 +60,9 @@ const subtitleIndices: Partial<Record<MoodType, number>> = {};
  */
 function getMoodGradient(color: string, isDark: boolean): readonly [string, string, string] {
     if (isDark) {
-        return [`${color}18`, `${color}08`, '#09090B'] as const;
+        return [`${color}18`, `${color}08`, 'transparent'] as const;
     }
-    return [`${color}20`, `${color}0C`, '#FDFBF7'] as const;
+    return [`${color}20`, `${color}0C`, 'transparent'] as const;
 }
 
 /**
@@ -89,7 +100,7 @@ export default function VerseRecommendationSheet({
     const surahCacheRef = useRef<Map<number, { text: string; translation: string }[]>>(new Map());
 
     const moodConfig = mood ? MOOD_CONFIGS[mood] : null;
-    const moodColor = moodConfig?.color || '#A78BFA';
+    const moodColor = moodConfig?.color || theme.colors.primary;
     const gradientColors = getMoodGradient(moodColor, theme.dark);
     const accentColor = getMoodAccent(moodColor, theme.dark);
 
@@ -116,10 +127,8 @@ export default function VerseRecommendationSheet({
         const fetchFullText = async () => {
             setLoadingText(true);
 
-            // Group verses by surah number to minimize API calls
             const surahNumbers = [...new Set(verses.map(v => v.surah))];
 
-            // Fetch only surahs we haven't cached
             const fetchPromises = surahNumbers
                 .filter(num => !surahCacheRef.current.has(num))
                 .map(async (surahNum) => {
@@ -141,11 +150,10 @@ export default function VerseRecommendationSheet({
 
             if (cancelled) return;
 
-            // Enrich verses with full text from cache
             const enriched = verses.map(v => {
                 const cachedSurah = surahCacheRef.current.get(v.surah);
                 if (cachedSurah && v.verse > 0 && v.verse <= cachedSurah.length) {
-                    const fullVerse = cachedSurah[v.verse - 1]; // verse numbers are 1-indexed
+                    const fullVerse = cachedSurah[v.verse - 1];
                     return {
                         ...v,
                         arabicFull: fullVerse.text,
@@ -170,7 +178,6 @@ export default function VerseRecommendationSheet({
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         const verseKey = `${surahNum}:${verseNum}`;
 
-        // If already playing this verse, toggle pause
         if (playingVerse && playingVerse.surah === surahNum && playingVerse.verse === verseNum) {
             if (isPlaying) {
                 pause();
@@ -180,7 +187,6 @@ export default function VerseRecommendationSheet({
 
         try {
             setLoadingVerse(verseKey);
-            // Stop any existing playback first to prevent conflicts
             await stop();
             await playVerse(surahNum, verseNum);
         } catch (e) {
@@ -230,41 +236,17 @@ export default function VerseRecommendationSheet({
             presentationStyle="pageSheet"
             onRequestClose={onDismiss}
         >
-            {/* Full-screen mood-tinted gradient */}
+            {/* Full-screen mood-tinted gradient — pageSheet handles safe area so no insets.top */}
             <LinearGradient
                 colors={gradientColors}
                 locations={[0, 0.45, 1]}
-                style={[styles.container, { paddingTop: insets.top }]}
+                style={[styles.container, { backgroundColor: theme.colors.background }]}
             >
-                {/* Close button */}
-                <Pressable
-                    onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        stop();
-                        onDismiss();
-                    }}
-                    style={({ pressed }) => [
-                        styles.closeButton,
-                        {
-                            backgroundColor: theme.dark
-                                ? 'rgba(255,255,255,0.12)'
-                                : 'rgba(0,0,0,0.06)',
-                        },
-                        pressed && { opacity: 0.6 },
-                    ]}
-                >
-                    <MaterialCommunityIcons
-                        name="close"
-                        size={20}
-                        color={theme.dark ? '#FFFFFF' : '#333333'}
-                    />
-                </Pressable>
-
-                {/* Mood header — icon + label + subtitle */}
+                {/* Mood header — illustration + label + subtitle */}
                 <MotiView
                     from={{ opacity: 0, scale: 0.85 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ type: 'spring', damping: 14, delay: 100 }}
+                    transition={{ type: 'spring', ...Springs.gentle, delay: 100 }}
                     style={styles.moodHeader}
                 >
                     {mood && <Image
@@ -280,6 +262,26 @@ export default function VerseRecommendationSheet({
                         {currentSubtitle}
                     </Text>
                 </MotiView>
+
+                {/* Close button — absolutely positioned top-right */}
+                <Pressable
+                    onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        stop();
+                        onDismiss();
+                    }}
+                    style={({ pressed }) => [
+                        styles.closeButton,
+                        { backgroundColor: `${theme.colors.onSurface}10` },
+                        pressed && { opacity: 0.6 },
+                    ]}
+                >
+                    <MaterialCommunityIcons
+                        name="close"
+                        size={20}
+                        color={theme.colors.onSurface}
+                    />
+                </Pressable>
 
                 {/* Verse cards */}
                 <ScrollView
@@ -301,11 +303,11 @@ export default function VerseRecommendationSheet({
                         return (
                             <MotiView
                                 key={`${verse.surah}-${verse.verse}-${idx}`}
-                                from={{ opacity: 0, translateY: 20 }}
+                                from={{ opacity: 0, translateY: Spacing.lg }}
                                 animate={{ opacity: 1, translateY: 0 }}
                                 transition={{
                                     type: 'spring',
-                                    damping: 16,
+                                    ...Springs.gentle,
                                     delay: 200 + idx * 120,
                                 }}
                             >
@@ -313,7 +315,7 @@ export default function VerseRecommendationSheet({
                                     ref={el => { viewShotRefs.current[idx] = el; }}
                                     options={{ format: 'png', quality: 1.0 }}
                                     style={capturingVerseKey === verseKey ? {
-                                        backgroundColor: theme.dark ? '#18181B' : '#FFFFFF',
+                                        backgroundColor: theme.colors.surface,
                                         padding: Spacing.md,
                                         borderRadius: BorderRadius.xl,
                                     } : {}}
@@ -321,7 +323,7 @@ export default function VerseRecommendationSheet({
                                     <View style={[
                                         styles.verseCard,
                                         {
-                                            backgroundColor: theme.dark ? '#1C1C1E' : '#FFFFFF',
+                                            backgroundColor: theme.colors.surface,
                                             borderColor: accentColor,
                                         },
                                         Shadows.sm,
@@ -343,8 +345,8 @@ export default function VerseRecommendationSheet({
                                             {displayTranslation}
                                         </Text>
 
-                                        {/* Surah reference */}
-                                        <Text style={[styles.surahRef, { color: moodColor }]}>
+                                        {/* Theme badge */}
+                                        <Text style={[styles.themeBadge, { color: moodColor }]}>
                                             {verse.theme}
                                         </Text>
 
@@ -364,12 +366,14 @@ export default function VerseRecommendationSheet({
                                                 ]}
                                             >
                                                 {isLoading ? (
-                                                    <ActivityIndicator size={14} color={moodColor} />
+                                                    <ActivityIndicator size="small" color={moodColor} />
                                                 ) : (
                                                     <MaterialCommunityIcons
                                                         name={isCurrentlyPlaying && isPlaying ? 'pause' : 'play'}
-                                                        size={16}
-                                                        color={isCurrentlyPlaying && isPlaying ? '#FFFFFF' : moodColor}
+                                                        size={Spacing.md}
+                                                        color={isCurrentlyPlaying && isPlaying
+                                                            ? theme.colors.onPrimary
+                                                            : moodColor}
                                                     />
                                                 )}
                                             </Pressable>
@@ -404,7 +408,7 @@ export default function VerseRecommendationSheet({
                                             >
                                                 <MaterialCommunityIcons
                                                     name="share-variant"
-                                                    size={15}
+                                                    size={Spacing.md - 1}
                                                     color={moodColor}
                                                 />
                                             </Pressable>
@@ -412,7 +416,9 @@ export default function VerseRecommendationSheet({
 
                                         {/* Watermark for sharing */}
                                         {capturingVerseKey === verseKey && (
-                                            <View style={styles.watermarkContainer}>
+                                            <View style={[styles.watermarkContainer, {
+                                                borderTopColor: `${theme.colors.outline}20`,
+                                            }]}>
                                                 <Text style={[styles.watermarkText, { color: theme.colors.onSurfaceVariant }]}>
                                                     QuranNotes App
                                                 </Text>
@@ -429,41 +435,41 @@ export default function VerseRecommendationSheet({
     );
 }
 
+// ── Styles — all values use design system tokens ────────────────────────
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        paddingTop: Spacing.md,
     },
     closeButton: {
-        alignSelf: 'flex-end',
-        width: 36,
-        height: 36,
+        position: 'absolute',
+        top: Spacing.md,
+        right: Spacing.md,
+        width: ICON_BUTTON_SIZE,
+        height: ICON_BUTTON_SIZE,
         borderRadius: BorderRadius.full,
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: Spacing.md,
-        marginTop: Spacing.xs,
+        zIndex: 10,
     },
     moodHeader: {
         alignItems: 'center',
         paddingHorizontal: Spacing.md,
-        marginBottom: Spacing.md,
+        marginBottom: Spacing.xs,
     },
     moodIllustration: {
-        width: 120,
-        height: 120,
-        marginBottom: 4,
+        width: ILLUSTRATION_SIZE,
+        height: ILLUSTRATION_SIZE,
+        marginBottom: -Spacing.sm,
     },
     moodLabel: {
-        ...Typography.displayMedium,
-        fontSize: 34,
-        lineHeight: 38,
+        ...Typography.displayLarge,
         textAlign: 'center',
     },
     subtitle: {
         ...Typography.bodyMedium,
         textAlign: 'center',
-        marginTop: 2,
-        opacity: 0.8,
+        marginTop: Spacing.xs / 2,
     },
     scrollContent: {
         paddingHorizontal: Spacing.md,
@@ -476,8 +482,8 @@ const styles = StyleSheet.create({
         borderWidth: 1,
     },
     arabicText: {
-        fontSize: 22,
-        lineHeight: 38,
+        fontSize: ARABIC_FONT_SIZE,
+        lineHeight: ARABIC_LINE_HEIGHT,
         textAlign: 'right',
         fontFamily: 'System',
         marginBottom: Spacing.md,
@@ -493,32 +499,30 @@ const styles = StyleSheet.create({
         height: 1,
     },
     dividerDot: {
-        width: 5,
-        height: 5,
-        borderRadius: 2.5,
-        marginHorizontal: 10,
+        width: DIVIDER_DOT_SIZE,
+        height: DIVIDER_DOT_SIZE,
+        borderRadius: DIVIDER_DOT_SIZE / 2,
+        marginHorizontal: Spacing.sm,
         opacity: 0.6,
     },
     translation: {
         ...Typography.bodyLarge,
         fontStyle: 'italic',
-        lineHeight: 26,
         marginBottom: Spacing.sm,
     },
-    surahRef: {
-        fontSize: 13,
-        fontWeight: '600',
+    themeBadge: {
+        ...Typography.labelMedium,
         marginBottom: Spacing.md,
         textTransform: 'capitalize',
     },
     actionRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: Spacing.sm,
     },
     actionBtn: {
-        width: 38,
-        height: 38,
+        width: ACTION_BUTTON_SIZE,
+        height: ACTION_BUTTON_SIZE,
         borderRadius: BorderRadius.full,
         alignItems: 'center',
         justifyContent: 'center',
@@ -526,21 +530,19 @@ const styles = StyleSheet.create({
     actionBtnWide: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 5,
-        paddingHorizontal: Spacing.sm + 4,
+        gap: Spacing.xs,
+        paddingHorizontal: Spacing.sm + Spacing.xs,
         paddingVertical: Spacing.xs + 2,
         borderRadius: BorderRadius.full,
     },
     actionBtnText: {
-        fontSize: 13,
-        fontWeight: '600',
+        ...Typography.labelMedium,
     },
     watermarkContainer: {
         marginTop: Spacing.lg,
         alignItems: 'center',
         paddingTop: Spacing.md,
         borderTopWidth: 1,
-        borderTopColor: 'rgba(0,0,0,0.05)',
     },
     watermarkText: {
         ...Typography.labelMedium,
