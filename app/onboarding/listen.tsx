@@ -75,7 +75,7 @@ export default function OnboardingListenExplore() {
                 const status = await soundRef.current.getStatusAsync();
                 if (status.isLoaded) await soundRef.current.stopAsync();
                 await soundRef.current.unloadAsync();
-            } catch (_) { }
+            } catch (_err) { }
             soundRef.current = null;
         }
         setIsPlaying(false);
@@ -109,7 +109,7 @@ export default function OnboardingListenExplore() {
                     try {
                         const s = await soundRef.current.getStatusAsync();
                         if (s.isLoaded) await soundRef.current.stopAsync();
-                    } catch (_) { }
+                    } catch (_err) { }
                     setIsPlaying(false);
                     setPlayingReciterId(null);
                 }

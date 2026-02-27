@@ -12,7 +12,7 @@ export interface Dhikr {
     category: string;
 }
 
-export type AdhkarPeriod = 'morning' | 'evening';
+export type AdhkarPeriod = 'morning' | 'evening' | 'night';
 
 export interface AdhkarProgress {
     /** Date string (YYYY-MM-DD) */
@@ -26,10 +26,11 @@ export interface AdhkarProgress {
 interface DayProgress {
     morning: AdhkarProgress | null;
     evening: AdhkarProgress | null;
+    night: AdhkarProgress | null;
 }
 
 interface AdhkarContextType {
-    adhkar: { morning: Dhikr[]; evening: Dhikr[] };
+    adhkar: { morning: Dhikr[]; evening: Dhikr[]; night: Dhikr[] };
     todayProgress: DayProgress;
     incrementCount: (period: AdhkarPeriod, dhikrId: string) => Promise<void>;
     resetDhikr: (period: AdhkarPeriod, dhikrId: string) => Promise<void>;
@@ -46,7 +47,7 @@ const STREAK_KEY = 'adhkar_streak';
 
 const AdhkarContext = createContext<AdhkarContextType>({
     adhkar: adhkarData as any,
-    todayProgress: { morning: null, evening: null },
+    todayProgress: { morning: null, evening: null, night: null },
     incrementCount: async () => { },
     resetDhikr: async () => { },
     getCompletionPercentage: () => 0,
@@ -70,11 +71,11 @@ function getStorageKey(date: string, period: AdhkarPeriod): string {
 
 // ── Provider ─────────────────────────────────────────────────────────
 export const AdhkarProvider = ({ children }: { children: React.ReactNode }) => {
-    const [todayProgress, setTodayProgress] = useState<DayProgress>({ morning: null, evening: null });
+    const [todayProgress, setTodayProgress] = useState<DayProgress>({ morning: null, evening: null, night: null });
     const [streak, setStreak] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
 
-    const adhkar = adhkarData as { morning: Dhikr[]; evening: Dhikr[] };
+    const adhkar = adhkarData as { morning: Dhikr[]; evening: Dhikr[]; night: Dhikr[] };
 
     // Load today's progress
     useEffect(() => {
@@ -85,14 +86,16 @@ export const AdhkarProvider = ({ children }: { children: React.ReactNode }) => {
     const loadProgress = async () => {
         try {
             const today = getToday();
-            const [morningData, eveningData] = await Promise.all([
+            const [morningData, eveningData, nightData] = await Promise.all([
                 AsyncStorage.getItem(getStorageKey(today, 'morning')),
                 AsyncStorage.getItem(getStorageKey(today, 'evening')),
+                AsyncStorage.getItem(getStorageKey(today, 'night')),
             ]);
 
             setTodayProgress({
                 morning: morningData ? JSON.parse(morningData) : null,
                 evening: eveningData ? JSON.parse(eveningData) : null,
+                night: nightData ? JSON.parse(nightData) : null,
             });
         } catch (e) {
             console.error('Failed to load adhkar progress:', e);

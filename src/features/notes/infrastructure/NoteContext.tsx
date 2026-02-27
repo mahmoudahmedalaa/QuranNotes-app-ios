@@ -10,7 +10,6 @@ import {
     GetAllNotesUseCase,
     DeleteNoteUseCase,
     GetNoteByIdUseCase,
-    GetNotesBySurahUseCase
 } from '../domain/usecases/NoteUseCases';
 import { useStreaks } from '../../auth/infrastructure/StreakContext';
 

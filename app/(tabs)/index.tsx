@@ -1,14 +1,14 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, Modal, ScrollView, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Modal, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
 import { BlurView } from 'expo-blur';
 import Svg, { Circle } from 'react-native-svg';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+
 import { NoorMascot } from '../../src/core/components/mascot/NoorMascot';
-import { Spacing, BorderRadius, Shadows } from '../../src/core/theme/DesignSystem';
+import { Spacing, BorderRadius, Shadows, Gradients } from '../../src/core/theme/DesignSystem';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -24,25 +24,22 @@ import { useAdhkar } from '../../src/features/adhkar/infrastructure/AdhkarContex
 import { AdhkarScreen } from '../../src/core/presentation/screens/AdhkarScreen';
 import { useQuran } from '../../src/core/hooks/useQuran';
 import { useSettings } from '../../src/features/settings/infrastructure/SettingsContext';
-import { useTimeOfDayPhase } from '../../src/core/hooks/useTimeOfDayPhase';
+
 import { LinearGradient } from 'expo-linear-gradient';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GRID_GAP = 10;
 const GRID_PAD = 16;
-const TILE_WIDTH = (SCREEN_WIDTH - GRID_PAD * 2 - GRID_GAP) / 2;
 
 // Khatma ring constants
 const RING_SIZE = 52;
 const STROKE_WIDTH = 4;
 const RADIUS = (RING_SIZE - STROKE_WIDTH) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-const GOLD = '#D4A853';
 
 export default function DashboardScreen() {
     const router = useRouter();
     const theme = useTheme();
-    const { playingVerse, isPlaying, playFromVerse } = useAudio();
+    const { playingVerse, playFromVerse } = useAudio();
     const { completedSurahs, completedJuz } = useKhatma();
     const { nextPrayer } = usePrayer();
     const [globalPosition, setGlobalPosition] = useState<ReadingPosition | null>(null);
@@ -50,28 +47,42 @@ export default function DashboardScreen() {
     const { surah: continueSurah, loadSurah } = useQuran();
     const [showAdhkar, setShowAdhkar] = useState(false);
     const insets = useSafeAreaInsets();
-    const tabBarHeight = useBottomTabBarHeight();  // actual runtime height, safe-area-inclusive
     // Reliable bottom offset: Math.max(insets.bottom, 16) + 8 (tab margin) + 64 (strict tab height) + 8 (gap) = 80
     const pillBottom = Math.max(insets.bottom, 16) + 80;
     const { getCompletionPercentage } = useAdhkar();
-    const timePhase = useTimeOfDayPhase();
 
-    // Smart Adhkar timing: Morning = Fajr until Asr begins. Evening = Asr onwards.
-    // If prayer data available, use it; otherwise fall back to hour < 15 heuristic.
-    const getAdhkarPeriod = (): 'morning' | 'evening' => {
+    // Smart Adhkar timing:
+    // Morning = Fajr until Asr begins
+    // Evening = Asr until Isha begins
+    // Night = Isha until Fajr begins
+    const getAdhkarPeriod = (): 'morning' | 'evening' | 'night' => {
         if (nextPrayer) {
-            // Evening begins when next prayer is Maghrib, Isha, or Midnight
-            // (meaning Asr has already passed)
-            const eveningPrayers = ['Maghrib', 'Isha', 'Midnight'];
+            // Night: after Isha (next prayer is Midnight or Fajr)
+            const nightPrayers = ['Midnight', 'Fajr'];
+            if (nightPrayers.includes(nextPrayer.name)) return 'night';
+            // Evening: after Asr (next prayer is Maghrib or Isha)
+            const eveningPrayers = ['Maghrib', 'Isha'];
             if (eveningPrayers.includes(nextPrayer.name)) return 'evening';
-            return 'morning'; // Fajr, Sunrise, Dhuhr, Asr upcoming = still morning
+            return 'morning'; // Sunrise, Dhuhr, Asr upcoming = still morning
         }
-        // Fallback: 3 PM (15:00) = approximate Asr in most timezones
+        // Fallback heuristic
         const h = new Date().getHours();
-        return h >= 15 ? 'evening' : 'morning';
+        if (h >= 20 || h < 5) return 'night';
+        if (h >= 15) return 'evening';
+        return 'morning';
     };
     const adhkarPeriod = getAdhkarPeriod();
     const adhkarPct = getCompletionPercentage(adhkarPeriod as any);
+
+    // Adhkar tile gradient & text — sunrise / sunset / night sky
+    const adhkarGradient: readonly [string, string, ...string[]] = adhkarPeriod === 'morning'
+        ? ['#FEF3C7', '#FDE68A', '#FBC95C', '#F59E0B']      // golden sunrise — warm peach → rich gold
+        : adhkarPeriod === 'evening'
+            ? ['#FDDCB5', '#F4A983', '#E07B6D', '#C66A8A']   // sunset — peach → coral → rose → dusky mauve
+            : ['#0F172A', '#1E293B', '#1A2540', '#0D1B2A'];  // deep navy → dark slate
+    const adhkarTextColor = adhkarPeriod === 'morning' ? '#92400E'
+        : adhkarPeriod === 'evening' ? '#9A3412'
+            : '#E2E8F0';
 
     // Khatma progress
     const completedCount = completedJuz?.length || 0;
@@ -88,7 +99,7 @@ export default function DashboardScreen() {
                 } else {
                     setGlobalPosition(null);
                 }
-            });
+            }).catch(() => { /* silent — position is non-critical */ });
         }, []) // No deps — always reload fresh on every focus
     );
 
@@ -101,7 +112,7 @@ export default function DashboardScreen() {
             ReadingPositionService.getGlobal().then(pos => {
                 if (pos && pos.verse > 1) setGlobalPosition(pos);
                 else setGlobalPosition(null);
-            });
+            }).catch(() => { /* silent */ });
         }
         // When playingVerse is set, showContinueReading already hides the pill
         // via !isPlaying — no need to clear globalPosition.
@@ -113,26 +124,20 @@ export default function DashboardScreen() {
         useCallback(() => {
             if (!globalPosition) return;
             loadSurah(globalPosition.surah, settings.translationEdition);
+            // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [globalPosition?.surah, settings.translationEdition])
     );
 
     const showContinueReading = globalPosition && !playingVerse && !completedSurahs.includes(globalPosition.surah);
 
-    // Ambient background phases
-    const getAmbientGlow = (): readonly [string, string, ...string[]] => {
-        if (theme.dark) {
-            return timePhase === 'morning' ? ['#09090B', '#18181B'] :
-                timePhase === 'evening' ? ['#130A19', '#09090B'] : // Very dark plum sunset tint
-                    ['#050508', '#09090B'];  // Deepest night
-        }
-        return timePhase === 'morning' ? ['#FFFFFF', '#F8F5FF'] : // Fresh morning light
-            timePhase === 'evening' ? ['#FDF4FF', '#F8F5FF'] : // Soft sunset blush
-                ['#F0EFFF', '#F8F5FF'];  // Cool evening/night slate
-    };
+
+    const gradientColors: readonly [string, string, ...string[]] = theme.dark
+        ? [Gradients.nightSky[0], Gradients.nightSky[1]]
+        : [Gradients.sereneSky[0], Gradients.sereneSky[1]];
 
     return (
         <View style={styles.container}>
-            <LinearGradient colors={getAmbientGlow()} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={gradientColors} style={StyleSheet.absoluteFillObject} />
             <SafeAreaView style={styles.safeArea} edges={['top']}>
                 <StatusBar style={theme.dark ? 'light' : 'dark'} />
 
@@ -240,29 +245,64 @@ export default function DashboardScreen() {
                             }}
                             style={({ pressed }) => [
                                 styles.gridTile,
-                                { backgroundColor: theme.colors.primaryContainer },
                                 Shadows.sm,
                                 pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                             ]}
                         >
+                            <LinearGradient
+                                colors={adhkarGradient}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={[StyleSheet.absoluteFillObject, { borderRadius: BorderRadius.lg }]}
+                            />
+                            {/* Faint stars for night mode */}
+                            {adhkarPeriod === 'night' && (
+                                <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+                                    {[{ top: 12, left: 18, size: 3, opacity: 0.6 },
+                                    { top: 8, right: 24, size: 2, opacity: 0.4 },
+                                    { top: 28, right: 14, size: 2.5, opacity: 0.5 },
+                                    { top: 22, left: 38, size: 1.5, opacity: 0.3 },
+                                    { bottom: 30, left: 28, size: 2, opacity: 0.35 },
+                                    { bottom: 16, right: 32, size: 1.5, opacity: 0.25 },
+                                    { top: 40, left: 58, size: 2, opacity: 0.45 },
+                                    ].map((star, i) => (
+                                        <View
+                                            key={i}
+                                            style={{
+                                                position: 'absolute',
+                                                ...star,
+                                                width: star.size,
+                                                height: star.size,
+                                                borderRadius: star.size / 2,
+                                                backgroundColor: '#FFFFFF',
+                                                opacity: star.opacity,
+                                            }}
+                                        />
+                                    ))}
+                                </View>
+                            )}
                             <View style={styles.tileEmojiWrap}>
                                 {adhkarPeriod === 'morning' ? (
-                                    <Feather name="sun" size={28} color={theme.colors.primary} />
+                                    <Feather name="sun" size={28} color={adhkarTextColor} />
+                                ) : adhkarPeriod === 'evening' ? (
+                                    <Feather name="sunset" size={28} color={adhkarTextColor} />
                                 ) : (
-                                    <Feather name="moon" size={28} color={theme.colors.primary} />
+                                    <Feather name="moon" size={28} color={adhkarTextColor} />
                                 )}
                             </View>
-                            <Text style={[styles.tileLabel, { color: theme.colors.primary }]}>
-                                {adhkarPeriod === 'morning' ? 'Morning' : 'Evening'}
+                            <Text style={[styles.tileLabel, { color: adhkarTextColor }]}>
+                                {adhkarPeriod === 'morning' ? 'Morning' : adhkarPeriod === 'evening' ? 'Evening' : 'Night'}
                             </Text>
-                            <Text style={[styles.tileSub, { color: theme.colors.primary, fontWeight: '600' }]}>
+                            <Text style={[styles.tileSub, { color: adhkarTextColor, fontWeight: '600' }]}>
                                 Adhkar
                             </Text>
-                            <Text style={[styles.tileSub2, { color: theme.colors.primary, opacity: 0.8 }]}>
+                            <Text style={[styles.tileSub2, { color: adhkarTextColor, opacity: 0.8 }]}>
                                 {adhkarPct > 0 ? `${adhkarPct}% done` : 'Tap to begin'}
                             </Text>
                         </Pressable>
                     </MotiView>
+
+
 
                     {/* ── 3. Prayer Times (full width, collapsible) ── */}
                     <PrayerTimesCard />
@@ -319,12 +359,16 @@ export default function DashboardScreen() {
                     {/* Play button */}
                     <Pressable
                         onPress={async () => {
-                            if (!continueSurah) {
-                                router.push(`/surah/${globalPosition.surah}?verse=${globalPosition.verse}&autoplay=true`);
-                                return;
+                            try {
+                                if (!continueSurah) {
+                                    router.push(`/surah/${globalPosition.surah}?verse=${globalPosition.verse}&autoplay=true`);
+                                    return;
+                                }
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                await playFromVerse(continueSurah, globalPosition.verse);
+                            } catch (e) {
+                                if (__DEV__) console.error('[Dashboard] Error playing:', e);
                             }
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                            await playFromVerse(continueSurah, globalPosition.verse);
                         }}
                         hitSlop={8}
                         style={({ pressed }) => [styles.playCircleWrap, pressed && { opacity: 0.7 }]}

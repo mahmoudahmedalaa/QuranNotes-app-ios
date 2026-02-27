@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Platform, Pressable, Switch, Dimensions, Linking } from 'react-native';
-import { Text, Button, useTheme, ActivityIndicator } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, Alert, Pressable, Switch, Linking } from 'react-native';
+import { Text, Button, ActivityIndicator } from 'react-native-paper';
 import { useRouter, useLocalSearchParams, Redirect } from 'expo-router';
-import { revenueCatService, PurchasesOffering, PurchasesPackage } from '../infrastructure/RevenueCatService';
+import { revenueCatService, PurchasesOffering } from '../infrastructure/RevenueCatService';
 import { usePro } from '../../auth/infrastructure/ProContext';
-import { Spacing, BorderRadius, Gradients, BrandTokens } from '../../../core/theme/DesignSystem';
+import { Spacing, BorderRadius, BrandTokens } from '../../../core/theme/DesignSystem';
 import { MotiView } from 'moti';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -12,7 +12,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { isRamadanSeason } from '../../../core/utils/ramadanUtils';
 
-const { width } = Dimensions.get('window');
 
 const FEATURES = [
     { icon: 'infinity', title: 'Unlimited Recordings', description: 'Capture every reflection' },
@@ -28,14 +27,28 @@ const MONTHLY_PRICE = 4.99;
 const ANNUAL_PRICE = 35.99;
 
 export default function PaywallScreen() {
-    const theme = useTheme();
     const router = useRouter();
     const { reason } = useLocalSearchParams<{ reason?: string }>();
-    const { isPro, checkStatus } = usePro();
+    const { checkStatus } = usePro();
     const [offering, setOffering] = useState<PurchasesOffering | null>(null);
     const [loading, setLoading] = useState(true);
     const [purchasing, setPurchasing] = useState(false);
     const [isAnnual, setIsAnnual] = useState(true);
+
+    useEffect(() => {
+        loadOfferings();
+    }, []);
+
+    const loadOfferings = async () => {
+        try {
+            const current = await revenueCatService.getOfferings();
+            setOffering(current);
+        } catch (e) {
+            console.error('Failed to load offerings:', e);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // During Ramadan season (2 weeks before → end), redirect to the special Ramadan paywall
     if (isRamadanSeason()) {
@@ -85,21 +98,6 @@ export default function PaywallScreen() {
     };
 
     const contextMessage = getMessage();
-
-    useEffect(() => {
-        loadOfferings();
-    }, []);
-
-    const loadOfferings = async () => {
-        try {
-            const current = await revenueCatService.getOfferings();
-            setOffering(current);
-        } catch (e) {
-            console.error('Failed to load offerings:', e);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handlePurchase = async () => {
         if (!offering) {

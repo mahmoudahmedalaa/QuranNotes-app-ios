@@ -35,7 +35,7 @@ export const StreakCounter: React.FC = () => {
                     </MotiView>
                     <View style={styles.textContainer}>
                         <Text style={styles.count}>{streak.currentStreak}</Text>
-                        <Text style={styles.label}>Day Reflection Streak</Text>
+                        <Text style={[styles.label, { color: theme.colors.primary }]}>Day Reflection Streak</Text>
                     </View>
                 </View>
             </Surface>
@@ -49,7 +49,8 @@ const styles = StyleSheet.create({
         paddingVertical: Spacing.xs,
         borderRadius: BorderRadius.full,
         ...Shadows.sm,
-        marginVertical: Spacing.xs,
+        marginTop: Spacing.xs,
+        marginBottom: Spacing.sm,
         alignSelf: 'center',
     },
     content: {

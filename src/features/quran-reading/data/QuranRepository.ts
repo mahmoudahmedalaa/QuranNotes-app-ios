@@ -23,7 +23,7 @@ export class QuranRepository implements IQuranRepository {
             if (local) {
                 return local;
             }
-        } catch (e) {
+        } catch {
             // Ignore error and fall back to remote
         }
 

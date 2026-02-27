@@ -144,9 +144,98 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Play a specific verse (with optional surah context for queue)
     const playVerse = useCallback(
         async (surahNum: number, verseNum: number, surah?: Surah) => {
-            const { cdnFolder, name } = getReciterInfo();
+            try {
+                const { cdnFolder, name } = getReciterInfo();
 
-            if (surah) {
+                if (surah) {
+                    const startIndex = surah.verses.findIndex(v => v.number === verseNum);
+                    if (startIndex >= 0) {
+                        setPlaylist(surah.verses);
+                        playlistRef.current = surah.verses;
+                        setCurrentSurahNum(surah.number);
+                        currentSurahNumRef.current = surah.number;
+                        const sName = surah.englishName || surah.name;
+                        setCurrentSurahName(sName);
+                        currentSurahNameRef.current = sName;
+                        setPlayingVerse({ surah: surahNum, verse: verseNum });
+
+                        await player.loadPlaylist(
+                            surah.number,
+                            surah.verses,
+                            startIndex,
+                            cdnFolder,
+                            name,
+                            sName,
+                        );
+                        return;
+                    }
+                }
+
+                // No surah context — try existing playlist
+                if (currentSurahNumRef.current === surahNum && playlistRef.current.length > 0) {
+                    const startIndex = playlistRef.current.findIndex(v => v.number === verseNum);
+                    if (startIndex >= 0) {
+                        setPlayingVerse({ surah: surahNum, verse: verseNum });
+                        await player.skipToTrack(startIndex);
+                        return;
+                    }
+                }
+
+                // Fallback: single verse playback — clear stale playlist state first
+                // to prevent conflicts when switching from surah to mood verse
+                if (playlistRef.current.length > 0) {
+                    await player.stop();
+                }
+                setPlaylist([]);
+                playlistRef.current = [];
+                setCurrentSurahNum(null);
+                currentSurahNumRef.current = null;
+                setCurrentSurahName(null);
+                currentSurahNameRef.current = null;
+                setPlayingVerse({ surah: surahNum, verse: verseNum });
+                await player.playVerse(surahNum, verseNum, cdnFolder, name);
+            } catch (e) {
+                if (__DEV__) console.warn('[AudioContext] playVerse failed:', e);
+            }
+        },
+        [getReciterInfo],
+    );
+
+    // Play entire surah from beginning
+    const playSurah = useCallback(
+        async (surah: Surah) => {
+            try {
+                setPlaylist(surah.verses);
+                playlistRef.current = surah.verses;
+                setCurrentSurahNum(surah.number);
+                currentSurahNumRef.current = surah.number;
+                const sName = surah.englishName || surah.name;
+                setCurrentSurahName(sName);
+                currentSurahNameRef.current = sName;
+
+                if (surah.verses.length > 0) {
+                    setPlayingVerse({ surah: surah.number, verse: surah.verses[0].number });
+                    const { cdnFolder, name } = getReciterInfo();
+                    await player.loadPlaylist(
+                        surah.number,
+                        surah.verses,
+                        0,
+                        cdnFolder,
+                        name,
+                        sName,
+                    );
+                }
+            } catch (e) {
+                if (__DEV__) console.warn('[AudioContext] playSurah failed:', e);
+            }
+        },
+        [getReciterInfo],
+    );
+
+    // Play from a specific verse within a surah
+    const playFromVerse = useCallback(
+        async (surah: Surah, verseNum: number) => {
+            try {
                 const startIndex = surah.verses.findIndex(v => v.number === verseNum);
                 if (startIndex >= 0) {
                     setPlaylist(surah.verses);
@@ -156,8 +245,8 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     const sName = surah.englishName || surah.name;
                     setCurrentSurahName(sName);
                     currentSurahNameRef.current = sName;
-                    setPlayingVerse({ surah: surahNum, verse: verseNum });
-
+                    setPlayingVerse({ surah: surah.number, verse: verseNum });
+                    const { cdnFolder, name } = getReciterInfo();
                     await player.loadPlaylist(
                         surah.number,
                         surah.verses,
@@ -166,111 +255,47 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                         name,
                         sName,
                     );
-                    return;
                 }
-            }
-
-            // No surah context — try existing playlist
-            if (currentSurahNumRef.current === surahNum && playlistRef.current.length > 0) {
-                const startIndex = playlistRef.current.findIndex(v => v.number === verseNum);
-                if (startIndex >= 0) {
-                    setPlayingVerse({ surah: surahNum, verse: verseNum });
-                    await player.skipToTrack(startIndex);
-                    return;
-                }
-            }
-
-            // Fallback: single verse playback — clear stale playlist state first
-            // to prevent conflicts when switching from surah to mood verse
-            if (playlistRef.current.length > 0) {
-                await player.stop();
-            }
-            setPlaylist([]);
-            playlistRef.current = [];
-            setCurrentSurahNum(null);
-            currentSurahNumRef.current = null;
-            setCurrentSurahName(null);
-            currentSurahNameRef.current = null;
-            setPlayingVerse({ surah: surahNum, verse: verseNum });
-            await player.playVerse(surahNum, verseNum, cdnFolder, name);
-        },
-        [getReciterInfo],
-    );
-
-    // Play entire surah from beginning
-    const playSurah = useCallback(
-        async (surah: Surah) => {
-            setPlaylist(surah.verses);
-            playlistRef.current = surah.verses;
-            setCurrentSurahNum(surah.number);
-            currentSurahNumRef.current = surah.number;
-            const sName = surah.englishName || surah.name;
-            setCurrentSurahName(sName);
-            currentSurahNameRef.current = sName;
-
-            if (surah.verses.length > 0) {
-                setPlayingVerse({ surah: surah.number, verse: surah.verses[0].number });
-                const { cdnFolder, name } = getReciterInfo();
-                await player.loadPlaylist(
-                    surah.number,
-                    surah.verses,
-                    0,
-                    cdnFolder,
-                    name,
-                    sName,
-                );
-            }
-        },
-        [getReciterInfo],
-    );
-
-    // Play from a specific verse within a surah
-    const playFromVerse = useCallback(
-        async (surah: Surah, verseNum: number) => {
-            const startIndex = surah.verses.findIndex(v => v.number === verseNum);
-            if (startIndex >= 0) {
-                setPlaylist(surah.verses);
-                playlistRef.current = surah.verses;
-                setCurrentSurahNum(surah.number);
-                currentSurahNumRef.current = surah.number;
-                const sName = surah.englishName || surah.name;
-                setCurrentSurahName(sName);
-                currentSurahNameRef.current = sName;
-                setPlayingVerse({ surah: surah.number, verse: verseNum });
-                const { cdnFolder, name } = getReciterInfo();
-                await player.loadPlaylist(
-                    surah.number,
-                    surah.verses,
-                    startIndex,
-                    cdnFolder,
-                    name,
-                    sName,
-                );
+            } catch (e) {
+                if (__DEV__) console.warn('[AudioContext] playFromVerse failed:', e);
             }
         },
         [getReciterInfo],
     );
 
     const pause = useCallback(async () => {
-        setIsPlaying(false);
-        await player.pause();
+        try {
+            setIsPlaying(false);
+            await player.pause();
+        } catch (e) {
+            if (__DEV__) console.warn('[AudioContext] pause failed:', e);
+        }
     }, []);
 
     const resume = useCallback(async () => {
-        setIsPlaying(true);
-        await player.resume();
+        try {
+            setIsPlaying(true);
+            await player.resume();
+        } catch (e) {
+            setIsPlaying(false);
+            if (__DEV__) console.warn('[AudioContext] resume failed:', e);
+        }
     }, []);
 
     const stop = useCallback(async () => {
-        setIsPlaying(false);
-        setPlayingVerse(null);
-        await player.stop();
-        setPlaylist([]);
-        playlistRef.current = [];
-        setCurrentSurahNum(null);
-        currentSurahNumRef.current = null;
-        setCurrentSurahName(null);
-        currentSurahNameRef.current = null;
+        try {
+            setIsPlaying(false);
+            setPlayingVerse(null);
+            await player.stop();
+            setPlaylist([]);
+            playlistRef.current = [];
+            setCurrentSurahNum(null);
+            currentSurahNumRef.current = null;
+            setCurrentSurahName(null);
+            currentSurahNameRef.current = null;
+        } catch (e) {
+            if (__DEV__) console.warn('[AudioContext] stop failed:', e);
+        }
     }, []);
 
     const value: AudioContextType = {

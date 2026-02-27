@@ -6,7 +6,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import * as Location from 'expo-location';
 import { PrayerTimesData, PrayerTime } from '../../../core/domain/entities/PrayerTimes';
-import { AladhanAPI } from '../../../core/api/AladhanAPI';
+import { AladhanAPI, getMethodForCountry } from '../../../core/api/AladhanAPI';
 import { useSettings } from '../../settings/infrastructure/SettingsContext';
 import { WidgetBridge, NextPrayerWidgetData } from '../../../../modules/widget-bridge/src';
 
@@ -60,7 +60,7 @@ export const PrayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const midnightRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const prayerMethod = settings.prayerMethod ?? 4;
+    const userMethod = settings.prayerMethod; // undefined = auto-detect from location
 
     const fetchPrayerTimes = useCallback(async () => {
         try {
@@ -109,17 +109,24 @@ export const PrayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 return;
             }
 
-            // Reverse geocode for city name
+            // Reverse geocode for city name and country (for method auto-detection)
             let locationName = '';
+            let detectedCountry: string | undefined;
             try {
                 const geocode = await Location.reverseGeocodeAsync({ latitude, longitude });
                 if (geocode.length > 0) {
                     const g = geocode[0];
                     locationName = [g.city, g.country].filter(Boolean).join(', ');
+                    detectedCountry = g.country ?? undefined;
                 }
             } catch {
                 // Non-critical — continue without location name
             }
+
+            // Determine calculation method:
+            // If the user has explicitly set a method in settings, use that.
+            // Otherwise, auto-detect from the reverse-geocoded country.
+            const prayerMethod = userMethod ?? getMethodForCountry(detectedCountry);
 
             // Fetch from API
             const data = await AladhanAPI.fetchByCoordinates(latitude, longitude, prayerMethod);
@@ -137,7 +144,7 @@ export const PrayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         } finally {
             setLoading(false);
         }
-    }, [prayerMethod]);
+    }, [userMethod]);
 
     // Defer fetch to avoid blocking app startup
     useEffect(() => {
@@ -196,7 +203,6 @@ export const PrayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     useEffect(() => {
         if (!prayerTimes) return;
 
-        const nowMs = Date.now();
         const widgetPrayers: NextPrayerWidgetData[] = [];
 
         // Add remaining prayers for today

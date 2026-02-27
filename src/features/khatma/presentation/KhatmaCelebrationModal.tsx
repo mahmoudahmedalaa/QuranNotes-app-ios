@@ -15,14 +15,14 @@ import {
     DimensionValue,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MotiView, AnimatePresence } from 'moti';
+import { MotiView } from 'moti';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import ViewShot from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
-import { Spacing, BorderRadius, Shadows } from '../../../core/theme/DesignSystem';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ─── Color palette — warmer, softer celebration tones (aligned with app gold accents) ──
 const COLORS = {

@@ -8,9 +8,11 @@ import { AudioProvider } from '../src/features/audio-player/infrastructure/Audio
 import { PrayerProvider } from '../src/features/prayer/infrastructure/PrayerContext';
 import { AdhkarProvider } from '../src/features/adhkar/infrastructure/AdhkarContext';
 import { AudioKhatmaBridge } from '../src/features/khatma/presentation/AudioKhatmaBridge';
+import { NotificationScheduler } from '../src/features/notifications/presentation/NotificationScheduler';
 import { OnboardingProvider, useOnboarding } from '../src/features/onboarding/infrastructure/OnboardingContext';
 import { AuthProvider, useAuth } from '../src/features/auth/infrastructure/AuthContext';
 import { ProProvider } from '../src/features/auth/infrastructure/ProContext';
+import { GlobalErrorBoundary } from '../src/core/components/GlobalErrorBoundary';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { PremiumTheme } from '../src/core/theme/DesignSystem';
@@ -45,14 +47,14 @@ export default function RootLayout() {
         let unsubscribe: (() => void) | undefined;
         initRamadanDates().then((unsub) => {
             unsubscribe = unsub;
-        });
+        }).catch(() => { /* silent — Ramadan dates fall back to hardcoded defaults */ });
         return () => {
             unsubscribe?.();
         };
     }, []);
 
     return (
-        <>
+        <GlobalErrorBoundary>
             <RepositoryProvider>
                 <AuthProvider>
                     <ProProvider>
@@ -68,6 +70,7 @@ export default function RootLayout() {
                                                         <NoteProvider>
                                                             <FolderProvider>
                                                                 <SplashHider />
+                                                                <NotificationScheduler />
                                                                 <StatusBar style="dark" />
                                                                 <Stack
                                                                     screenOptions={{
@@ -112,6 +115,6 @@ export default function RootLayout() {
                 topOffset={80}
                 visibilityTime={5000}
             />
-        </>
+        </GlobalErrorBoundary>
     );
 }

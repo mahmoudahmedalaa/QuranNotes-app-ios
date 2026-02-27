@@ -2,7 +2,7 @@
  * TopicGrid — 2-column grid of TopicCards with staggered entrance animations.
  */
 import React from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
+import { StyleSheet, FlatList } from 'react-native';
 import { QURAN_TOPICS, QuranTopic } from '../../verse-of-the-day/domain/QuranTopics';
 import { TopicCard } from './TopicCard';
 import { Spacing } from '../../../core/theme/DesignSystem';

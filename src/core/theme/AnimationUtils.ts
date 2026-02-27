@@ -5,7 +5,7 @@
  * and custom spring presets for consistent motion feel.
  */
 
-import { Easing } from 'react-native-reanimated';
+import { Easing, useReducedMotion } from 'react-native-reanimated';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SPRING PRESETS - Consistent motion feel across the app
@@ -151,7 +151,6 @@ export const getStaggerDelay = (index: number, baseDelay: number = 50) => {
 // REDUCED MOTION - Respect user preference
 // ═══════════════════════════════════════════════════════════════════════════
 
-import { useReducedMotion } from 'react-native-reanimated';
 
 export const useAnimationConfig = () => {
     const reducedMotion = useReducedMotion();

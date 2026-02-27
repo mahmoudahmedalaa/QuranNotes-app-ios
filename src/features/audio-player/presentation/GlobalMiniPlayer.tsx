@@ -13,7 +13,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
 import * as Haptics from 'expo-haptics';
 import { useAudio } from '../infrastructure/AudioContext';
-import { TAB_BAR_HEIGHT } from '../../../core/theme/DesignSystem';
 
 export const GlobalMiniPlayer: React.FC = () => {
     const router = useRouter();

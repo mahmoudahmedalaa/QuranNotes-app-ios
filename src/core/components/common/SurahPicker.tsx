@@ -9,7 +9,7 @@ interface SurahPickerProps {
     visible: boolean;
     onDismiss: () => void;
     onSelect: (surahNumber: number) => void;
-    surahs: Array<{ number: number; name: string; englishName: string }>;
+    surahs: { number: number; name: string; englishName: string }[];
 }
 
 export function SurahPicker({ visible, onDismiss, onSelect, surahs }: SurahPickerProps) {

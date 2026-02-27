@@ -3,12 +3,12 @@
  * Displays achievement stats, completion badge, and encouragement.
  */
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useTheme, Surface, MD3Theme } from 'react-native-paper';
 import { MotiView } from 'moti';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Pressable } from 'react-native';
+
 import * as Haptics from 'expo-haptics';
 import { Spacing, BorderRadius, Shadows } from '../../../core/theme/DesignSystem';
 

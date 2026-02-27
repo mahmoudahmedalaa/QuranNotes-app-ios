@@ -99,7 +99,7 @@ export default function OnboardingNote() {
                             Ash-Sharh (The Relief) • Verses 5-6
                         </Text>
                         <Text style={[styles.verseArabic, { color: theme.colors.onSurface }]}>
-                            "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا ۝ إِنَّ مَعَ الْعُسْرِ يُسْرًا"
+                            {'"'}فَإِنَّ مَعَ الْعُسْرِ يُسْرًا ۝ إِنَّ مَعَ الْعُسْرِ يُسْرًا{'"'}
                         </Text>
                     </MotiView>
 

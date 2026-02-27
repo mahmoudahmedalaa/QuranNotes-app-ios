@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Pressable, Dimensions } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { Text, useTheme, Button, ProgressBar } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -54,7 +54,7 @@ export default function OnboardingLibrary() {
                         Nice work!
                     </Text>
                     <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-                        Here's your first reflection
+                        Here&apos;s your first reflection
                     </Text>
                 </MotiView>
 

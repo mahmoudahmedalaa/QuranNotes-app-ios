@@ -1,4 +1,4 @@
-import { UserStreak, INITIAL_STREAK } from '../../domain/entities/UserStreak';
+import { UserStreak } from '../../domain/entities/UserStreak';
 
 export class StreakService {
     /**

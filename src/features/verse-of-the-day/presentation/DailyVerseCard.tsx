@@ -58,8 +58,8 @@ async function pickNextVerse(): Promise<TopicVerse> {
         if (storedHistory) {
             history = JSON.parse(storedHistory);
         }
-    } catch (e) {
-        if (__DEV__) console.warn('Failed to parse daily verse history', e);
+    } catch (_e) {
+        if (__DEV__) console.warn('Failed to parse daily verse history', _e);
     }
 
     let availableVerses = allVerses.filter(v => !history.includes(`${v.surah}-${v.verse}`));
@@ -73,8 +73,8 @@ async function pickNextVerse(): Promise<TopicVerse> {
 
     try {
         await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-    } catch (e) {
-        if (__DEV__) console.warn('Failed to save daily verse history', e);
+    } catch (_e) {
+        if (__DEV__) console.warn('Failed to save daily verse history', _e);
     }
 
     return randomVerse;
@@ -131,7 +131,7 @@ export const DailyVerseCard: React.FC = () => {
                 date: todayKey(),
                 verse: nextVerse,
             }));
-        } catch (e) {
+        } catch {
             // Fallback to a well-known verse
             const fallbackVerse: TopicVerse = {
                 surah: 13,
@@ -152,14 +152,18 @@ export const DailyVerseCard: React.FC = () => {
     }, [loadOrPickVerse]);
 
     const handleRefresh = async () => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        const nextVerse = await pickNextVerse();
-        setVerse(nextVerse);
-        syncVerseToWidget(nextVerse);
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({
-            date: todayKey(),
-            verse: nextVerse,
-        }));
+        try {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            const nextVerse = await pickNextVerse();
+            setVerse(nextVerse);
+            syncVerseToWidget(nextVerse);
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({
+                date: todayKey(),
+                verse: nextVerse,
+            }));
+        } catch (_e) {
+            if (__DEV__) console.error('[DailyVerse] Error refreshing:', _e);
+        }
     };
 
     const handlePress = () => {

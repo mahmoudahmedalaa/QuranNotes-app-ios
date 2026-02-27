@@ -11,7 +11,7 @@ const MOCK_USER_KEY = '@quran_notes:mock_user';
  */
 export class MockAuthRepository implements IAuthRepository {
     private currentUser: User | null = null;
-    private authStateListeners: Array<(user: User | null) => void> = [];
+    private authStateListeners: ((user: User | null) => void)[] = [];
 
     async getCurrentUser(): Promise<User | null> {
         if (!this.currentUser) {

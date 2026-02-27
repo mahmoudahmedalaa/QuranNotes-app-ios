@@ -29,6 +29,7 @@ interface ApiVerseResponse {
     };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface ApiEditionResponse {
     data: {
         surahs: {

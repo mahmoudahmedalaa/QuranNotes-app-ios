@@ -3,7 +3,7 @@ import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 're
 import { Text, TextInput, Button, useTheme, HelperText } from 'react-native-paper';
 import { useRouter, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Spacing, BorderRadius, Colors } from '../../src/core/theme/DesignSystem';
+import { Spacing, BorderRadius } from '../../src/core/theme/DesignSystem';
 import { useAuth } from '../../src/features/auth/infrastructure/AuthContext';
 import { MotiView } from 'moti';
 import Toast from 'react-native-toast-message';
@@ -90,7 +90,7 @@ export default function ForgotPasswordScreen() {
                             Reset Password
                         </Text>
                         <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant, marginTop: Spacing.xs }}>
-                            Enter your email and we'll send you a link to reset your password
+                            Enter your email and we&apos;ll send you a link to reset your password
                         </Text>
                     </MotiView>
                 </View>

@@ -21,23 +21,24 @@ import { Recording } from '../../src/core/domain/entities/Recording';
 import { Spacing } from '../../src/core/theme/DesignSystem';
 import { ModernDropdown } from '../../src/core/components/common/ModernDropdown';
 
-import { FolderManagementDialog } from '../../src/core/components/common/FolderManagementDialog';
+
 
 export default function RecordingsScreen() {
     const theme = useTheme();
     const router = useRouter();
     const { recordings, saveRecording, deleteRecording, refreshRecordings } = useRecordingStorage();
-    const { folders, addFolder, updateFolder, deleteFolder } = useFolders();
+    const { folders } = useFolders();
     const { isRecording, startRecording, stopRecording } = useAudioRecorder();
     const { isPro } = usePro();
     const [dialogVisible, setDialogVisible] = useState(false);
-    const [manageFoldersVisible, setManageFoldersVisible] = useState(false);
+
     const [recordingName, setRecordingName] = useState('');
     const [selectedFolderIds, setSelectedFolderIds] = useState<string[]>([]);
     const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>();
 
     useEffect(() => {
         refreshRecordings();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const filteredRecordings = recordings.filter(r => {

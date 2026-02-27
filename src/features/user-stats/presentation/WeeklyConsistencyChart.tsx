@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
 import { Spacing } from '../../../core/theme/DesignSystem';

@@ -10,7 +10,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Spacing, BorderRadius, Shadows } from '../../../core/theme/DesignSystem';
 
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-const GAP = 4;
+
 
 const ACCENT = {
     green: '#10B981',
@@ -30,6 +30,7 @@ export const ConsistencyHeatmap: React.FC<ConsistencyHeatmapProps> = ({ data }) 
     const viewDate = useMemo(() => {
         const d = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
         return d;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [monthOffset]);
 
     const year = viewDate.getFullYear();

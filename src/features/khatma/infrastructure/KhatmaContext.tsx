@@ -174,7 +174,6 @@ interface KhatmaContextType {
     currentRound: number;
     completedRounds: number[];
     isGated: boolean;           // true when premium required (completed >= FREE_JUZ_LIMIT and not pro)
-    debugResetProgress: () => Promise<void>;  // for testing
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -241,6 +240,7 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     useEffect(() => {
         loadProgress();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Reset on auth change
@@ -254,6 +254,7 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             prevUidRef.current = currentUid;
             loadProgress();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user?.id]);
 
     const loadProgress = async () => {
@@ -432,19 +433,6 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return completedJuz.length >= FREE_JUZ_LIMIT;
     }, [isPro, proLoading, completedJuz]);
 
-    // Debug: reset all progress for testing the gate
-    const debugResetProgress = useCallback(async () => {
-        const emptyState: KhatmaState = {
-            completedSurahs: [],
-            year: new Date().getFullYear(),
-            lastProgressDate: undefined,
-            currentRound: 1,
-            completedRounds: [],
-            streakCount: 0,
-        };
-        setState(emptyState);
-        await saveProgress(emptyState);
-    }, []);
 
     // Streak
     const streakDays = useMemo(() => {
@@ -473,7 +461,6 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         currentRound: state.currentRound,
         completedRounds: state.completedRounds,
         isGated,
-        debugResetProgress,
     };
 
     return (

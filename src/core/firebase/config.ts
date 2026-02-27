@@ -21,6 +21,7 @@ if (!firebase.apps.length) {
     // Explicitly initialize Auth with AsyncStorage persistence to fix "removeItem" error
     // We use require() to avoid TypeScript issues with the modular SDK inside compat setup
     try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const authModule = require('firebase/auth');
         if (authModule && authModule.getReactNativePersistence && authModule.initializeAuth) {
             authModule.initializeAuth(firebaseApp, {

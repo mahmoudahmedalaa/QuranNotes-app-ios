@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { LocalBookmarkRepository } from '../data/local/LocalBookmarkRepository';
 
 const repo = new LocalBookmarkRepository();

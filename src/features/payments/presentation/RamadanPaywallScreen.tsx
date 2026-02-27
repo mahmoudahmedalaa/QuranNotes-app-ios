@@ -1,14 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     StyleSheet,
     ScrollView,
     Alert,
     Pressable,
-    Dimensions,
     Linking,
 } from 'react-native';
-import { Text, Button, useTheme, ActivityIndicator } from 'react-native-paper';
+import { Text, useTheme, ActivityIndicator } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { revenueCatService, PurchasesOffering } from '../infrastructure/RevenueCatService';
 import { usePro } from '../../auth/infrastructure/ProContext';
@@ -18,9 +17,9 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { daysUntilRamadanEnds, ramadanCountdownText } from '../../../core/utils/ramadanUtils';
+import { ramadanCountdownText } from '../../../core/utils/ramadanUtils';
 
-const { width } = Dimensions.get('window');
+
 
 const ORIGINAL_ANNUAL_PRICE = 35.99;
 const RAMADAN_PRICE = 17.99;
@@ -45,9 +44,9 @@ interface RamadanPaywallProps {
 }
 
 export default function RamadanPaywallScreen({ onPurchaseSuccess, onDismiss }: RamadanPaywallProps = {}) {
-    const theme = useTheme();
+    useTheme();
     const router = useRouter();
-    const { isPro, checkStatus } = usePro();
+    const { checkStatus } = usePro();
     const [offering, setOffering] = useState<PurchasesOffering | null>(null);
     const [loading, setLoading] = useState(true);
     const [purchasing, setPurchasing] = useState(false);

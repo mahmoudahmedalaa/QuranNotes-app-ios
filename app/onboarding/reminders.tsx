@@ -22,13 +22,13 @@ export default function OnboardingReminders() {
     const theme = useTheme();
     const router = useRouter();
     const { goToStep } = useOnboarding();
-    const { settings, updateSettings } = useSettings();
+    const { updateSettings } = useSettings();
 
     const [enabled, setEnabled] = useState(true); // Opted-in by default
-    const [selectedChip, setSelectedChip] = useState<string>('Fajr');
+    const [selectedChip, setSelectedChip] = useState<string>('Dhuhr');
     const [pickerDate, setPickerDate] = useState(() => {
         const d = new Date();
-        d.setHours(6, 0, 0, 0); // Default to 6:00 AM for Fajr
+        d.setHours(12, 30, 0, 0); // Default to 12:30 PM for Dhuhr
         return d;
     });
 
@@ -113,7 +113,7 @@ export default function OnboardingReminders() {
                         Daily Quran Reminder
                     </Text>
                     <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-                        A gentle nudge to keep your heart connected to Allah's words
+                        A gentle nudge to keep your heart connected to Allah&apos;s words
                     </Text>
                 </MotiView>
 

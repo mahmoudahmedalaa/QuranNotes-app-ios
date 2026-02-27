@@ -7,14 +7,7 @@
 
 import React, { useMemo } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
-import Animated, {
-    useSharedValue,
-    useAnimatedStyle,
-    withRepeat,
-    withTiming,
-    withDelay,
-    Easing,
-} from 'react-native-reanimated';
+import { Easing } from 'react-native-reanimated';
 import { useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
 

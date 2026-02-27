@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { Folder, DEFAULT_FOLDER } from '../../../core/domain/entities/Folder';
 import { usePro } from '../../auth/infrastructure/ProContext';
+import { LocalFolderRepository } from '../../../core/data/local/LocalFolderRepository';
 
-const STORAGE_KEY = 'folders';
+
 
 interface FolderContextType {
     folders: Folder[];
@@ -25,7 +25,6 @@ const FolderContext = createContext<FolderContextType>({
 
 export const useFolders = () => useContext(FolderContext);
 
-import { LocalFolderRepository } from '../../../core/data/local/LocalFolderRepository';
 
 const repo = new LocalFolderRepository();
 
@@ -47,15 +46,6 @@ export function FolderProvider({ children }: { children: React.ReactNode }) {
             console.error('Failed to load folders:', error);
         } finally {
             setLoading(false);
-        }
-    };
-
-    const saveFolders = async (newFolders: Folder[]) => {
-        try {
-            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newFolders));
-            setFolders(newFolders);
-        } catch (error) {
-            console.error('Failed to save folders:', error);
         }
     };
 

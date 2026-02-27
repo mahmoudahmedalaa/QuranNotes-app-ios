@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Modal, Portal, Text, Button, useTheme, TextInput, Chip } from 'react-native-paper';
+import { View, StyleSheet } from 'react-native';
+import { Modal, Portal, Text, Button, useTheme, TextInput } from 'react-native-paper';
 import { useRecordingStorage } from '../../../core/hooks/useRecordingStorage';
 import { useFolders } from '../../notes/infrastructure/FolderContext';
 import { Spacing, BorderRadius, Shadows } from '../../../core/theme/DesignSystem';

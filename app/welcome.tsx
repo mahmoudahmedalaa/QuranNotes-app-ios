@@ -1,17 +1,16 @@
-import { View, StyleSheet, Dimensions } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Text, Button, useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Spacing, BorderRadius, Gradients } from '../src/core/theme/DesignSystem';
-import { useOnboarding } from '../src/features/onboarding/infrastructure/OnboardingContext';
-import { useAuth } from '../src/features/auth/infrastructure/AuthContext';
+
 import { NoorMascot } from '../src/core/components/mascot/NoorMascot';
 import React, { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const { width, height } = Dimensions.get('window');
+
 
 // Short Authentic Hadiths (Sahih Muslim/Bukhari)
 const HADITHS = [
@@ -25,10 +24,10 @@ const HADITHS = [
 export default function WelcomeScreen() {
     const router = useRouter();
     const theme = useTheme();
-    const { shouldShowOnboarding } = useOnboarding();
+
     const [hadithIndex, setHadithIndex] = useState(0);
 
-    const { user } = useAuth(); // Add user from useAuth
+
 
     // Cycle Hadith
     useEffect(() => {
@@ -85,7 +84,7 @@ export default function WelcomeScreen() {
                             transition={{ type: 'timing', duration: 500 }}
                         >
                             <Text style={[styles.hadithText, { color: theme.colors.onSurfaceVariant }]}>
-                                "{HADITHS[hadithIndex].text}"
+                                {'"'}{HADITHS[hadithIndex].text}{'"'}
                             </Text>
                             <Text style={[styles.hadithSource, { color: theme.colors.primary }]}>
                                 {HADITHS[hadithIndex].source}

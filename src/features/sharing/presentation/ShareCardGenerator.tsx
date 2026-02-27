@@ -2,7 +2,7 @@ import React, { useRef, useCallback, forwardRef, useImperativeHandle } from 'rea
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import ViewShot from 'react-native-view-shot';
-import { Gradients, Spacing, BorderRadius } from '../../../core/theme/DesignSystem';
+import { Spacing, BorderRadius } from '../../../core/theme/DesignSystem';
 import { ShareService } from '../infrastructure/ShareService';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -120,7 +120,7 @@ const VerseCard = ({ data }: { data: VerseShareData }) => (
         {/* English translation */}
         {data.englishText && (
             <Text style={styles.englishTranslation} numberOfLines={6}>
-                "{data.englishText}"
+                &quot;{data.englishText}&quot;
             </Text>
         )}
 

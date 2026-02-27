@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, ScrollView } from 'react-native';
 import {
     Dialog,
     Portal,
@@ -8,7 +8,6 @@ import {
     List,
     IconButton,
     useTheme,
-    Text,
 } from 'react-native-paper';
 import { Folder, DEFAULT_FOLDER } from '../../domain/entities/Folder';
 
@@ -133,8 +132,8 @@ export const FolderManagementDialog = ({
                     {mode === 'list'
                         ? 'Manage Folders'
                         : mode === 'create'
-                          ? 'New Folder'
-                          : 'Edit Folder'}
+                            ? 'New Folder'
+                            : 'Edit Folder'}
                 </Dialog.Title>
                 <Dialog.Content>{renderContent()}</Dialog.Content>
                 <Dialog.Actions>

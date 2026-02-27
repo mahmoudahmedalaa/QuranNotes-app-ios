@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Pressable, Switch, Dimensions, Alert } from 'react-native';
-import { Text, useTheme, Button, ActivityIndicator } from 'react-native-paper';
+import { View, StyleSheet, Pressable, Switch, Alert } from 'react-native';
+import { Text, useTheme, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
@@ -10,8 +10,6 @@ import { useOnboarding } from '../../src/features/onboarding/infrastructure/Onbo
 import {
     Spacing,
     BorderRadius,
-    Shadows,
-    Gradients,
     BrandTokens,
 } from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
@@ -20,7 +18,7 @@ import { usePro } from '../../src/features/auth/infrastructure/ProContext';
 import { isRamadanSeason } from '../../src/core/utils/ramadanUtils';
 import RamadanPaywallScreen from '../../src/features/payments/presentation/RamadanPaywallScreen';
 
-const { width } = Dimensions.get('window');
+
 
 const FEATURES = [
     { icon: 'infinity', title: 'Unlimited Recordings', description: 'No 5-recording limit' },
@@ -36,7 +34,7 @@ const MONTHLY_PRICE = 4.99;
 const ANNUAL_PRICE = 35.99;
 
 export default function OnboardingPremium() {
-    const theme = useTheme();
+    useTheme();
     const router = useRouter();
     const { highlight } = useLocalSearchParams();
     const { completeOnboarding } = useOnboarding();
@@ -60,7 +58,7 @@ export default function OnboardingPremium() {
             try {
                 const current = await revenueCatService.getOfferings();
                 setOffering(current);
-            } catch (e) {
+            } catch (_e) {
                 // Offerings may fail on simulator — still allow free start
             }
         };
@@ -93,7 +91,7 @@ export default function OnboardingPremium() {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
         try {
-            const { success, userCancelled, error } = await revenueCatService.purchasePackage(packageToBuy);
+            const { success, userCancelled, error: purchaseError } = await revenueCatService.purchasePackage(packageToBuy);
             if (success) {
                 checkStatus();
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -101,9 +99,9 @@ export default function OnboardingPremium() {
                 router.dismissAll();
                 router.replace('/');
             } else if (!userCancelled) {
-                Alert.alert('Purchase Failed', error || 'Could not complete purchase. Please try again.');
+                Alert.alert('Purchase Failed', purchaseError || 'Could not complete purchase. Please try again.');
             }
-        } catch (error) {
+        } catch (_error) {
             Alert.alert('Error', 'Something went wrong. Please try again.');
         } finally {
             setPurchasing(false);

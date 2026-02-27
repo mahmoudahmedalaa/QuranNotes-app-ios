@@ -48,7 +48,6 @@ function AnimatedMoodPill({
 }) {
     const theme = useTheme();
     const config = MOOD_CONFIGS[mood];
-    const moodColor = config.color;
 
     // Core RN Animated — guaranteed loop
     const scaleAnim = useRef(new RNAnimated.Value(1.2)).current;

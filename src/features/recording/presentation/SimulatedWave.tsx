@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { MotiView } from 'moti';
-import { Spacing, BorderRadius } from '../../../core/theme/DesignSystem';
+import { BorderRadius } from '../../../core/theme/DesignSystem';
 
 interface SimulatedWaveProps {
     color?: string;

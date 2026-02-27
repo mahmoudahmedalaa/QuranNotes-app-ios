@@ -12,7 +12,6 @@ interface ProContextType {
     loading: boolean;
     restorePurchases: () => Promise<void>;
     checkStatus: () => Promise<void>;
-    toggleDebugPro: () => void;
 }
 
 const ProContext = createContext<ProContextType>({
@@ -20,7 +19,6 @@ const ProContext = createContext<ProContextType>({
     loading: false,
     restorePurchases: async () => { },
     checkStatus: async () => { },
-    toggleDebugPro: () => { },
 });
 
 export const usePro = () => useContext(ProContext);
@@ -54,6 +52,7 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Check RevenueCat status on app startup and when user changes
     useEffect(() => {
         checkStatus();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
 
     const restorePurchases = async () => {
@@ -68,15 +67,8 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     };
 
-    // Debug only — no-op in production
-    const toggleDebugPro = () => {
-        if (__DEV__) {
-            setIsPro(prev => !prev);
-        }
-    };
-
     return (
-        <ProContext.Provider value={{ isPro, loading, restorePurchases, checkStatus, toggleDebugPro }}>
+        <ProContext.Provider value={{ isPro, loading, restorePurchases, checkStatus }}>
             {children}
         </ProContext.Provider>
     );

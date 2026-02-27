@@ -9,7 +9,6 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
 import { GeminiAPI } from '../../../core/api/GeminiAPI';
 import { Spacing, BorderRadius, Shadows } from '../../../core/theme/DesignSystem';
-import * as Haptics from 'expo-haptics';
 
 const GOLD = '#D4A853';
 const SCREEN_HEIGHT = Dimensions.get('window').height;

@@ -2,8 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { LineChart } from 'react-native-gifted-charts';
-import { Spacing, BorderRadius, Shadows, Gradients } from '../../../core/theme/DesignSystem';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Spacing, BorderRadius, Shadows } from '../../../core/theme/DesignSystem';
 
 const { width } = Dimensions.get('window');
 

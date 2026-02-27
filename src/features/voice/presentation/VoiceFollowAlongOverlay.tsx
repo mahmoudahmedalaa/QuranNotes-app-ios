@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Text, IconButton, useTheme, Surface } from 'react-native-paper';
 import { Spacing, BorderRadius, Shadows, STICKY_PLAYER_HEIGHT } from '../../../core/theme/DesignSystem';
 
@@ -70,7 +70,7 @@ export const VoiceFollowAlongOverlay: React.FC<VoiceFollowAlongOverlayProps> = (
                             style={{ color: theme.colors.onSurface, marginTop: 4, fontFamily: 'System' }}
                             numberOfLines={2}
                             ellipsizeMode="head">
-                            "{transcript.slice(-100)}"
+                            &quot;{transcript.slice(-100)}&quot;
                         </Text>
                     ) : (
                         <Text variant="bodySmall" style={{ color: theme.colors.outline, marginTop: 4 }}>

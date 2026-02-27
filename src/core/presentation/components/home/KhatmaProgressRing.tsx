@@ -13,7 +13,6 @@ import { Spacing, BorderRadius, Shadows } from '../../../theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 const GOLD = '#D4A853';
-const GOLD_DIM = '#D4A85330';
 const RING_SIZE = 64;
 const STROKE_WIDTH = 5;
 const RADIUS = (RING_SIZE - STROKE_WIDTH) / 2;

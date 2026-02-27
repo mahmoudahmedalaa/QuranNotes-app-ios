@@ -6,11 +6,6 @@ import {
     Searchbar,
     TouchableRipple,
     IconButton,
-    FAB,
-    Portal,
-    Dialog,
-    TextInput,
-    Button,
 } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useNotes } from '../../src/core/hooks/useNotes';
@@ -19,7 +14,7 @@ import { Note } from '../../src/features/notes/domain/Note';
 import { Spacing } from '../../src/core/theme/DesignSystem';
 import { ModernDropdown } from '../../src/core/components/common/ModernDropdown';
 import { FolderManagementDialog } from '../../src/core/components/common/FolderManagementDialog';
-import { ExportService, ExportFormat } from '../../src/core/export/ExportService';
+import { ExportService } from '../../src/core/export/ExportService';
 
 export default function NotesScreen() {
     const router = useRouter();
@@ -195,7 +190,6 @@ export default function NotesScreen() {
                     await updateFolder(id, { name });
                 }}
                 onDelete={async id => {
-                    const { Alert } = require('react-native');
                     Alert.alert(
                         'Delete Folder',
                         'Are you sure? Notes in this folder will be unassigned.',

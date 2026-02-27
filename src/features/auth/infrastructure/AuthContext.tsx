@@ -49,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         return () => unsubscribe();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const loginAnonymously = async () => {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import VoiceRecognitionService, { VoiceRecognitionResult, VoiceRecognitionServiceImpl } from '../../features/voice/infrastructure/VoiceRecognitionService';
+import VoiceRecognitionService, { VoiceRecognitionResult } from '../../features/voice/infrastructure/VoiceRecognitionService';
 import { Verse } from '../domain/entities/Quran';
 import {
     FollowAlongSession,
@@ -163,6 +163,7 @@ export function useVoiceFollowAlong(
             Alert.alert('Recognition Error', error);
         }
         stopSession();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const startSession = async () => {

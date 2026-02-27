@@ -11,10 +11,10 @@ import {
 import { useTheme, Surface } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MotiView, AnimatePresence } from 'moti';
+import { MotiView } from 'moti';
 import { FollowAlongSession } from '../../../src/core/domain/entities/FollowAlongSession';
 import { LocalFollowAlongRepository } from '../../../src/core/data/local/LocalFollowAlongRepository';
-import { Spacing, BorderRadius, Shadows } from '../../../src/core/theme/DesignSystem';
+import { Spacing, BorderRadius } from '../../../src/core/theme/DesignSystem';
 
 export default function FollowAlongsTab() {
     const theme = useTheme();
@@ -38,11 +38,13 @@ export default function FollowAlongsTab() {
 
     useEffect(() => {
         loadSessions();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleRefresh = useCallback(() => {
         setRefreshing(true);
         loadSessions();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleDelete = (session: FollowAlongSession) => {

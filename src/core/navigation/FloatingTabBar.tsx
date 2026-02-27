@@ -3,7 +3,7 @@
  * Inspired by Calm/fitness app design: icon-only, dark container, press animations
  */
 import React from 'react';
-import { View, Pressable, StyleSheet, Platform } from 'react-native';
+import { View, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -30,8 +30,6 @@ const TAB_ICONS: Record<string, {
 };
 
 // Theme-adaptive pill backgrounds
-const PILL_BG_LIGHT = '#1C1C1E';                   // Solid dark on light screens
-const PILL_BG_DARK = 'rgba(60, 60, 67, 0.85)';    // Translucent lighter grey on dark screens
 const ICON_SIZE = 24;
 const ACTIVE_DOT_SIZE = 4;
 
@@ -108,8 +106,6 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
     const activeColor = theme.dark ? '#FFFFFF' : theme.colors.primary;
     const inactiveColor = theme.dark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)';
 
-    // Glassmorphism base tint
-    const pillBg = theme.dark ? 'rgba(30, 30, 35, 0.75)' : 'rgba(255, 255, 255, 0.85)';
     const pillBorder = theme.dark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
 
     return (

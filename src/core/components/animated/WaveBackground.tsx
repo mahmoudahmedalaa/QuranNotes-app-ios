@@ -14,7 +14,7 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet, Dimensions, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Path, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -55,7 +55,7 @@ const generateWavePath = (
     return path;
 };
 
-const AnimatedPath = Animated.createAnimatedComponent(Path);
+
 
 interface WaveLayerProps {
     color: string;
@@ -75,6 +75,7 @@ const WaveLayer = ({ color, opacity, speed, amplitude, frequency, height }: Wave
             -1,
             false,
         );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const animatedStyle = useAnimatedStyle(() => {

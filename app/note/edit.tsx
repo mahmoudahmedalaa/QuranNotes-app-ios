@@ -13,14 +13,12 @@ import {
     ActivityIndicator,
     IconButton,
     Text,
-    Portal,
-    Modal,
     Button,
 } from 'react-native-paper';
-import { useNoteContext } from '../../src/features/notes/infrastructure/NoteContext';
+
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
+
 import { Ionicons } from '@expo/vector-icons';
 import { useNotes } from '../../src/core/hooks/useNotes';
 import { useFolders } from '../../src/features/notes/infrastructure/FolderContext';
@@ -29,7 +27,6 @@ import {
     Spacing,
     BorderRadius,
     Shadows,
-    Gradients,
 } from '../../src/core/theme/DesignSystem';
 import { FolderPicker } from '../../src/core/components/common/FolderPicker';
 import * as Haptics from 'expo-haptics';
@@ -51,6 +48,7 @@ export default function NoteEditorScreen() {
 
     useEffect(() => {
         loadNote();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [surah, verse, id]);
 
     const loadNote = async () => {
@@ -106,7 +104,8 @@ export default function NoteEditorScreen() {
         }
     };
 
-    const handleFolderSelect = (folderId: string | undefined) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _handleFolderSelect = (folderId: string | undefined) => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         setSelectedFolderId(folderId);
     };

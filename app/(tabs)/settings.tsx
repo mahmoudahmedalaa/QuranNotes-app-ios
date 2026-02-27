@@ -1,6 +1,6 @@
-import { View, StyleSheet, ScrollView, Pressable, Alert, Switch as RNSwitch, Animated, LayoutAnimation, Platform, UIManager, Linking } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable, Alert, Switch as RNSwitch, LayoutAnimation, Platform, UIManager, Linking } from 'react-native';
 import { Text, useTheme, Switch } from 'react-native-paper';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,7 +8,7 @@ import { useRouter } from 'expo-router';
 import { useSettings } from '../../src/features/settings/infrastructure/SettingsContext';
 import { ReciterPicker } from '../../src/core/components/common/ReciterPicker';
 import { getReciterById } from '../../src/features/audio-player/domain/Reciter';
-import { getEditionById, getAvailableLanguages, TranslationEdition } from '../../src/core/domain/entities/TranslationEdition';
+import { getEditionById, getAvailableLanguages } from '../../src/core/domain/entities/TranslationEdition';
 import {
     Spacing,
     BorderRadius,
@@ -19,8 +19,8 @@ import {
 import * as Haptics from 'expo-haptics';
 import { usePro } from '../../src/features/auth/infrastructure/ProContext';
 import { useAuth } from '../../src/features/auth/infrastructure/AuthContext';
-import { useMood } from '../../src/features/mood/infrastructure/MoodContext';
-import { useKhatma } from '../../src/features/khatma/infrastructure/KhatmaContext';
+
+
 import { NotificationService } from '../../src/features/notifications/infrastructure/NotificationService';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
@@ -40,12 +40,10 @@ const PRAYER_TIMES = [
 export default function SettingsScreen() {
     const theme = useTheme();
     const router = useRouter();
-    const { settings, updateSettings, resetSettings } = useSettings();
+    const { settings, updateSettings } = useSettings();
 
-    const { toggleDebugPro, isPro } = usePro();
-    const { debugResetProgress, completedJuz } = useKhatma();
-    const { debugResetAll, debugUseOneCredit, freeUsesRemaining } = useMood();
-    const { user, loading, logout, deleteAccount, deleteAccountWithPassword } = useAuth();
+    const { isPro } = usePro();
+    const { user, logout, deleteAccount, deleteAccountWithPassword } = useAuth();
     const [reciterPickerVisible, setReciterPickerVisible] = useState(false);
     const [translationPickerExpanded, setTranslationPickerExpanded] = useState(false);
 
@@ -85,16 +83,13 @@ export default function SettingsScreen() {
             if (granted) {
                 const hour = reminderTime.getHours();
                 const minute = reminderTime.getMinutes();
-                await NotificationService.scheduleDailyReminder(hour, minute);
                 await updateSettings({ dailyReminderEnabled: true, reminderHour: hour, reminderMinute: minute });
             } else {
                 setReminderEnabled(false);
                 Alert.alert('Permissions Required', 'Please enable notifications in your device settings.');
             }
         } else {
-            await NotificationService.cancelDailyReminder();
-            await NotificationService.cancelStreakReminder();
-            await NotificationService.cancelKhatmaNudge();
+            await NotificationService.cancelAllReminders();
             await updateSettings({ dailyReminderEnabled: false });
         }
     };
@@ -107,9 +102,6 @@ export default function SettingsScreen() {
             setSelectedChip('Custom');
             const hour = selectedDate.getHours();
             const minute = selectedDate.getMinutes();
-            if (reminderEnabled) {
-                await NotificationService.scheduleDailyReminder(hour, minute);
-            }
             await updateSettings({ reminderHour: hour, reminderMinute: minute });
         }
     };
@@ -579,98 +571,92 @@ export default function SettingsScreen() {
                             NOTIFICATIONS
                         </Text>
 
-                        {/* Reminder Toggle Card */}
+                        {/* Unified Notifications Card */}
                         <View
                             style={[
                                 styles.card,
-                                { backgroundColor: theme.colors.surface, marginBottom: Spacing.sm },
+                                {
+                                    backgroundColor: theme.colors.surface,
+                                    flexDirection: 'column',
+                                    alignItems: 'stretch',
+                                    paddingVertical: 0,
+                                    paddingHorizontal: 0,
+                                    overflow: 'hidden',
+                                },
                                 Shadows.sm,
                             ]}>
-                            <View
-                                style={[
-                                    styles.iconContainer,
-                                    { backgroundColor: theme.colors.primaryContainer },
-                                ]}>
-                                <Ionicons
-                                    name="notifications"
-                                    size={18}
-                                    color={theme.colors.primary}
-                                />
-                            </View>
-                            <View style={styles.cardContent}>
-                                <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
-                                    Daily Reminders
-                                </Text>
-                                <Text
-                                    style={[
-                                        styles.cardSubtitle,
-                                        { color: theme.colors.onSurfaceVariant },
-                                    ]}>
-                                    Smart daily reminders based on your activity
-                                </Text>
-                            </View>
-                            <RNSwitch
-                                value={reminderEnabled}
-                                onValueChange={handleReminderToggle}
-                                trackColor={{ false: '#48484A', true: theme.colors.primary }}
-                                thumbColor={reminderEnabled ? '#FFF' : '#F4F4F4'}
-                            />
-                        </View>
 
-                        {/* Reminder Time — expandable card */}
-                        {reminderEnabled && (
-                            <>
+                            {/* ── Row 1: Daily Quran Reminder ── */}
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                paddingHorizontal: Spacing.md,
+                                paddingVertical: 14,
+                            }}>
                                 <View
                                     style={[
-                                        styles.expandableCard,
-                                        { backgroundColor: theme.colors.surface, marginBottom: Spacing.sm },
-                                        Shadows.sm,
+                                        styles.iconContainer,
+                                        { backgroundColor: theme.colors.primaryContainer },
                                     ]}>
-                                    {/* Header row — tappable */}
+                                    <Ionicons
+                                        name="book"
+                                        size={16}
+                                        color={theme.colors.primary}
+                                    />
+                                </View>
+                                <View style={{ flex: 1, marginLeft: 0 }}>
+                                    <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
+                                        Daily Quran Reminder
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            styles.cardSubtitle,
+                                            { color: theme.colors.onSurfaceVariant },
+                                        ]}>
+                                        {reminderEnabled
+                                            ? selectedChip === 'Custom'
+                                                ? `Custom · ${reminderTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`
+                                                : `${selectedChip} · ${PRAYER_TIMES.find(p => p.key === selectedChip)?.desc || ''}`
+                                            : 'Personalized reading reminders'}
+                                    </Text>
+                                </View>
+                                <RNSwitch
+                                    value={reminderEnabled}
+                                    onValueChange={handleReminderToggle}
+                                    trackColor={{ false: '#48484A', true: theme.colors.primary }}
+                                    thumbColor={reminderEnabled ? '#FFF' : '#F4F4F4'}
+                                />
+                            </View>
+
+                            {/* Expandable time picker — inside the same card */}
+                            {reminderEnabled && (
+                                <>
+                                    <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant, marginHorizontal: Spacing.md }]} />
                                     <Pressable
-                                        style={styles.expandableHeader}
+                                        style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: 12 }}
                                         onPress={() => {
                                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                                             LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                                             setTimePickerExpanded(!timePickerExpanded);
                                         }}>
-                                        <View
-                                            style={[
-                                                styles.iconContainer,
-                                                { backgroundColor: theme.colors.primaryContainer },
-                                            ]}>
-                                            <Ionicons
-                                                name="time-outline"
-                                                size={18}
-                                                color={theme.colors.primary}
-                                            />
-                                        </View>
-                                        <View style={styles.cardContent}>
-                                            <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
-                                                Reminder Time
-                                            </Text>
-                                            <Text
-                                                style={[
-                                                    styles.cardSubtitle,
-                                                    { color: theme.colors.onSurfaceVariant },
-                                                ]}>
-                                                {selectedChip === 'Custom'
-                                                    ? `Custom · ${reminderTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`
-                                                    : `${selectedChip} · ${PRAYER_TIMES.find(p => p.key === selectedChip)?.desc || ''}`}
-                                            </Text>
-                                        </View>
+                                        <Ionicons
+                                            name="time-outline"
+                                            size={18}
+                                            color={theme.colors.onSurfaceVariant}
+                                            style={{ marginRight: Spacing.sm }}
+                                        />
+                                        <Text style={[styles.cardTitle, { color: theme.colors.onSurface, flex: 1, fontSize: 14 }]}>
+                                            Reminder Time
+                                        </Text>
                                         <Ionicons
                                             name={timePickerExpanded ? 'chevron-up' : 'chevron-down'}
-                                            size={20}
+                                            size={18}
                                             color={theme.colors.onSurfaceVariant}
                                         />
                                     </Pressable>
 
-                                    {/* Expanded options */}
                                     {timePickerExpanded && (
-                                        <View style={styles.expandedContent}>
-                                            <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant }]} />
-
+                                        <View style={{ paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm }}>
                                             {PRAYER_TIMES.map((time) => {
                                                 const isActive = selectedChip === time.key;
                                                 return (
@@ -687,9 +673,6 @@ export default function SettingsScreen() {
                                                             const d = new Date();
                                                             d.setHours(time.hour, time.minute, 0, 0);
                                                             setReminderTime(d);
-                                                            if (reminderEnabled) {
-                                                                await NotificationService.scheduleDailyReminder(time.hour, time.minute);
-                                                            }
                                                             await updateSettings({ reminderHour: time.hour, reminderMinute: time.minute });
                                                             LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                                                             setTimePickerExpanded(false);
@@ -734,11 +717,60 @@ export default function SettingsScreen() {
                                             </View>
                                         </View>
                                     )}
+                                </>
+                            )}
+
+                            {/* ── Divider between rows ── */}
+                            <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant, marginHorizontal: Spacing.md }]} />
+
+                            {/* ── Row 2: Adhkar Reminders ── */}
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                paddingHorizontal: Spacing.md,
+                                paddingVertical: 14,
+                            }}>
+                                <View
+                                    style={[
+                                        styles.iconContainer,
+                                        { backgroundColor: theme.colors.tertiaryContainer || theme.colors.primaryContainer },
+                                    ]}>
+                                    <Ionicons
+                                        name="sparkles"
+                                        size={16}
+                                        color={theme.colors.tertiary || theme.colors.primary}
+                                    />
                                 </View>
-
-
-                            </>
-                        )}
+                                <View style={{ flex: 1, marginLeft: 0 }}>
+                                    <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
+                                        Adhkar Reminders
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            styles.cardSubtitle,
+                                            { color: theme.colors.onSurfaceVariant },
+                                        ]}>
+                                        Morning, evening & night
+                                    </Text>
+                                </View>
+                                <RNSwitch
+                                    value={settings.adhkarReminderEnabled}
+                                    onValueChange={async (value) => {
+                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                        if (value) {
+                                            const granted = await NotificationService.requestPermissions();
+                                            if (!granted) {
+                                                Alert.alert('Permissions Required', 'Please enable notifications in your device settings.');
+                                                return;
+                                            }
+                                        }
+                                        await updateSettings({ adhkarReminderEnabled: value });
+                                    }}
+                                    trackColor={{ false: '#48484A', true: theme.colors.primary }}
+                                    thumbColor={settings.adhkarReminderEnabled ? '#FFF' : '#F4F4F4'}
+                                />
+                            </View>
+                        </View>
                     </View>
 
                     {/* Appearance Section */}
@@ -914,177 +946,7 @@ export default function SettingsScreen() {
                         </View>
                     )}
 
-                    {/* Debug Section — only visible in development builds */}
-                    {__DEV__ && (
-                        <View style={styles.section}>
-                            <Text
-                                style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>
-                                DEBUG
-                            </Text>
-                            <View
-                                style={[
-                                    styles.card,
-                                    { backgroundColor: theme.colors.surface },
-                                    Shadows.sm,
-                                ]}>
-                                <View
-                                    style={[
-                                        styles.iconContainer,
-                                        { backgroundColor: '#D69E2E20' },
-                                    ]}>
-                                    <Ionicons name="moon" size={18} color="#D69E2E" />
-                                </View>
-                                <View style={styles.cardContent}>
-                                    <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
-                                        Simulate Ramadan
-                                    </Text>
-                                    <Text style={[styles.cardSubtitle, { color: theme.colors.onSurfaceVariant }]}>
-                                        Test Khatma as if Ramadan is active
-                                    </Text>
-                                </View>
-                                <Switch
-                                    value={settings.debugSimulateRamadan}
-                                    onValueChange={(val) => {
-                                        updateSettings({ debugSimulateRamadan: val });
-                                    }}
-                                    color="#D69E2E"
-                                />
-                            </View>
 
-                            {/* Debug: Simulate Mood Check-in (use 1 credit) */}
-                            <Pressable
-                                onPress={() => {
-                                    debugUseOneCredit();
-                                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                                }}
-                                style={({ pressed }) => [
-                                    styles.card,
-                                    { backgroundColor: theme.colors.surface, marginTop: Spacing.sm },
-                                    Shadows.sm,
-                                    pressed && { opacity: 0.7 },
-                                ]}
-                            >
-                                <View
-                                    style={[
-                                        styles.iconContainer,
-                                        { backgroundColor: '#F59E0B20' },
-                                    ]}>
-                                    <Ionicons name="remove-circle" size={18} color="#F59E0B" />
-                                </View>
-                                <View style={styles.cardContent}>
-                                    <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
-                                        Simulate Check-in
-                                    </Text>
-                                    <Text style={[styles.cardSubtitle, { color: theme.colors.onSurfaceVariant }]}>
-                                        {freeUsesRemaining}/5 free uses left · Tap to use 1
-                                    </Text>
-                                </View>
-                            </Pressable>
-
-                            {/* Debug: Reset All Mood Data */}
-                            <Pressable
-                                onPress={() => {
-                                    debugResetAll();
-                                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                                }}
-                                style={({ pressed }) => [
-                                    styles.card,
-                                    { backgroundColor: theme.colors.surface, marginTop: Spacing.sm },
-                                    Shadows.sm,
-                                    pressed && { opacity: 0.7 },
-                                ]}
-                            >
-                                <View
-                                    style={[
-                                        styles.iconContainer,
-                                        { backgroundColor: '#8B5CF620' },
-                                    ]}>
-                                    <Ionicons name="refresh" size={18} color="#8B5CF6" />
-                                </View>
-                                <View style={styles.cardContent}>
-                                    <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
-                                        Reset All Mood Data
-                                    </Text>
-                                    <Text style={[styles.cardSubtitle, { color: theme.colors.onSurfaceVariant }]}>
-                                        Wipe history & restore 5 free uses
-                                    </Text>
-                                </View>
-                            </Pressable>
-
-                            {/* Debug: Toggle Pro */}
-                            <View
-                                style={[
-                                    styles.card,
-                                    { backgroundColor: theme.colors.surface, marginTop: Spacing.sm },
-                                    Shadows.sm,
-                                ]}>
-                                <View
-                                    style={[
-                                        styles.iconContainer,
-                                        { backgroundColor: isPro ? '#10B98120' : '#EF444420' },
-                                    ]}>
-                                    <Ionicons name={isPro ? 'diamond' : 'diamond-outline'} size={18} color={isPro ? '#10B981' : '#EF4444'} />
-                                </View>
-                                <View style={styles.cardContent}>
-                                    <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
-                                        Simulate Pro
-                                    </Text>
-                                    <Text style={[styles.cardSubtitle, { color: theme.colors.onSurfaceVariant }]}>
-                                        {isPro ? 'Pro active' : 'Free user'} · Toggle to test
-                                    </Text>
-                                </View>
-                                <Switch
-                                    value={isPro}
-                                    onValueChange={() => toggleDebugPro()}
-                                    color="#10B981"
-                                />
-                            </View>
-
-                            {/* Debug: Reset Khatma Progress */}
-                            <Pressable
-                                onPress={() => {
-                                    Alert.alert(
-                                        'Reset Khatma Progress',
-                                        'This will clear ALL completed surahs and reset your Khatma. Use this to test the premium gate.',
-                                        [
-                                            { text: 'Cancel', style: 'cancel' },
-                                            {
-                                                text: 'Reset',
-                                                style: 'destructive',
-                                                onPress: async () => {
-                                                    await debugResetProgress();
-                                                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                                                    Alert.alert('Done', 'Khatma progress has been reset.');
-                                                },
-                                            },
-                                        ],
-                                    );
-                                }}
-                                style={[
-                                    styles.card,
-                                    { backgroundColor: theme.colors.surface, marginTop: Spacing.sm },
-                                    Shadows.sm,
-                                ]}
-                            >
-                                <View
-                                    style={[
-                                        styles.iconContainer,
-                                        { backgroundColor: '#EF444420' },
-                                    ]}>
-                                    <Ionicons name="refresh-circle-outline" size={18} color="#EF4444" />
-                                </View>
-                                <View style={styles.cardContent}>
-                                    <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
-                                        Reset Khatma Progress
-                                    </Text>
-                                    <Text style={[styles.cardSubtitle, { color: theme.colors.onSurfaceVariant }]}>
-                                        {completedJuz.length} Juz completed · Gate at 2
-                                    </Text>
-                                </View>
-                                <Ionicons name="chevron-forward" size={18} color={theme.colors.onSurfaceVariant} />
-                            </Pressable>
-                        </View>
-                    )}
 
                 </ScrollView>
 

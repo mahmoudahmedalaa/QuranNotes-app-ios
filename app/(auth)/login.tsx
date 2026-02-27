@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
-import { Text, TextInput, Button, IconButton, useTheme, HelperText } from 'react-native-paper';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { Text, TextInput, Button, useTheme, HelperText } from 'react-native-paper';
 import { useRouter, Link, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Spacing, BorderRadius, Colors } from '../../src/core/theme/DesignSystem';
@@ -11,7 +11,7 @@ export default function LoginScreen() {
     const theme = useTheme();
     const router = useRouter();
     const insets = useSafeAreaInsets();
-    const { user, loginWithEmail, loginAnonymously, loginWithGoogle, loginWithApple } = useAuth();
+    const { user, loginWithEmail, loginWithGoogle, loginWithApple } = useAuth();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -26,6 +26,7 @@ export default function LoginScreen() {
         if (user) {
             router.replace('/');
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
 
     const handleLogin = async () => {
@@ -195,7 +196,7 @@ export default function LoginScreen() {
                     style={styles.footer}
                 >
                     <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                        Don't have an account?{' '}
+                        Don&apos;t have an account?{' '}
                     </Text>
                     <Link href="/(auth)/sign-up" asChild>
                         <Button mode="text" compact>Sign Up</Button>

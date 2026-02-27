@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Text, useTheme, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,10 +10,10 @@ import { useOnboarding } from '../../src/features/onboarding/infrastructure/Onbo
 import { Spacing, BorderRadius, Gradients, BrandTokens } from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
-const { width, height } = Dimensions.get('window');
+
 
 export default function OnboardingWelcome() {
-    const theme = useTheme();
+    useTheme();
     const router = useRouter();
     const { goToStep } = useOnboarding();
 

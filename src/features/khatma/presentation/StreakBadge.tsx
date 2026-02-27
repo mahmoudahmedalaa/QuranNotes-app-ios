@@ -4,7 +4,6 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { BorderRadius } from '../../../core/theme/DesignSystem';
@@ -19,7 +18,6 @@ interface StreakBadgeProps {
 }
 
 export const StreakBadge: React.FC<StreakBadgeProps> = ({ streakDays }) => {
-    const theme = useTheme();
 
     if (streakDays <= 0) return null;
 

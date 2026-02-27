@@ -1,17 +1,17 @@
 /**
  * MoodInsightWidget — Insights tab widget showing mood check-in history.
- * Clean vertical timeline with illustrations (not emojis) and no pill bubbles.
+ * Donut chart for mood frequency + horizontal scrolling dot strip with text labels.
  */
 import React, { useMemo } from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
+import Svg, { Path, Circle as SvgCircle } from 'react-native-svg';
 import { MoodType, MOOD_CONFIGS } from '../../../core/domain/entities/Mood';
 import { useMood } from '../infrastructure/MoodContext';
 import { Spacing, BorderRadius, Shadows, Typography } from '../../../core/theme/DesignSystem';
-import { MOOD_ILLUSTRATIONS } from '../../../core/theme/MoodIllustrations';
 
-const MAX_TIMELINE_DAYS = 14;
+const MAX_TIMELINE_DAYS = 7;
 
 /** Group mood entries by date and pick the last mood of each day */
 function groupByDay(history: { mood: MoodType; timestamp: string }[]) {
@@ -21,13 +21,12 @@ function groupByDay(history: { mood: MoodType; timestamp: string }[]) {
         const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
         map.set(key, { mood: e.mood, date: d });
     });
-    // Sort most recent first
     return Array.from(map.values())
         .sort((a, b) => b.date.getTime() - a.date.getTime())
         .slice(0, MAX_TIMELINE_DAYS);
 }
 
-function formatDate(date: Date): string {
+function formatDayShort(date: Date): string {
     const now = new Date();
     const isToday = date.toDateString() === now.toDateString();
     const yesterday = new Date(now);
@@ -35,8 +34,21 @@ function formatDate(date: Date): string {
     const isYesterday = date.toDateString() === yesterday.toDateString();
 
     if (isToday) return 'Today';
-    if (isYesterday) return 'Yesterday';
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    if (isYesterday) return 'Yest.';
+    return date.toLocaleDateString('en-US', { weekday: 'short' });
+}
+
+// ── SVG donut arc helpers ────────────────────────────────────────────
+function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
+    const rad = ((angleDeg - 90) * Math.PI) / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+function describeArc(cx: number, cy: number, r: number, startAngle: number, endAngle: number) {
+    const start = polarToCartesian(cx, cy, r, endAngle);
+    const end = polarToCartesian(cx, cy, r, startAngle);
+    const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
+    return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`;
 }
 
 export default function MoodInsightWidget() {
@@ -46,7 +58,7 @@ export default function MoodInsightWidget() {
     const dailyMoods = useMemo(() => groupByDay(moodHistory), [moodHistory]);
     const totalCheckins = moodHistory.length;
 
-    // Frequency map for breakdown
+    // Frequency map sorted by count descending, top 5
     const moodFrequency = useMemo(() => {
         const freq: Partial<Record<MoodType, number>> = {};
         moodHistory.forEach((entry) => {
@@ -56,6 +68,32 @@ export default function MoodInsightWidget() {
             .sort(([, a], [, b]) => b - a)
             .slice(0, 5) as [MoodType, number][];
     }, [moodHistory]);
+
+    // Donut chart data
+    const donutSize = 120;
+    const strokeWidth = 14;
+    const radius = (donutSize - strokeWidth) / 2;
+    const cx = donutSize / 2;
+    const cy = donutSize / 2;
+
+    const arcs = useMemo(() => {
+        if (totalCheckins === 0 || moodFrequency.length === 0) return [];
+        let currentAngle = 0;
+        const gapDeg = moodFrequency.length > 1 ? 3 : 0; // small gap between arcs
+        const totalGap = gapDeg * moodFrequency.length;
+        const availableDeg = 360 - totalGap;
+
+        return moodFrequency.map(([mood, count]) => {
+            const sweep = (count / totalCheckins) * availableDeg;
+            const start = currentAngle;
+            const end = currentAngle + sweep;
+            currentAngle = end + gapDeg;
+            return { mood, count, start, end, color: MOOD_CONFIGS[mood].color };
+        });
+    }, [moodFrequency, totalCheckins]);
+
+    // Find the top mood for center label
+    const topMood = moodFrequency.length > 0 ? moodFrequency[0] : null;
 
     return (
         <MotiView
@@ -84,87 +122,90 @@ export default function MoodInsightWidget() {
                     </View>
                 ) : (
                     <>
-                        {/* Day-by-day timeline — clean rows, no pill bubbles */}
-                        <View style={styles.timeline}>
-                            {dailyMoods.map((entry, idx) => {
-                                const config = MOOD_CONFIGS[entry.mood];
-                                const isLast = idx === dailyMoods.length - 1;
+                        {/* ── Donut Chart + Legend ────────────────────── */}
+                        <View style={styles.donutRow}>
+                            <View style={styles.donutContainer}>
+                                <Svg width={donutSize} height={donutSize}>
+                                    {/* Background circle */}
+                                    <SvgCircle
+                                        cx={cx}
+                                        cy={cy}
+                                        r={radius}
+                                        stroke={`${theme.colors.outline}15`}
+                                        strokeWidth={strokeWidth}
+                                        fill="none"
+                                    />
+                                    {/* Arcs */}
+                                    {arcs.map((arc, idx) => (
+                                        <Path
+                                            key={idx}
+                                            d={describeArc(cx, cy, radius, arc.start, arc.end)}
+                                            stroke={arc.color}
+                                            strokeWidth={strokeWidth}
+                                            strokeLinecap="round"
+                                            fill="none"
+                                        />
+                                    ))}
+                                </Svg>
+                                {/* Center label */}
+                                {topMood && (
+                                    <View style={styles.donutCenter}>
+                                        <Text style={[styles.donutPct, { color: theme.colors.onSurface }]}>
+                                            {Math.round((topMood[1] / totalCheckins) * 100)}%
+                                        </Text>
+                                        <Text style={[styles.donutLabel, { color: MOOD_CONFIGS[topMood[0]].color }]}>
+                                            {MOOD_CONFIGS[topMood[0]].label}
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
 
-                                return (
-                                    <View key={idx} style={styles.timelineRow}>
-                                        {/* Date label */}
-                                        <View style={styles.dateCol}>
-                                            <Text style={[styles.dateLabel, {
-                                                color: idx === 0 ? theme.colors.primary : theme.colors.onSurfaceVariant,
-                                                fontWeight: idx === 0 ? '700' : '500',
-                                            }]}>
-                                                {formatDate(entry.date)}
-                                            </Text>
-                                        </View>
-
-                                        {/* Timeline dot + connector */}
-                                        <View style={styles.dotCol}>
-                                            <View style={[
-                                                styles.dot,
-                                                {
-                                                    backgroundColor: theme.colors.primary,
-                                                },
-                                            ]} />
-                                            {!isLast && (
-                                                <View style={[styles.connector, {
-                                                    backgroundColor: `${theme.colors.outline}25`,
-                                                }]} />
-                                            )}
-                                        </View>
-
-                                        {/* Mood illustration + label — clean, no background bubble */}
-                                        <View style={styles.moodCol}>
-                                            <Image
-                                                source={MOOD_ILLUSTRATIONS[entry.mood]}
-                                                style={styles.moodIllustration}
-                                            />
-                                            <Text style={[styles.moodLabel, { color: theme.colors.onSurface }]}>
+                            {/* Legend */}
+                            <View style={styles.legend}>
+                                {moodFrequency.map(([mood, count]) => {
+                                    const config = MOOD_CONFIGS[mood];
+                                    const pct = Math.round((count / totalCheckins) * 100);
+                                    return (
+                                        <View key={mood} style={styles.legendItem}>
+                                            <View style={[styles.legendDot, { backgroundColor: config.color }]} />
+                                            <Text style={[styles.legendLabel, { color: theme.colors.onSurface }]}>
                                                 {config.label}
                                             </Text>
+                                            <Text style={[styles.legendPct, { color: theme.colors.onSurfaceVariant }]}>
+                                                {pct}%
+                                            </Text>
                                         </View>
-                                    </View>
-                                );
-                            })}
+                                    );
+                                })}
+                            </View>
                         </View>
 
-                        {/* Frequency breakdown — compact bar with illustrations */}
-                        {moodFrequency.length > 0 && (
-                            <View style={styles.freqSection}>
-                                <Text style={[styles.freqTitle, { color: theme.colors.onSurfaceVariant }]}>
-                                    Most frequent
-                                </Text>
-                                <View style={styles.freqRow}>
-                                    {moodFrequency.map(([mood, count]) => {
-                                        const config = MOOD_CONFIGS[mood];
-                                        const pct = (count / totalCheckins) * 100;
-                                        return (
-                                            <View key={mood} style={styles.freqItem}>
-                                                <Image
-                                                    source={MOOD_ILLUSTRATIONS[mood]}
-                                                    style={styles.freqIllustration}
-                                                />
-                                                <View style={[styles.freqBar, {
-                                                    backgroundColor: `${theme.colors.outline}15`,
-                                                }]}>
-                                                    <View style={[styles.freqFill, {
-                                                        width: `${Math.max(pct, 8)}%`,
-                                                        backgroundColor: theme.colors.primary,
-                                                    }]} />
-                                                </View>
-                                                <Text style={[styles.freqCount, { color: theme.colors.onSurfaceVariant }]}>
-                                                    {count}
-                                                </Text>
-                                            </View>
-                                        );
-                                    })}
-                                </View>
-                            </View>
-                        )}
+                        {/* ── Horizontal dot strip (last 7 days) ─────── */}
+                        <View style={styles.stripSection}>
+                            <Text style={[styles.stripTitle, { color: theme.colors.onSurfaceVariant }]}>
+                                Last {dailyMoods.length} days
+                            </Text>
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={styles.stripScroll}
+                            >
+                                {[...dailyMoods].reverse().map((entry, idx) => {
+                                    const config = MOOD_CONFIGS[entry.mood];
+                                    return (
+                                        <View key={idx} style={styles.stripItem}>
+                                            <View style={[styles.stripDot, { backgroundColor: config.color }]} />
+                                            <Text style={[styles.stripMood, { color: theme.colors.onSurface }]}>
+                                                {config.label}
+                                            </Text>
+                                            <Text style={[styles.stripDate, { color: theme.colors.onSurfaceVariant }]}>
+                                                {formatDayShort(entry.date)}
+                                            </Text>
+                                        </View>
+                                    );
+                                })}
+                            </ScrollView>
+                        </View>
                     </>
                 )}
             </View>
@@ -200,93 +241,88 @@ const styles = StyleSheet.create({
         ...Typography.bodyMedium,
         textAlign: 'center',
     },
-    timeline: {
-        gap: 2,
-    },
-    timelineRow: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        minHeight: 44,
-    },
-    dateCol: {
-        width: 72,
-        paddingTop: 8,
-    },
-    dateLabel: {
-        fontSize: 12,
-    },
-    dotCol: {
-        width: 24,
-        alignItems: 'center',
-        paddingTop: 8,
-    },
-    dot: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-        zIndex: 1,
-    },
-    connector: {
-        width: 2,
-        flex: 1,
-        minHeight: 20,
-        marginTop: 2,
-    },
-    moodCol: {
-        flex: 1,
+
+    // ── Donut ────────────────────────────────────────────
+    donutRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10,
-        marginLeft: 8,
-        paddingVertical: 4,
+        gap: Spacing.md,
     },
-    moodIllustration: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
+    donutContainer: {
+        position: 'relative',
+        width: 120,
+        height: 120,
     },
-    moodLabel: {
-        fontSize: 14,
+    donutCenter: {
+        ...StyleSheet.absoluteFillObject,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    donutPct: {
+        fontSize: 18,
+        fontWeight: '800',
+    },
+    donutLabel: {
+        fontSize: 11,
         fontWeight: '600',
+        marginTop: 1,
     },
-    freqSection: {
+    legend: {
+        flex: 1,
+        gap: 6,
+    },
+    legendItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    legendDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+    },
+    legendLabel: {
+        fontSize: 13,
+        fontWeight: '600',
+        flex: 1,
+    },
+    legendPct: {
+        fontSize: 12,
+        fontWeight: '500',
+    },
+
+    // ── Dot strip ────────────────────────────────────────
+    stripSection: {
         marginTop: Spacing.md,
         paddingTop: Spacing.sm,
         borderTopWidth: StyleSheet.hairlineWidth,
         borderTopColor: 'rgba(128,128,128,0.12)',
     },
-    freqTitle: {
+    stripTitle: {
         fontSize: 12,
         fontWeight: '600',
-        marginBottom: Spacing.xs,
+        marginBottom: Spacing.sm,
     },
-    freqRow: {
-        gap: 6,
+    stripScroll: {
+        gap: 16,
+        paddingHorizontal: 2,
     },
-    freqItem: {
-        flexDirection: 'row',
+    stripItem: {
         alignItems: 'center',
-        gap: 8,
+        gap: 4,
+        minWidth: 52,
     },
-    freqIllustration: {
-        width: 22,
-        height: 22,
-        borderRadius: 11,
+    stripDot: {
+        width: 18,
+        height: 18,
+        borderRadius: 9,
     },
-    freqBar: {
-        flex: 1,
-        height: 6,
-        borderRadius: 3,
-        overflow: 'hidden',
-    },
-    freqFill: {
-        height: '100%',
-        borderRadius: 3,
-    },
-    freqCount: {
+    stripMood: {
         fontSize: 11,
         fontWeight: '600',
-        width: 20,
-        textAlign: 'right',
+    },
+    stripDate: {
+        fontSize: 10,
+        fontWeight: '500',
     },
 });

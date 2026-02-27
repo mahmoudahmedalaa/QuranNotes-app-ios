@@ -1,11 +1,9 @@
 import { usePrayer } from '../../features/prayer/infrastructure/PrayerContext';
-import { useSettings } from '../../features/settings/infrastructure/SettingsContext';
 
 type TimePhase = 'morning' | 'evening' | 'night';
 
 export const useTimeOfDayPhase = (): TimePhase => {
     const { nextPrayer } = usePrayer();
-    const { settings } = useSettings();
 
     // If simulating Ramadan, we might want to test night more often, but let's stick to strict time logic first
     if (!nextPrayer) {

@@ -18,7 +18,7 @@ export default function Index() {
         try {
             const value = await AsyncStorage.getItem('hasSeenWelcome');
             setHasSeenWelcome(value === 'true');
-        } catch (error) {
+        } catch (_error) {
             // If error, show welcome screen
             setHasSeenWelcome(false);
         }

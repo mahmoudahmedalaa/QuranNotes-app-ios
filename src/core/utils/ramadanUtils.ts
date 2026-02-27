@@ -35,7 +35,7 @@ export async function initRamadanDates(): Promise<() => void> {
     try {
         const dates = await RamadanConfigService.fetch();
         applyDates(dates.startDate, dates.endDate);
-    } catch (e) {
+    } catch (_e) {
         if (__DEV__) console.log('[Ramadan] Using hardcoded defaults');
     }
 

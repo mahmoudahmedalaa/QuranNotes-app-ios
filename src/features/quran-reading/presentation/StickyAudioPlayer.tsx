@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, IconButton, ProgressBar, Menu, Divider, useTheme } from 'react-native-paper';
-import { Colors, Spacing, BorderRadius, Shadows } from '../../../core/theme/DesignSystem';
+import { Text, IconButton, Menu, Divider, useTheme } from 'react-native-paper';
+import { Spacing, BorderRadius } from '../../../core/theme/DesignSystem';
 import { useSettings } from '../../settings/infrastructure/SettingsContext';
 import { RECITERS } from '../../audio-player/domain/Reciter';
 import { MotiView } from 'moti';

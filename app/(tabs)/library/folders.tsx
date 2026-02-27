@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, FlatList, StyleSheet, Alert, Pressable, Dimensions, Platform } from 'react-native';
+import { View, FlatList, StyleSheet, Alert, Pressable, Platform } from 'react-native';
 import {
     Text,
     useTheme,
@@ -51,7 +51,8 @@ export default function FoldersScreen() {
         setEditingFolder(null);
     };
 
-    const handleDelete = (folder: Folder) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _handleDelete = (folder: Folder) => {
         Alert.alert(
             'Delete Folder',
             `Delete "${folder.name}"? Items in this folder will be unassigned.`,

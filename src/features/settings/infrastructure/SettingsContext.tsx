@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MD3LightTheme, MD3DarkTheme, Provider as PaperProvider } from 'react-native-paper';
 import { View, Text, Button } from 'react-native';
-import { PremiumTheme } from '../../../core/theme/DesignSystem';
+
 import { DEFAULT_RECITER } from '../../audio-player/domain/Reciter';
 
 interface AppSettings {
@@ -18,11 +18,10 @@ interface AppSettings {
     reminderMinute: number;
     streakReminderEnabled: boolean;
     khatmaReminderEnabled: boolean;
-    prayerMethod: number;
+    prayerMethod?: number;    // undefined = auto-detect from location
     prayerNotifications: boolean;
     prayerLocation: string;
-    debugSimulateRamadan: boolean;
-    debugRamadanDay: number;
+    adhkarReminderEnabled: boolean;
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -33,15 +32,14 @@ const DEFAULT_SETTINGS: AppSettings = {
     translationEdition: 'en.sahih',
     showTransliteration: false,
     dailyReminderEnabled: false,
-    reminderHour: 6,
-    reminderMinute: 0,
+    reminderHour: 12,
+    reminderMinute: 30,
     streakReminderEnabled: true,
     khatmaReminderEnabled: true,
-    prayerMethod: 4,
+    prayerMethod: undefined,  // auto-detect from location
     prayerNotifications: false,
     prayerLocation: '',
-    debugSimulateRamadan: false,
-    debugRamadanDay: 5,
+    adhkarReminderEnabled: true,
 };
 
 const STORAGE_KEY = 'app_settings';
@@ -112,7 +110,7 @@ class ErrorBoundary extends React.Component<
 
 export const SettingsProvider = ({ children }: { children: React.ReactNode }) => {
     const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
-    const [isReady, setIsReady] = useState(false);
+    const [, setIsReady] = useState(false);
 
     useEffect(() => {
         loadSettings();
@@ -138,11 +136,12 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
                     reminderMinute: parsed.reminderMinute ?? DEFAULT_SETTINGS.reminderMinute,
                     streakReminderEnabled: parsed.streakReminderEnabled ?? DEFAULT_SETTINGS.streakReminderEnabled,
                     khatmaReminderEnabled: parsed.khatmaReminderEnabled ?? DEFAULT_SETTINGS.khatmaReminderEnabled,
-                    prayerMethod: parsed.prayerMethod ?? DEFAULT_SETTINGS.prayerMethod,
+                    // Migrate: old default was 4 (Umm Al-Qura). Treat as undefined (auto-detect)
+                    // unless the user explicitly chose a different method.
+                    prayerMethod: parsed.prayerMethod === 4 ? undefined : parsed.prayerMethod,
                     prayerNotifications: parsed.prayerNotifications ?? DEFAULT_SETTINGS.prayerNotifications,
                     prayerLocation: parsed.prayerLocation ?? DEFAULT_SETTINGS.prayerLocation,
-                    debugSimulateRamadan: parsed.debugSimulateRamadan ?? DEFAULT_SETTINGS.debugSimulateRamadan,
-                    debugRamadanDay: parsed.debugRamadanDay ?? DEFAULT_SETTINGS.debugRamadanDay,
+                    adhkarReminderEnabled: parsed.adhkarReminderEnabled ?? DEFAULT_SETTINGS.adhkarReminderEnabled,
                 };
 
                 setSettings({ ...DEFAULT_SETTINGS, ...loaded });
@@ -176,7 +175,7 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
 
     // if (!isReady) return null; // Don't block render. Allow async update.
 
-    const theme = settings.isDarkMode ? MD3DarkTheme : PremiumTheme;
+    // Theme is derived in PaperProvider below
 
     return (
         <ErrorBoundary>

@@ -3,6 +3,7 @@
  * Real-time Arabic speech recognition for Follow Along feature.
  * Uses @jamsch/expo-speech-recognition native module.
  */
+import { NativeModules, NativeEventEmitter } from 'react-native';
 
 export interface VoiceRecognitionResult {
     transcript: string;
@@ -16,7 +17,6 @@ export type VoiceRecognitionErrorCallback = (error: string) => void;
 // Use NativeModules directly to avoid Metro bundling crashes.
 // Metro resolves ALL require() calls at bundle time, even inside try-catch.
 // So we access the native module through React Native's NativeModules bridge.
-import { NativeModules, NativeEventEmitter, Platform } from 'react-native';
 
 let moduleChecked = false;
 let moduleAvailable = false;

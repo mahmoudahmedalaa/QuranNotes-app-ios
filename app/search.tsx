@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useSearch } from '../src/core/hooks/useSearch';
 import { Verse } from '../src/core/domain/entities/Quran';
-import { Spacing, BorderRadius, Shadows } from '../src/core/theme/DesignSystem';
+import { Spacing, BorderRadius } from '../src/core/theme/DesignSystem';
 
 export default function SearchScreen() {
     const router = useRouter();

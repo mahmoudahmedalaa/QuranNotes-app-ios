@@ -59,6 +59,7 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         loadOnboardingState();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
 
     const loadOnboardingState = async () => {

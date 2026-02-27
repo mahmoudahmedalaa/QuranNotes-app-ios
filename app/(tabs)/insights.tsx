@@ -1,31 +1,23 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
-import { Text, useTheme } from 'react-native-paper';
+import { View, StyleSheet, ScrollView } from 'react-native';
+import { Text, useTheme, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Spacing, Gradients, BorderRadius } from '../../src/core/theme/DesignSystem';
 import { ConsistencyHeatmap } from '../../src/features/user-stats/presentation/ConsistencyHeatmap';
 import { ActivityChart } from '../../src/features/user-stats/presentation/ActivityChart';
 import { TopicBreakdown } from '../../src/features/user-stats/presentation/TopicBreakdown';
 import { StatsWidgetGrid } from '../../src/features/user-stats/presentation/StatsWidgetGrid';
 import MoodInsightWidget from '../../src/features/mood/presentation/MoodInsightWidget';
-import { useStreaks } from '../../src/features/auth/infrastructure/StreakContext';
-
-const { width } = Dimensions.get('window');
-
 import { useInsightsData } from '../../src/core/hooks/useInsightsData';
-
-import { Button } from 'react-native-paper';
-import { useRouter } from 'expo-router';
 import { usePro } from '../../src/features/auth/infrastructure/ProContext';
-
-// ...
 
 export default function InsightsScreen() {
     const theme = useTheme();
     const router = useRouter();
     const { isPro } = usePro();
-    const { dailyActivity, heatmapData, topicBreakdown, stats, loading } = useInsightsData();
+    const { dailyActivity, heatmapData, topicBreakdown, stats } = useInsightsData();
 
     if (!isPro) {
         return (

@@ -6,12 +6,12 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { JuzInfo } from '../data/khatmaData';
-import { Spacing, BorderRadius, Shadows, BrandTokens } from '../../../core/theme/DesignSystem';
+import { Spacing, BorderRadius, Shadows } from '../../../core/theme/DesignSystem';
 
 interface JuzCardProps {
     juz: JuzInfo;
@@ -125,34 +125,30 @@ export const JuzCard: React.FC<JuzCardProps> = ({
 
                 {/* Action Buttons */}
                 <View style={styles.actionRow}>
-                    {/* Continue Reading / Start Reading button */}
+                    {/* Continue Reading / Start Reading — soft tinted pill */}
                     {!isCompleted && (
                         <Pressable
                             onPress={handleContinueReading}
                             style={({ pressed }) => [
-                                styles.continueButtonWrapper,
-                                pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                                styles.readButton,
+                                {
+                                    backgroundColor: theme.colors.primaryContainer,
+                                },
+                                pressed && { opacity: 0.7, transform: [{ scale: 0.97 }] },
                             ]}
                         >
-                            <LinearGradient
-                                colors={[BrandTokens.light.accentPrimary, '#7B5FFF']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                                style={styles.continueButton}
-                            >
-                                <MaterialCommunityIcons
-                                    name="book-open-page-variant"
-                                    size={18}
-                                    color="#FFF"
-                                />
-                                <Text style={styles.continueButtonText}>
-                                    {lastReadSurahNumber ? 'Continue Reading' : 'Start Reading'}
-                                </Text>
-                            </LinearGradient>
+                            <Ionicons
+                                name={lastReadSurahNumber ? 'book' : 'book-outline'}
+                                size={16}
+                                color={theme.colors.primary}
+                            />
+                            <Text style={[styles.readButtonText, { color: theme.colors.primary }]}>
+                                {lastReadSurahNumber ? 'Continue' : 'Start Reading'}
+                            </Text>
                         </Pressable>
                     )}
 
-                    {/* Mark Complete / Undo button */}
+                    {/* Complete / Undo — subtle tinted pill */}
                     <Pressable
                         onPress={() => {
                             Haptics.notificationAsync(
@@ -163,30 +159,28 @@ export const JuzCard: React.FC<JuzCardProps> = ({
                             onToggle();
                         }}
                         style={({ pressed }) => [
-                            styles.toggleButton,
+                            styles.completeButton,
                             {
                                 backgroundColor: isCompleted
-                                    ? 'rgba(0,0,0,0.05)'
-                                    : 'rgba(56, 161, 105, 0.08)',
-                                flex: isCompleted ? 1 : 0,
+                                    ? 'rgba(0,0,0,0.04)'
+                                    : 'rgba(56, 161, 105, 0.10)',
+                                flex: isCompleted ? 1 : undefined,
                             },
-                            pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] },
+                            pressed && { opacity: 0.7, transform: [{ scale: 0.97 }] },
                         ]}
                     >
                         <Ionicons
-                            name={isCompleted ? 'close-circle-outline' : 'checkmark-circle'}
-                            size={18}
-                            color={isCompleted ? '#888' : '#38A169'}
+                            name={isCompleted ? 'arrow-undo-outline' : 'checkmark-circle-outline'}
+                            size={16}
+                            color={isCompleted ? '#999' : '#38A169'}
                         />
                         <Text
                             style={[
-                                styles.toggleButtonText,
-                                {
-                                    color: isCompleted ? '#888' : '#38A169',
-                                },
+                                styles.completeButtonText,
+                                { color: isCompleted ? '#999' : '#38A169' },
                             ]}
                         >
-                            {isCompleted ? 'Undo' : 'Mark Complete'}
+                            {isCompleted ? 'Undo' : 'Complete'}
                         </Text>
                     </Pressable>
                 </View>
@@ -256,39 +250,30 @@ const styles = StyleSheet.create({
         gap: Spacing.sm,
         marginTop: Spacing.md,
     },
-    continueButtonWrapper: {
+    readButton: {
         flex: 1,
-        borderRadius: BorderRadius.full,
-        shadowColor: BrandTokens.light.accentPrimary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 6,
-    },
-    continueButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 13,
+        paddingVertical: 11,
         borderRadius: BorderRadius.full,
-        gap: 8,
+        gap: 7,
     },
-    continueButtonText: {
-        color: '#FFF',
-        fontWeight: '700',
-        fontSize: 15,
-        letterSpacing: 0.3,
+    readButtonText: {
+        fontWeight: '600',
+        fontSize: 14,
+        letterSpacing: 0.2,
     },
-    toggleButton: {
+    completeButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 12,
+        paddingVertical: 11,
         paddingHorizontal: 16,
         borderRadius: BorderRadius.full,
         gap: 6,
     },
-    toggleButtonText: {
+    completeButtonText: {
         fontWeight: '600',
         fontSize: 13,
     },

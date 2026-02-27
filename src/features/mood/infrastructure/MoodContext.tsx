@@ -38,10 +38,6 @@ interface MoodContextType {
     moodHistory: MoodEntry[];
     /** Reset today's mood (allow new check-in) */
     resetToday: () => void;
-    /** Debug: reset everything (free uses, today, history) */
-    debugResetAll: () => void;
-    /** Debug: use one free credit (for paywall testing) */
-    debugUseOneCredit: () => void;
     /** Loading state */
     loading: boolean;
 }
@@ -54,8 +50,6 @@ const MoodContext = createContext<MoodContextType>({
     todayVerses: [],
     moodHistory: [],
     resetToday: () => { },
-    debugResetAll: () => { },
-    debugUseOneCredit: () => { },
     loading: true,
 });
 
@@ -149,76 +143,59 @@ export const MoodProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const checkIn = useCallback(async (mood: MoodType): Promise<MoodVerse[] | null> => {
         if (!canCheckIn) return null;
 
-        const keys = storageKeys(uid);
+        try {
+            const keys = storageKeys(uid);
 
-        // Get verses for this mood
-        const allVerses = (moodVerses as Record<string, MoodVerse[]>)[mood] || [];
-        const selected = shuffle(allVerses).slice(0, VERSES_PER_SESSION);
+            // Get verses for this mood
+            const allVerses = (moodVerses as Record<string, MoodVerse[]>)[mood] || [];
+            const selected = shuffle(allVerses).slice(0, VERSES_PER_SESSION);
 
-        // Record the check-in
-        const entry: MoodEntry = {
-            mood,
-            timestamp: new Date().toISOString(),
-            versesShown: [],
-        };
-        const updatedHistory = [entry, ...moodHistory].slice(0, 100); // Keep last 100
-
-        // Decrement free uses for non-Pro
-        let newFreeUses = freeUsesRemaining;
-        if (!isPro) {
-            newFreeUses = Math.max(0, freeUsesRemaining - 1);
-            setFreeUsesRemaining(newFreeUses);
-        }
-
-        setTodayMood(mood);
-        setTodayVerses(selected);
-        setMoodHistory(updatedHistory);
-
-        // Persist everything
-        await Promise.all([
-            AsyncStorage.setItem(keys.HISTORY, JSON.stringify(updatedHistory)),
-            AsyncStorage.setItem(keys.FREE_USES, String(newFreeUses)),
-            AsyncStorage.setItem(keys.TODAY_MOOD, JSON.stringify({
-                date: todayKey(),
+            // Record the check-in
+            const entry: MoodEntry = {
                 mood,
-                verses: selected,
-            })),
-        ]);
+                timestamp: new Date().toISOString(),
+                versesShown: [],
+            };
+            const updatedHistory = [entry, ...moodHistory].slice(0, 100); // Keep last 100
 
-        // Record streak activity
-        await recordActivity();
+            // Decrement free uses for non-Pro
+            let newFreeUses = freeUsesRemaining;
+            if (!isPro) {
+                newFreeUses = Math.max(0, freeUsesRemaining - 1);
+                setFreeUsesRemaining(newFreeUses);
+            }
 
-        return selected;
+            setTodayMood(mood);
+            setTodayVerses(selected);
+            setMoodHistory(updatedHistory);
+
+            // Persist everything
+            await Promise.all([
+                AsyncStorage.setItem(keys.HISTORY, JSON.stringify(updatedHistory)),
+                AsyncStorage.setItem(keys.FREE_USES, String(newFreeUses)),
+                AsyncStorage.setItem(keys.TODAY_MOOD, JSON.stringify({
+                    date: todayKey(),
+                    mood,
+                    verses: selected,
+                })),
+            ]);
+
+            // Record streak activity
+            await recordActivity();
+
+            return selected;
+        } catch (e) {
+            console.error('[MoodContext] Error during check-in:', e);
+            return null;
+        }
     }, [canCheckIn, isPro, freeUsesRemaining, moodHistory, uid, recordActivity]);
 
     const resetToday = useCallback(() => {
         setTodayMood(null);
         setTodayVerses([]);
-        AsyncStorage.removeItem(storageKeys(uid).TODAY_MOOD);
+        AsyncStorage.removeItem(storageKeys(uid).TODAY_MOOD).catch(() => { });
     }, [uid]);
 
-    /** Debug: wipe ALL mood data for this user and restore free uses */
-    const debugResetAll = useCallback(() => {
-        const keys = storageKeys(uid);
-        setTodayMood(null);
-        setTodayVerses([]);
-        setMoodHistory([]);
-        setFreeUsesRemaining(MAX_FREE_USES);
-        AsyncStorage.multiRemove([keys.HISTORY, keys.FREE_USES, keys.TODAY_MOOD]);
-    }, [uid]);
-
-    /** Debug: use one free credit without actually checking in */
-    const debugUseOneCredit = useCallback(() => {
-        setFreeUsesRemaining(prev => {
-            const next = Math.max(0, prev - 1);
-            AsyncStorage.setItem(storageKeys(uid).FREE_USES, String(next));
-            return next;
-        });
-        // Also reset today's mood so the check-in card reappears
-        setTodayMood(null);
-        setTodayVerses([]);
-        AsyncStorage.removeItem(storageKeys(uid).TODAY_MOOD);
-    }, [uid]);
 
     const value = useMemo(() => ({
         checkIn,
@@ -228,10 +205,8 @@ export const MoodProvider: React.FC<{ children: React.ReactNode }> = ({ children
         todayVerses,
         moodHistory,
         resetToday,
-        debugResetAll,
-        debugUseOneCredit,
         loading,
-    }), [checkIn, canCheckIn, freeUsesRemaining, todayMood, todayVerses, moodHistory, resetToday, debugResetAll, debugUseOneCredit, loading]);
+    }), [checkIn, canCheckIn, freeUsesRemaining, todayMood, todayVerses, moodHistory, resetToday, loading]);
 
     return (
         <MoodContext.Provider value={value}>

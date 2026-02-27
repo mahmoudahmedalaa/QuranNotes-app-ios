@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, FlatList, Pressable, Dimensions } from 'react-native';
+import { View, StyleSheet, FlatList, Pressable } from 'react-native';
 import { Text, useTheme, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,11 +18,7 @@ import { RECITERS, getReciterById } from '../../src/features/audio-player/domain
 import { useSettings } from '../../src/features/settings/infrastructure/SettingsContext';
 import * as Haptics from 'expo-haptics';
 
-const { width } = Dimensions.get('window');
 
-// Al-Fatiha Verse 1 location for preview
-const PREVIEW_SURAH = 1;
-const PREVIEW_AYAH = 1;
 
 export default function OnboardingReciter() {
     const theme = useTheme();
@@ -82,9 +78,10 @@ export default function OnboardingReciter() {
         }
     };
 
-    // Auto-play on mount
+    // Auto-play on mount — intentionally run only once
     useEffect(() => {
         playPreview(selectedReciter);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleReciterSelect = (reciterId: string) => {

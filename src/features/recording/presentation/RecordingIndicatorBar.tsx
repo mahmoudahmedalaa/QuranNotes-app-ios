@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Spacing, BorderRadius, Shadows } from '../../../core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
-import { MotiView, AnimatePresence } from 'moti';
+import { MotiView } from 'moti';
 
 interface RecordingIndicatorBarProps {
     duration: number;

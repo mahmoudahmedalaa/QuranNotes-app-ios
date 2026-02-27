@@ -10,7 +10,6 @@
 
 import React from 'react';
 import { StyleSheet, ViewStyle, Pressable } from 'react-native';
-import { MotiView } from 'moti';
 import { Text, useTheme } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';

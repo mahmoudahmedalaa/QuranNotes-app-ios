@@ -25,6 +25,7 @@ import { Image } from 'expo-image';
 import { Text, useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Path as SvgPath } from 'react-native-svg';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -37,10 +38,17 @@ import { useQuran } from '../../../core/hooks/useQuran';
 import { Spacing, BorderRadius, Shadows, Typography, Springs } from '../../../core/theme/DesignSystem';
 
 // ── Layout constants (avoids magic numbers throughout) ──────────────────
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const ICON_BUTTON_SIZE = 36;
 const ACTION_BUTTON_SIZE = 38;
-const ILLUSTRATION_SIZE = 180;
+const ILLUSTRATION_SIZE = 120;
 const DIVIDER_DOT_SIZE = 5;
+const CURVE_DEPTH = 65;                               // how deep the elliptical arc is (wide & shallow)
+const COLORED_ZONE_HEIGHT = 220;                      // height of the gradient top zone (before curve)
+const ICON_OVERLAP = ILLUSTRATION_SIZE * 0.5;         // how much the icon drops below the curve boundary
+
+// SVG path for the wide, shallow elliptical dome (Headspace-style)
+const CURVE_SVG_PATH = `M 0 ${CURVE_DEPTH} Q ${SCREEN_WIDTH / 2} 0 ${SCREEN_WIDTH} ${CURVE_DEPTH} L ${SCREEN_WIDTH} ${CURVE_DEPTH} L 0 ${CURVE_DEPTH} Z`;
 
 // ── Arabic text style (not in DesignSystem — unique to Quran rendering) ─
 const ARABIC_FONT_SIZE = 22;
@@ -102,9 +110,9 @@ const subtitleIndices: Partial<Record<MoodType, number>> = {};
  */
 function getMoodGradient(color: string, isDark: boolean): readonly [string, string, string] {
     if (isDark) {
-        return [`${color}18`, `${color}08`, 'transparent'] as const;
+        return [`${color}40`, `${color}28`, `${color}18`] as const;
     }
-    return [`${color}20`, `${color}0C`, 'transparent'] as const;
+    return [`${color}50`, `${color}35`, `${color}20`] as const;
 }
 
 /**
@@ -132,10 +140,10 @@ export default function VerseRecommendationSheet({
 
     // Runtime-enriched verses with full text from API
     const [enrichedVerses, setEnrichedVerses] = useState<MoodVerse[]>([]);
-    const [loadingText, setLoadingText] = useState(false);
+    const [, setLoadingText] = useState(false);
 
     // For sharing
-    const viewShotRefs = useRef<Array<ViewShot | null>>([]);
+    const viewShotRefs = useRef<(ViewShot | null)[]>([]);
     const [capturingVerseKey, setCapturingVerseKey] = useState<string | null>(null);
 
     // Cache to avoid re-fetching surahs we've already loaded
@@ -155,6 +163,7 @@ export default function VerseRecommendationSheet({
         } else {
             setCurrentSubtitle('Here are some verses for you');
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [visible, mood]);
 
     // Fetch full verse text when the sheet opens
@@ -278,33 +287,15 @@ export default function VerseRecommendationSheet({
             presentationStyle="pageSheet"
             onRequestClose={onDismiss}
         >
-            {/* Full-screen mood-tinted gradient — pageSheet handles safe area so no insets.top */}
-            <LinearGradient
-                colors={gradientColors}
-                locations={[0, 0.45, 1]}
-                style={[styles.container, { backgroundColor: theme.colors.background }]}
-            >
-                {/* Mood header — illustration + label + subtitle */}
-                <MotiView
-                    from={{ opacity: 0, scale: 0.85 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ type: 'spring', ...Springs.gentle, delay: 100 }}
-                    style={styles.moodHeader}
-                >
-                    {mood && (
-                        <View style={{ width: ILLUSTRATION_SIZE, height: ILLUSTRATION_SIZE, alignItems: 'center', justifyContent: 'center', overflow: 'visible' as const }}>
-                            <BreathingIcon imageSource={moodConfig?.imageSource} size={ILLUSTRATION_SIZE} />
-                        </View>
-                    )}
-                    <Text style={[styles.moodLabel, { color: theme.colors.onSurface }]}>
-                        {moodConfig?.label}
-                    </Text>
-                    <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-                        {currentSubtitle}
-                    </Text>
-                </MotiView>
+            <View style={styles.container}>
+                {/* ── Full-height Gradient — always visible as background ── */}
+                <LinearGradient
+                    colors={[...gradientColors, moodColor + '33']}
+                    locations={[0, 0.15, 0.35, 1]}
+                    style={styles.coloredZone}
+                />
 
-                {/* Close button — absolutely positioned top-right */}
+                {/* Close button — fixed above everything */}
                 <Pressable
                     onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -315,8 +306,8 @@ export default function VerseRecommendationSheet({
                         styles.closeButton,
                         {
                             backgroundColor: theme.dark
-                                ? 'rgba(255,255,255,0.12)'
-                                : 'rgba(0,0,0,0.06)',
+                                ? 'rgba(255,255,255,0.15)'
+                                : 'rgba(255,255,255,0.7)',
                         },
                         pressed && { opacity: 0.6 },
                     ]}
@@ -328,154 +319,197 @@ export default function VerseRecommendationSheet({
                     />
                 </Pressable>
 
-                {/* Verse cards */}
+                {/* ── Scrollable Content ── */}
                 <ScrollView
-                    contentContainerStyle={[
-                        styles.scrollContent,
-                        { paddingBottom: insets.bottom + Spacing.xl },
-                    ]}
+                    contentContainerStyle={{ paddingBottom: insets.bottom + Spacing.xl }}
                     showsVerticalScrollIndicator={false}
+                    style={styles.scrollView}
                 >
-                    {(enrichedVerses.length > 0 ? enrichedVerses : verses).map((verse, idx) => {
-                        const verseKey = `${verse.surah}:${verse.verse}`;
-                        const isCurrentlyPlaying = playingVerse &&
-                            playingVerse.surah === verse.surah &&
-                            playingVerse.verse === verse.verse;
-                        const isLoading = loadingVerse === verseKey;
-                        const displayArabic = verse.arabicFull || verse.arabicSnippet;
-                        const displayTranslation = verse.translationFull || verse.translation;
+                    {/* Transparent spacer — gradient shows through */}
+                    <View style={styles.gradientSpacer} />
 
-                        return (
-                            <MotiView
-                                key={`${verse.surah}-${verse.verse}-${idx}`}
-                                from={{ opacity: 0, translateY: Spacing.lg }}
-                                animate={{ opacity: 1, translateY: 0 }}
-                                transition={{
-                                    type: 'spring',
-                                    ...Springs.gentle,
-                                    delay: 200 + idx * 120,
-                                }}
-                            >
-                                <ViewShot
-                                    ref={el => { viewShotRefs.current[idx] = el; }}
-                                    options={{ format: 'png', quality: 1.0 }}
-                                    style={capturingVerseKey === verseKey ? {
-                                        backgroundColor: theme.colors.surface,
-                                        padding: Spacing.md,
-                                        borderRadius: BorderRadius.xl,
-                                    } : {}}
-                                >
-                                    <View style={[
-                                        styles.verseCard,
-                                        {
-                                            backgroundColor: theme.colors.surface,
-                                            borderColor: accentColor,
-                                        },
-                                        Shadows.sm,
-                                    ]}>
-                                        {/* Arabic text */}
-                                        <Text style={[styles.arabicText, { color: theme.colors.onSurface }]}>
-                                            {displayArabic}
-                                        </Text>
+                    {/* SVG dome — wide, shallow elliptical curve (Headspace style) */}
+                    <Svg
+                        width={SCREEN_WIDTH}
+                        height={CURVE_DEPTH}
+                        style={styles.curveSvg}
+                    >
+                        <SvgPath d={CURVE_SVG_PATH} fill={theme.colors.surface} />
+                    </Svg>
 
-                                        {/* Decorative divider with mood accent */}
-                                        <View style={styles.dividerRow}>
-                                            <View style={[styles.dividerLine, { backgroundColor: accentColor }]} />
-                                            <View style={[styles.dividerDot, { backgroundColor: moodColor }]} />
-                                            <View style={[styles.dividerLine, { backgroundColor: accentColor }]} />
-                                        </View>
+                    {/* White content area — connects seamlessly with the dome arch */}
+                    <View style={[styles.headerArea, { backgroundColor: theme.colors.surface }]}>
+                        {/* Breathing icon — floats up through dome into gradient */}
+                        <MotiView
+                            from={{ opacity: 0, scale: 0.7 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ type: 'spring', ...Springs.gentle, delay: 100 }}
+                            style={styles.floatingIconWrap}
+                        >
+                            {mood && (
+                                <BreathingIcon imageSource={moodConfig?.imageSource} size={ILLUSTRATION_SIZE} />
+                            )}
+                        </MotiView>
 
-                                        {/* Translation */}
-                                        <Text style={[styles.translation, { color: theme.colors.onSurfaceVariant }]}>
-                                            {displayTranslation}
-                                        </Text>
+                        {/* Mood label + subtitle */}
+                        <MotiView
+                            from={{ opacity: 0, translateY: 10 }}
+                            animate={{ opacity: 1, translateY: 0 }}
+                            transition={{ type: 'spring', ...Springs.gentle, delay: 200 }}
+                            style={styles.moodHeader}
+                        >
+                            <Text style={[styles.moodLabel, { color: theme.colors.onSurface }]}>
+                                {moodConfig?.label}
+                            </Text>
+                            <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
+                                {currentSubtitle}
+                            </Text>
+                        </MotiView>
 
-                                        {/* Theme badge */}
-                                        <Text style={[styles.themeBadge, { color: moodColor }]}>
-                                            {verse.theme}
-                                        </Text>
+                        {/* Verse cards */}
+                        <View style={styles.scrollContent}>
+                            {(enrichedVerses.length > 0 ? enrichedVerses : verses).map((verse, idx) => {
+                                const verseKey = `${verse.surah}:${verse.verse}`;
+                                const isCurrentlyPlaying = playingVerse &&
+                                    playingVerse.surah === verse.surah &&
+                                    playingVerse.verse === verse.verse;
+                                const isLoading = loadingVerse === verseKey;
+                                const displayArabic = verse.arabicFull || verse.arabicSnippet;
+                                const displayTranslation = verse.translationFull || verse.translation;
 
-                                        {/* Action buttons */}
-                                        <View style={styles.actionRow}>
-                                            {/* Play */}
-                                            <Pressable
-                                                onPress={() => handlePlayVerse(verse.surah, verse.verse)}
-                                                style={({ pressed }) => [
-                                                    styles.actionBtn,
-                                                    {
-                                                        backgroundColor: isCurrentlyPlaying && isPlaying
-                                                            ? moodColor
-                                                            : `${moodColor}15`,
-                                                    },
-                                                    pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
-                                                ]}
-                                            >
-                                                {isLoading ? (
-                                                    <ActivityIndicator size="small" color={moodColor} />
-                                                ) : (
-                                                    <MaterialCommunityIcons
-                                                        name={isCurrentlyPlaying && isPlaying ? 'pause' : 'play'}
-                                                        size={Spacing.md}
-                                                        color={isCurrentlyPlaying && isPlaying
-                                                            ? theme.colors.onPrimary
-                                                            : moodColor}
-                                                    />
+                                return (
+                                    <MotiView
+                                        key={`${verse.surah}-${verse.verse}-${idx}`}
+                                        from={{ opacity: 0, translateY: Spacing.lg }}
+                                        animate={{ opacity: 1, translateY: 0 }}
+                                        transition={{
+                                            type: 'spring',
+                                            ...Springs.gentle,
+                                            delay: 200 + idx * 120,
+                                        }}
+                                    >
+                                        <ViewShot
+                                            ref={el => { viewShotRefs.current[idx] = el; }}
+                                            options={{ format: 'png', quality: 1.0 }}
+                                            style={capturingVerseKey === verseKey ? {
+                                                backgroundColor: theme.colors.surface,
+                                                padding: Spacing.md,
+                                                borderRadius: BorderRadius.xl,
+                                            } : {}}
+                                        >
+                                            <View style={[
+                                                styles.verseCard,
+                                                {
+                                                    backgroundColor: theme.colors.surface,
+                                                    borderColor: accentColor,
+                                                },
+                                                Shadows.sm,
+                                            ]}>
+                                                {/* Arabic text */}
+                                                <Text style={[styles.arabicText, { color: theme.colors.onSurface }]}>
+                                                    {displayArabic}
+                                                </Text>
+
+                                                {/* Decorative divider with mood accent */}
+                                                <View style={styles.dividerRow}>
+                                                    <View style={[styles.dividerLine, { backgroundColor: accentColor }]} />
+                                                    <View style={[styles.dividerDot, { backgroundColor: moodColor }]} />
+                                                    <View style={[styles.dividerLine, { backgroundColor: accentColor }]} />
+                                                </View>
+
+                                                {/* Translation */}
+                                                <Text style={[styles.translation, { color: theme.colors.onSurfaceVariant }]}>
+                                                    {displayTranslation}
+                                                </Text>
+
+                                                {/* Theme badge */}
+                                                <Text style={[styles.themeBadge, { color: moodColor }]}>
+                                                    {verse.theme}
+                                                </Text>
+
+                                                {/* Action buttons */}
+                                                <View style={styles.actionRow}>
+                                                    {/* Play */}
+                                                    <Pressable
+                                                        onPress={() => handlePlayVerse(verse.surah, verse.verse)}
+                                                        style={({ pressed }) => [
+                                                            styles.actionBtn,
+                                                            {
+                                                                backgroundColor: isCurrentlyPlaying && isPlaying
+                                                                    ? moodColor
+                                                                    : `${moodColor}15`,
+                                                            },
+                                                            pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
+                                                        ]}
+                                                    >
+                                                        {isLoading ? (
+                                                            <ActivityIndicator size="small" color={moodColor} />
+                                                        ) : (
+                                                            <MaterialCommunityIcons
+                                                                name={isCurrentlyPlaying && isPlaying ? 'pause' : 'play'}
+                                                                size={Spacing.md}
+                                                                color={isCurrentlyPlaying && isPlaying
+                                                                    ? theme.colors.onPrimary
+                                                                    : moodColor}
+                                                            />
+                                                        )}
+                                                    </Pressable>
+
+                                                    {/* Read in Surah */}
+                                                    <Pressable
+                                                        onPress={() => handleOpenSurah(verse.surah, verse.verse)}
+                                                        style={({ pressed }) => [
+                                                            styles.actionBtnWide,
+                                                            { backgroundColor: `${moodColor}15` },
+                                                            pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
+                                                        ]}
+                                                    >
+                                                        <MaterialCommunityIcons
+                                                            name="book-open-page-variant"
+                                                            size={14}
+                                                            color={moodColor}
+                                                        />
+                                                        <Text style={[styles.actionBtnText, { color: moodColor }]}>
+                                                            Read
+                                                        </Text>
+                                                    </Pressable>
+
+                                                    {/* Share */}
+                                                    <Pressable
+                                                        onPress={() => handleShareVerse(verseKey, idx)}
+                                                        style={({ pressed }) => [
+                                                            styles.actionBtn,
+                                                            { backgroundColor: `${moodColor}15` },
+                                                            pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
+                                                        ]}
+                                                    >
+                                                        <MaterialCommunityIcons
+                                                            name="share-variant"
+                                                            size={Spacing.md - 1}
+                                                            color={moodColor}
+                                                        />
+                                                    </Pressable>
+                                                </View>
+
+                                                {/* Watermark for sharing */}
+                                                {capturingVerseKey === verseKey && (
+                                                    <View style={[styles.watermarkContainer, {
+                                                        borderTopColor: `${theme.colors.outline}20`,
+                                                    }]}>
+                                                        <Text style={[styles.watermarkText, { color: theme.colors.onSurfaceVariant }]}>
+                                                            QuranNotes App
+                                                        </Text>
+                                                    </View>
                                                 )}
-                                            </Pressable>
-
-                                            {/* Read in Surah */}
-                                            <Pressable
-                                                onPress={() => handleOpenSurah(verse.surah, verse.verse)}
-                                                style={({ pressed }) => [
-                                                    styles.actionBtnWide,
-                                                    { backgroundColor: `${moodColor}15` },
-                                                    pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
-                                                ]}
-                                            >
-                                                <MaterialCommunityIcons
-                                                    name="book-open-page-variant"
-                                                    size={14}
-                                                    color={moodColor}
-                                                />
-                                                <Text style={[styles.actionBtnText, { color: moodColor }]}>
-                                                    Read
-                                                </Text>
-                                            </Pressable>
-
-                                            {/* Share */}
-                                            <Pressable
-                                                onPress={() => handleShareVerse(verseKey, idx)}
-                                                style={({ pressed }) => [
-                                                    styles.actionBtn,
-                                                    { backgroundColor: `${moodColor}15` },
-                                                    pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
-                                                ]}
-                                            >
-                                                <MaterialCommunityIcons
-                                                    name="share-variant"
-                                                    size={Spacing.md - 1}
-                                                    color={moodColor}
-                                                />
-                                            </Pressable>
-                                        </View>
-
-                                        {/* Watermark for sharing */}
-                                        {capturingVerseKey === verseKey && (
-                                            <View style={[styles.watermarkContainer, {
-                                                borderTopColor: `${theme.colors.outline}20`,
-                                            }]}>
-                                                <Text style={[styles.watermarkText, { color: theme.colors.onSurfaceVariant }]}>
-                                                    QuranNotes App
-                                                </Text>
                                             </View>
-                                        )}
-                                    </View>
-                                </ViewShot>
-                            </MotiView>
-                        );
-                    })}
+                                        </ViewShot>
+                                    </MotiView>
+                                );
+                            })}
+                        </View>
+                    </View>
                 </ScrollView>
-            </LinearGradient>
+            </View>
         </Modal>
     );
 }
@@ -484,7 +518,35 @@ export default function VerseRecommendationSheet({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: Spacing.md,
+    },
+    coloredZone: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,    // full-height so gradient persists when scrolled
+    },
+    scrollView: {
+        flex: 1,
+    },
+    gradientSpacer: {
+        height: COLORED_ZONE_HEIGHT - CURVE_DEPTH,    // let gradient show fully before the curve begins
+    },
+    curveSvg: {
+        // no extra spacing — dome sits seamlessly above the content card
+    },
+    floatingIconWrap: {
+        alignSelf: 'center',
+        marginTop: -(CURVE_DEPTH + ICON_OVERLAP),    // float up through the SVG dome into gradient
+        zIndex: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: Spacing.xs,
+    },
+    headerArea: {
+        // connects seamlessly with the SVG dome — holds icon + title + subtitle
+        overflow: 'visible',
+        paddingBottom: Spacing.md,
     },
     closeButton: {
         position: 'absolute',
@@ -495,12 +557,12 @@ const styles = StyleSheet.create({
         borderRadius: BorderRadius.full,
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 10,
+        zIndex: 30,
     },
     moodHeader: {
         alignItems: 'center',
-        marginTop: Spacing.sm,
-        marginBottom: Spacing.sm,
+        paddingTop: Spacing.sm,               // title sits closer to the icon
+        marginBottom: Spacing.md,
     },
     moodIllustration: {
         width: ILLUSTRATION_SIZE,
@@ -511,9 +573,10 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     subtitle: {
-        ...Typography.bodyMedium,
+        ...Typography.bodyLarge,
         textAlign: 'center',
-        marginTop: Spacing.xs,
+        marginTop: Spacing.sm,
+        paddingHorizontal: Spacing.lg,
     },
     scrollContent: {
         paddingHorizontal: Spacing.md,

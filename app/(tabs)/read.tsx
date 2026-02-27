@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
@@ -11,10 +11,11 @@ import { WaveBackground } from '../../src/core/components/animated/WaveBackgroun
 import { FloatingParticles } from '../../src/core/components/animated/FloatingParticles';
 import { NoorMascot } from '../../src/core/components/mascot/NoorMascot';
 import { AnimatedButton } from '../../src/core/components/animated/AnimatedButton';
-import { Spacing, Shadows } from '../../src/core/theme/DesignSystem';
+import { Spacing, Gradients } from '../../src/core/theme/DesignSystem';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
-import * as Haptics from 'expo-haptics';
+
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function ReadScreen() {
     const { loading, error, surahList, loadSurahList } = useQuran();
@@ -27,6 +28,7 @@ export default function ReadScreen() {
         loadSurahList();
         const timer = setTimeout(() => setMinLoading(false), 600);
         return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const isAppLoading = loading || minLoading;
@@ -81,8 +83,12 @@ export default function ReadScreen() {
         );
     }
 
+    const gradientColors: readonly [string, string] = theme.dark
+        ? [Gradients.nightSky[0], Gradients.nightSky[1]]
+        : [Gradients.sereneSky[0], Gradients.sereneSky[1]];
+
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <LinearGradient colors={gradientColors} style={styles.container}>
             <SafeAreaView style={styles.safeArea} edges={['top']}>
                 <StatusBar style={theme.dark ? 'light' : 'dark'} />
 
@@ -123,7 +129,7 @@ export default function ReadScreen() {
                     }))}
                 />
             </SafeAreaView>
-        </View>
+        </LinearGradient>
     );
 }
 

@@ -39,14 +39,13 @@ export const AdhkarScreen = ({ onClose, initialPeriod }: AdhkarScreenProps) => {
         adhkar,
         todayProgress,
         incrementCount,
-        resetDhikr,
         isSessionComplete,
         getStreak,
     } = useAdhkar();
 
     const currentHour = new Date().getHours();
     // initialPeriod from dashboard (honours prayer-time logic); fall back to time heuristic
-    const defaultPeriod: AdhkarPeriod = initialPeriod ?? (currentHour < 15 ? 'morning' : 'evening');
+    const defaultPeriod: AdhkarPeriod = initialPeriod ?? (currentHour < 15 ? 'morning' : currentHour < 20 ? 'evening' : 'night');
     const [period, setPeriod] = useState<AdhkarPeriod>(defaultPeriod);
     const [phase, setPhase] = useState<SessionPhase>('intro');
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -59,14 +58,18 @@ export const AdhkarScreen = ({ onClose, initialPeriod }: AdhkarScreenProps) => {
     const streak = getStreak();
     const sessionAlreadyDone = isSessionComplete(period);
 
-    // Colors based on period
+    // Colors based on period (3 states)
     const isMorning = period === 'morning';
+    const isEvening = period === 'evening';
+    const isNight = period === 'night';
     const gradientColors = isMorning
         ? ['#FFFBEB', '#FEF3C7', '#FDE68A'] as const
-        : ['#1E1B4B', '#312E81', '#4338CA'] as const;
-    const textColor = isMorning ? '#451A03' : '#FFFFFF';
-    const subtextColor = isMorning ? '#78350F' : '#C7D2FE';
-    const accentColor = isMorning ? '#92400E' : '#A5B4FC';
+        : isEvening
+            ? ['#FFF7ED', '#FFEDD5', '#FB923C'] as const
+            : ['#0F172A', '#1E293B', '#334155'] as const;
+    const textColor = isMorning ? '#451A03' : isEvening ? '#7C2D12' : '#FFFFFF';
+    const subtextColor = isMorning ? '#78350F' : isEvening ? '#9A3412' : '#94A3B8';
+    const accentColor = isMorning ? '#92400E' : isEvening ? '#C2410C' : '#64748B';
 
     // Get remaining count for current dhikr
     const getRemainingForDhikr = useCallback((dhikr: Dhikr): number => {
@@ -76,7 +79,6 @@ export const AdhkarScreen = ({ onClose, initialPeriod }: AdhkarScreenProps) => {
     }, [todayProgress, period]);
 
     // Count how many dhikr are fully completed
-    const completedDhikrCount = dhikrList.filter(d => getRemainingForDhikr(d) === 0).length;
 
     // Estimate session time based on total taps (~1.5 sec per tap + 5 sec reading per dhikr)
     const totalTaps = dhikrList.reduce((sum, d) => sum + d.repeatCount, 0);
@@ -150,9 +152,61 @@ export const AdhkarScreen = ({ onClose, initialPeriod }: AdhkarScreenProps) => {
             duration: Math.random() * 3000 + 4000,
             color: isMorning
                 ? ['#F59E0B', '#FBBF24', '#FDE68A', '#D97706'][Math.floor(Math.random() * 4)]
-                : ['#A5B4FC', '#818CF8', '#C4B5FD', '#E0E7FF'][Math.floor(Math.random() * 4)],
+                : isEvening
+                    ? ['#F97316', '#FB923C', '#FDBA74', '#EA580C'][Math.floor(Math.random() * 4)]
+                    : ['#64748B', '#94A3B8', '#475569', '#CBD5E1'][Math.floor(Math.random() * 4)],
         }));
-    }, [isMorning]);
+    }, [isMorning, isEvening]);
+
+    // ── Star field for evening & night ──
+    const starField = useMemo(() => {
+        if (isMorning) return [];
+        const count = isNight ? 35 : 20; // more stars at night
+        const screenH = Dimensions.get('window').height;
+        return Array.from({ length: count }, (_, i) => ({
+            id: i,
+            x: Math.random() * SCREEN_WIDTH,
+            y: Math.random() * screenH,
+            size: Math.random() * (isNight ? 3 : 2) + 1,
+            opacity: isNight
+                ? Math.random() * 0.4 + 0.3   // night: 0.3–0.7
+                : Math.random() * 0.15 + 0.1,  // evening: 0.1–0.25
+            delay: Math.random() * 3000,
+        }));
+    }, [isMorning, isNight]);
+
+    const StarOverlay = () => {
+        if (isMorning || starField.length === 0) return null;
+        return (
+            <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                {starField.map(s => (
+                    <MotiView
+                        key={s.id}
+                        from={{ opacity: s.opacity * 0.4 }}
+                        animate={{ opacity: s.opacity }}
+                        transition={{
+                            type: 'timing',
+                            duration: 2000 + s.delay,
+                            loop: true,
+                        }}
+                        style={{
+                            position: 'absolute',
+                            left: s.x,
+                            top: s.y,
+                            width: s.size,
+                            height: s.size,
+                            borderRadius: s.size / 2,
+                            backgroundColor: '#FFFFFF',
+                        }}
+                    />
+                ))}
+            </View>
+        );
+    };
+
+    // Period display label
+    const periodLabel = isMorning ? 'Morning' : isEvening ? 'Evening' : 'Night';
+
 
     // ═══════════════════════════════════════════════════════════════════
     // INTRO PHASE
@@ -160,6 +214,7 @@ export const AdhkarScreen = ({ onClose, initialPeriod }: AdhkarScreenProps) => {
     if (phase === 'intro') {
         return (
             <LinearGradient colors={gradientColors} style={styles.container}>
+                <StarOverlay />
                 <Pressable onPress={onClose} style={[styles.closeButton, { top: insets.top + 16 }]} hitSlop={12}>
                     <Ionicons name="close" size={24} color={textColor} />
                 </Pressable>
@@ -171,7 +226,7 @@ export const AdhkarScreen = ({ onClose, initialPeriod }: AdhkarScreenProps) => {
                         transition={{ type: 'spring', damping: 15 }}
                     >
                         <Ionicons
-                            name={isMorning ? 'sunny' : 'moon'}
+                            name={isMorning ? 'sunny' : isEvening ? 'partly-sunny' : 'moon'}
                             size={64}
                             color={textColor}
                             style={{ textAlign: 'center', marginBottom: Spacing.lg }}
@@ -184,7 +239,7 @@ export const AdhkarScreen = ({ onClose, initialPeriod }: AdhkarScreenProps) => {
                         transition={{ type: 'spring', damping: 18, delay: 100 }}
                     >
                         <Text style={[styles.introTitle, { color: textColor }]}>
-                            {isMorning ? 'Morning Adhkar' : 'Evening Adhkar'}
+                            {periodLabel} Adhkar
                         </Text>
                     </MotiView>
 
@@ -194,7 +249,10 @@ export const AdhkarScreen = ({ onClose, initialPeriod }: AdhkarScreenProps) => {
                         transition={{ type: 'spring', damping: 18, delay: 200 }}
                     >
                         <Text style={[styles.introDescription, { color: subtextColor }]}>
-                            The Prophet ﷺ recommended these daily supplications for protection, peace, and blessings. Recite them each {isMorning ? 'morning' : 'evening'} to strengthen your connection with Allah.
+                            {isNight
+                                ? 'The Prophet (ﷺ) recommended these bedtime supplications. Recite them before sleep to seek Allah\'s protection and end your day in remembrance.'
+                                : `The Prophet (ﷺ) recommended these daily supplications for protection, peace, and blessings. Recite them each ${periodLabel.toLowerCase()} to strengthen your connection with Allah.`
+                            }
                         </Text>
                     </MotiView>
 
@@ -232,28 +290,24 @@ export const AdhkarScreen = ({ onClose, initialPeriod }: AdhkarScreenProps) => {
                         transition={{ delay: 350 }}
                         style={styles.periodToggle}
                     >
-                        <Pressable
-                            onPress={() => setPeriod('morning')}
-                            style={[
-                                styles.periodButton,
-                                isMorning && [styles.periodButtonActive, { backgroundColor: `${textColor}20` }],
-                            ]}
-                        >
-                            <Text style={[styles.periodButtonText, { color: isMorning ? textColor : `${textColor}60` }]}>
-                                Morning
-                            </Text>
-                        </Pressable>
-                        <Pressable
-                            onPress={() => setPeriod('evening')}
-                            style={[
-                                styles.periodButton,
-                                !isMorning && [styles.periodButtonActive, { backgroundColor: `${textColor}20` }],
-                            ]}
-                        >
-                            <Text style={[styles.periodButtonText, { color: !isMorning ? textColor : `${textColor}60` }]}>
-                                Evening
-                            </Text>
-                        </Pressable>
+                        {(['morning', 'evening', 'night'] as AdhkarPeriod[]).map((p) => {
+                            const isActive = period === p;
+                            const label = p === 'morning' ? 'Morning' : p === 'evening' ? 'Evening' : 'Night';
+                            return (
+                                <Pressable
+                                    key={p}
+                                    onPress={() => setPeriod(p)}
+                                    style={[
+                                        styles.periodButton,
+                                        isActive && [styles.periodButtonActive, { backgroundColor: `${textColor}20` }],
+                                    ]}
+                                >
+                                    <Text style={[styles.periodButtonText, { color: isActive ? textColor : `${textColor}60` }]}>
+                                        {label}
+                                    </Text>
+                                </Pressable>
+                            );
+                        })}
                     </MotiView>
 
                     {sessionAlreadyDone && (
@@ -291,10 +345,10 @@ export const AdhkarScreen = ({ onClose, initialPeriod }: AdhkarScreenProps) => {
                             pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                         ]}
                     >
-                        <Text style={[styles.beginButtonText, { color: isMorning ? '#FEF3C7' : '#312E81' }]}>
+                        <Text style={[styles.beginButtonText, { color: isMorning ? '#FEF3C7' : isEvening ? '#FFF7ED' : '#312E81' }]}>
                             {sessionAlreadyDone ? 'Review Session' : 'Begin Session'}
                         </Text>
-                        <Ionicons name="arrow-forward" size={20} color={isMorning ? '#FEF3C7' : '#312E81'} />
+                        <Ionicons name="arrow-forward" size={20} color={isMorning ? '#FEF3C7' : isEvening ? '#FFF7ED' : '#312E81'} />
                     </Pressable>
                 </MotiView>
             </LinearGradient>
@@ -307,10 +361,12 @@ export const AdhkarScreen = ({ onClose, initialPeriod }: AdhkarScreenProps) => {
             <LinearGradient
                 colors={isMorning
                     ? ['#FEF3C7', '#FDE68A', '#FBBF24'] as const
-                    : ['#0F0A2E', '#1E1B4B', '#312E81'] as const}
+                    : isEvening
+                        ? ['#FFEDD5', '#FED7AA', '#FB923C'] as const
+                        : ['#020617', '#0F172A', '#1E293B'] as const}
                 style={styles.container}
             >
-                {/* Floating celebration particles */}
+                <StarOverlay />
                 <View style={StyleSheet.absoluteFill} pointerEvents="none">
                     {celebrationParticles.map(p => (
                         <MotiView
@@ -353,16 +409,16 @@ export const AdhkarScreen = ({ onClose, initialPeriod }: AdhkarScreenProps) => {
                             animate={{ opacity: [0.3, 0.6, 0.3] }}
                             transition={{ type: 'timing', duration: 2000, loop: true }}
                             style={[styles.glowCircle, {
-                                backgroundColor: isMorning ? '#F59E0B25' : '#818CF825',
+                                backgroundColor: isMorning ? '#F59E0B25' : isEvening ? '#EA580C20' : '#64748B20',
                             }]}
                         >
                             <View style={[styles.glowCircleInner, {
-                                backgroundColor: isMorning ? '#F59E0B15' : '#818CF815',
+                                backgroundColor: isMorning ? '#F59E0B15' : isEvening ? '#EA580C10' : '#64748B10',
                             }]}>
                                 <Ionicons
                                     name="checkmark-circle"
                                     size={64}
-                                    color={isMorning ? '#D97706' : '#A5B4FC'}
+                                    color={isMorning ? '#D97706' : isEvening ? '#C2410C' : '#94A3B8'}
                                 />
                             </View>
                         </MotiView>
@@ -388,8 +444,8 @@ export const AdhkarScreen = ({ onClose, initialPeriod }: AdhkarScreenProps) => {
                         transition={{ type: 'spring', damping: 18, delay: 350 }}
                     >
                         <Text style={[styles.completeSubtitle, { color: subtextColor }]}>
-                            Your {isMorning ? 'morning' : 'evening'} adhkar are complete.{' '}
-                            May Allah grant you His protection and blessings.
+                            Your {periodLabel.toLowerCase()} adhkar are complete.{' '}
+                            {isNight ? 'May Allah grant you peaceful sleep and protection.' : 'May Allah grant you His protection and blessings.'}
                         </Text>
                     </MotiView>
 
@@ -430,33 +486,32 @@ export const AdhkarScreen = ({ onClose, initialPeriod }: AdhkarScreenProps) => {
                         </View>
                     </MotiView>
 
-                    {/* Gradient Done button */}
+                    {/* Subtle Done button */}
                     <MotiView
-                        from={{ opacity: 0, translateY: 20 }}
+                        from={{ opacity: 0, translateY: 10 }}
                         animate={{ opacity: 1, translateY: 0 }}
                         transition={{ type: 'spring', damping: 18, delay: 600 }}
-                        style={{ width: '100%', paddingHorizontal: Spacing.xl }}
                     >
                         <Pressable
                             onPress={() => {
                                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                                 onClose();
                             }}
-                            style={({ pressed }) => [
-                                pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
+                            style={({ pressed }) => [{
+                                alignSelf: 'center',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 6,
+                                paddingVertical: 10,
+                                paddingHorizontal: 28,
+                                borderRadius: 24,
+                                backgroundColor: `${textColor}15`,
+                            },
+                            pressed && { opacity: 0.7, transform: [{ scale: 0.96 }] },
                             ]}
                         >
-                            <LinearGradient
-                                colors={isMorning
-                                    ? ['#D97706', '#B45309'] as const
-                                    : ['#6366F1', '#4338CA'] as const}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 0 }}
-                                style={styles.doneGradientButton}
-                            >
-                                <Text style={styles.doneButtonText}>Done</Text>
-                                <Ionicons name="checkmark" size={20} color="#FFFFFF" />
-                            </LinearGradient>
+                            <Text style={{ fontSize: 15, fontWeight: '600', color: textColor }}>Done</Text>
+                            <Ionicons name="checkmark" size={16} color={textColor} />
                         </Pressable>
                     </MotiView>
                 </View>
@@ -473,6 +528,7 @@ export const AdhkarScreen = ({ onClose, initialPeriod }: AdhkarScreenProps) => {
 
     return (
         <LinearGradient colors={gradientColors} style={styles.container}>
+            <StarOverlay />
             {/* Header: close + progress */}
             <View style={styles.activeHeader}>
                 <Pressable onPress={onClose} hitSlop={12}>

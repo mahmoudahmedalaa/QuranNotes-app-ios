@@ -35,7 +35,7 @@ export default function LibraryLayout() {
 
     return (
         <LinearGradient
-            colors={theme.dark ? (['#0F1419', '#1A1F26'] as const) : (['#FFFFFF', '#F8F5FF'] as const)}
+            colors={theme.dark ? (['#0F1419', '#1A1F26'] as const) : Gradients.sereneSky}
             style={styles.container}>
             <SafeAreaView style={styles.safeArea} edges={['top']}>
                 {/* Header */}

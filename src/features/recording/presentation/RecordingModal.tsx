@@ -60,6 +60,7 @@ export const RecordingModal = ({ visible, onDismiss, surahId, verseId }: Recordi
         return () => {
             stopRecording();
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [visible]);
 
     useEffect(() => {
@@ -130,7 +131,7 @@ export const RecordingModal = ({ visible, onDismiss, surahId, verseId }: Recordi
                                     Reflection Limit Reached
                                 </Text>
                                 <Text style={[styles.subtitle, { textAlign: 'center', marginBottom: Spacing.xl }]}>
-                                    You've reached 5 recordings. Upgrade to Pro for unlimited space to grow your connection with the Quran.
+                                    You&apos;ve reached 5 recordings. Upgrade to Pro for unlimited space to grow your connection with the Quran.
                                 </Text>
                                 <Button
                                     mode="contained"

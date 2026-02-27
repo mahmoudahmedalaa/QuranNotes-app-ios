@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, FlatList, Pressable, Dimensions } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,7 +15,7 @@ import {
 } from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
-const { width } = Dimensions.get('window');
+
 
 // Sample surahs for onboarding (just show first few)
 const SAMPLE_SURAHS = [

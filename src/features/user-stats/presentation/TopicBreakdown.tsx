@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { PieChart } from 'react-native-gifted-charts';
 import { Spacing, BorderRadius, Shadows } from '../../../core/theme/DesignSystem';
 
-const { width } = Dimensions.get('window');
+
 
 interface TopicBreakdownProps {
     data: { value: number; color: string; text: string; label?: string; focused?: boolean }[];

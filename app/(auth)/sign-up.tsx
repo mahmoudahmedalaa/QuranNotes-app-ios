@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Text, TextInput, Button, useTheme, HelperText } from 'react-native-paper';
 import { useRouter, Link, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Spacing, BorderRadius, Colors } from '../../src/core/theme/DesignSystem';
+import { Spacing, BorderRadius } from '../../src/core/theme/DesignSystem';
 import { useAuth } from '../../src/features/auth/infrastructure/AuthContext';
 import { MotiView } from 'moti';
+import Toast from 'react-native-toast-message';
 
 export default function SignUpScreen() {
     const theme = useTheme();
@@ -25,6 +26,7 @@ export default function SignUpScreen() {
         if (user) {
             router.replace('/');
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
 
     const handleSignUp = async () => {
@@ -49,7 +51,6 @@ export default function SignUpScreen() {
             await registerWithEmail(email, password);
 
             // Show modern toast notification
-            const Toast = require('react-native-toast-message').default;
             Toast.show({
                 type: 'success',
                 text1: 'Account Created!',

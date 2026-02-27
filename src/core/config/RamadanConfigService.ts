@@ -46,7 +46,7 @@ export const RamadanConfigService = {
                     return data;
                 }
             }
-        } catch (e) {
+        } catch (_e) {
             if (__DEV__) console.log('[RamadanConfig] Firestore fetch failed, using cache');
         }
 
@@ -56,7 +56,7 @@ export const RamadanConfigService = {
             if (cached) {
                 return JSON.parse(cached) as RamadanDates;
             }
-        } catch (e) {
+        } catch (_e) {
             if (__DEV__) console.log('[RamadanConfig] Cache read failed');
         }
 
@@ -74,7 +74,7 @@ export const RamadanConfigService = {
                     const data = doc.data() as RamadanDates;
                     if (data?.startDate && data?.endDate) {
                         // Cache for offline use
-                        AsyncStorage.setItem(CACHE_KEY, JSON.stringify(data));
+                        AsyncStorage.setItem(CACHE_KEY, JSON.stringify(data)).catch(() => { });
                         // Notify ramadanUtils to update dates in real-time
                         if (onDatesChanged) {
                             onDatesChanged(data);

@@ -39,6 +39,7 @@ export const EidCelebrationOverlay: React.FC<EidCelebrationOverlayProps> = ({
 
     useEffect(() => {
         checkAndShow();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const checkAndShow = async () => {

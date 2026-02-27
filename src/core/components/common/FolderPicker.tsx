@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Modal, FlatList, Pressable } from 'react-native';
-import { Text, useTheme, Searchbar, IconButton, Button, Divider } from 'react-native-paper';
+import { Text, useTheme, Searchbar, IconButton, Divider } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { Folder, DEFAULT_FOLDER } from '../../domain/entities/Folder';
-import { Spacing, BorderRadius, Shadows } from '../../theme/DesignSystem';
+import { Spacing, BorderRadius } from '../../theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 interface FolderPickerProps {

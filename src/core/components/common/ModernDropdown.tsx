@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { View, StyleSheet, Modal, TextInput } from 'react-native';
-import { Text, Button, Menu, Divider, useTheme, Searchbar, Chip } from 'react-native-paper';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, StyleSheet, Modal } from 'react-native';
+import { Text, Button, Menu, Divider, useTheme, Searchbar } from 'react-native-paper';
 
 interface ModernDropdownProps {
     label: string;

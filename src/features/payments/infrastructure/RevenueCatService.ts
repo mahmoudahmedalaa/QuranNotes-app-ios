@@ -4,8 +4,8 @@ import Purchases, {
     CustomerInfo,
     LOG_LEVEL
 } from 'react-native-purchases';
-export { PurchasesOffering, PurchasesPackage, CustomerInfo };
 import { Platform } from 'react-native';
+export { PurchasesOffering, PurchasesPackage, CustomerInfo };
 
 const API_KEYS = {
     ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY || '',

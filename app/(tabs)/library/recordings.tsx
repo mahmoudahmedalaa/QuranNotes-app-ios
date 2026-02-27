@@ -10,7 +10,6 @@ import {
     Button,
     IconButton,
     ProgressBar,
-    SegmentedButtons,
 } from 'react-native-paper';
 import { useRecordingStorage } from '../../../src/core/hooks/useRecordingStorage';
 import { useRecordingPlayback } from '../../../src/core/hooks/useRecordingPlayback';
@@ -47,13 +46,13 @@ export default function RecordingsScreen() {
     const [editFolderId, setEditFolderId] = useState<string | undefined>();
 
     // View mode for toggling between recordings and follow alongs
-    const [viewMode, setViewMode] = useState<'recordings' | 'follow-alongs'>('recordings'); // Default to recordings
-    // const [viewMode, setViewMode] = useState<'recordings' | 'follow-alongs'>('recordings');
+    const [viewMode] = useState<'recordings' | 'follow-alongs'>('recordings');
     const [followAlongSessions, setFollowAlongSessions] = useState<FollowAlongSession[]>([]);
 
     useEffect(() => {
         refreshRecordings();
         loadFollowAlongSessions();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const loadFollowAlongSessions = async () => {

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { render, waitFor, act, fireEvent } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OnboardingProvider, useOnboarding } from './OnboardingContext';
