@@ -247,20 +247,23 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // One-time backfill: seed readingLog from existing completedSurahs + activity dates
-    // so that pre-existing data is filterable by timeframe
+    // One-time reseed: fix stale backfill data from dev dates.
+    // Uses a flag so it only runs once per install.
     useEffect(() => {
-        if (loading) return; // wait for khatma state to load
-        if (Object.keys(readingLog).length > 0) return; // already has data
-        if (state.completedSurahs.length === 0) return; // nothing to seed
+        if (loading) return;
+        if (state.completedSurahs.length === 0) return;
 
-        ReadingActivityLog.backfillFromHistory(state.completedSurahs)
-            .then(seeded => {
-                if (Object.keys(seeded).length > 0) {
-                    setReadingLog(seeded);
-                }
-            });
-    }, [loading, state.completedSurahs, readingLog]);
+        (async () => {
+            const flag = await AsyncStorage.getItem('reading_log_v2_seeded');
+            if (flag === 'true') return; // already done
+
+            const seeded = await ReadingActivityLog.reseed(state.completedSurahs);
+            await AsyncStorage.setItem('reading_log_v2_seeded', 'true');
+            if (Object.keys(seeded).length > 0) {
+                setReadingLog(seeded);
+            }
+        })();
+    }, [loading, state.completedSurahs]);
 
     // Reset on auth change
     useEffect(() => {

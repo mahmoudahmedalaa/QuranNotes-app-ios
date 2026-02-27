@@ -5,6 +5,7 @@ import {
     StyleSheet,
     Pressable,
     Dimensions,
+    ScrollView,
 } from 'react-native';
 import { useTheme, ProgressBar } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -590,20 +591,28 @@ export const AdhkarScreen = ({ onClose, initialPeriod }: AdhkarScreenProps) => {
                         </Text>
                     </View>
 
-                    {/* Arabic text */}
-                    <Text style={[styles.arabicText, {
-                        color: theme.colors.onSurface,
-                        opacity: isDhikrComplete ? 0.4 : 1,
-                    }]}>
-                        {currentDhikr.arabic}
-                    </Text>
+                    {/* Scrollable text area for long adhkar */}
+                    <ScrollView
+                        style={styles.cardScrollArea}
+                        contentContainerStyle={styles.cardScrollContent}
+                        showsVerticalScrollIndicator={false}
+                        bounces={false}
+                    >
+                        {/* Arabic text — always dark/black for readability */}
+                        <Text style={[styles.arabicText, {
+                            color: theme.dark ? '#F5F5F5' : '#1A1A1A',
+                            opacity: isDhikrComplete ? 0.4 : 1,
+                        }]}>
+                            {currentDhikr.arabic}
+                        </Text>
 
-                    {/* Translation */}
-                    <Text style={[styles.translationText, { color: theme.colors.onSurfaceVariant }]}>
-                        {currentDhikr.translation}
-                    </Text>
+                        {/* Translation */}
+                        <Text style={[styles.translationText, { color: theme.colors.onSurfaceVariant }]}>
+                            {currentDhikr.translation}
+                        </Text>
+                    </ScrollView>
 
-                    {/* Counter */}
+                    {/* Counter — always visible at bottom */}
                     <View style={styles.counterSection}>
                         {isDhikrComplete ? (
                             <View style={styles.completeBadge}>
@@ -858,6 +867,13 @@ const styles = StyleSheet.create({
         lineHeight: 46,
         marginBottom: Spacing.lg,
     },
+    cardScrollArea: {
+        flex: 1,
+        marginBottom: Spacing.sm,
+    },
+    cardScrollContent: {
+        flexGrow: 1,
+    },
     translationText: {
         fontSize: 14,
         lineHeight: 22,
@@ -866,7 +882,6 @@ const styles = StyleSheet.create({
     },
     counterSection: {
         alignItems: 'center',
-        marginTop: 'auto',
         paddingTop: Spacing.md,
     },
     countdownContainer: {

@@ -96,9 +96,9 @@ export const ReadingActivityLog = {
 
     /**
      * One-time backfill: distribute existing completed surahs across
-     * known activity dates from streak history. Reads activityHistory
+     * known activity dates from streak history. Only uses dates within
+     * the last 30 days to avoid stale dev/test data. Reads activityHistory
      * directly from AsyncStorage to avoid circular dependency.
-     * Once seeded, this never runs again (readingLog is no longer empty).
      */
     async backfillFromHistory(completedSurahs: number[]): Promise<ReadingLog> {
         if (completedSurahs.length === 0) return {};
@@ -110,22 +110,27 @@ export const ReadingActivityLog = {
                 ? (JSON.parse(streakRaw).activityHistory || {})
                 : {};
 
+            // Only use dates within the last 30 days (avoid stale dev dates)
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            thirtyDaysAgo.setHours(0, 0, 0, 0);
+
             const activeDates = Object.keys(activityHistory)
-                .filter(d => (activityHistory[d] || 0) > 0)
+                .filter(d => (activityHistory[d] || 0) > 0 && new Date(d) >= thirtyDaysAgo)
                 .sort(); // oldest first
 
             const sorted = [...completedSurahs].sort((a, b) => a - b);
             const log: ReadingLog = {};
 
             if (activeDates.length === 0) {
-                // No history at all — put everything on today
+                // No recent history — put everything on today
                 const today = todayStr();
                 log[today] = {
                     surahs: sorted,
                     pages: sorted.reduce((sum, s) => sum + estimateSurahPages(s), 0),
                 };
             } else {
-                // Distribute surahs evenly across active dates
+                // Distribute surahs evenly across recent active dates
                 const perDay = Math.max(1, Math.ceil(sorted.length / activeDates.length));
                 let idx = 0;
 
@@ -146,6 +151,12 @@ export const ReadingActivityLog = {
             if (__DEV__) console.warn('[ReadingActivityLog] backfill failed', e);
             return {};
         }
+    },
+
+    /** Force re-seed: clear existing log and backfill again */
+    async reseed(completedSurahs: number[]): Promise<ReadingLog> {
+        await AsyncStorage.removeItem(STORAGE_KEY);
+        return this.backfillFromHistory(completedSurahs);
     },
 
     /** Clear all data (for logout) */
