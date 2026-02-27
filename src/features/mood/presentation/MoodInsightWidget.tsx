@@ -104,7 +104,7 @@ export default function MoodInsightWidget() {
             <View style={[styles.card, { backgroundColor: theme.colors.surface }, Shadows.sm]}>
                 {/* Header */}
                 <View style={styles.headerRow}>
-                    <Text style={[styles.title, { color: theme.colors.onSurface }]}>
+                    <Text style={[styles.title, { color: theme.colors.primary }]}>
                         Mood Journey
                     </Text>
                     {totalCheckins > 0 && (
@@ -150,7 +150,7 @@ export default function MoodInsightWidget() {
                                 {/* Center label */}
                                 {topMood && (
                                     <View style={styles.donutCenter}>
-                                        <Text style={[styles.donutPct, { color: theme.colors.onSurface }]}>
+                                        <Text style={[styles.donutPct, { color: theme.colors.primary }]}>
                                             {Math.round((topMood[1] / totalCheckins) * 100)}%
                                         </Text>
                                         <Text style={[styles.donutLabel, { color: MOOD_CONFIGS[topMood[0]].color }]}>

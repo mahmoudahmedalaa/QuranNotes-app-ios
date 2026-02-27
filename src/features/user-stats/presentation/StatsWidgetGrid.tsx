@@ -28,7 +28,7 @@ const StatCard: React.FC<StatCardProps> = ({ icon, label, value, color, delay = 
                 <Ionicons name={icon} size={24} color={color} />
             </View>
             <View>
-                <Text style={[styles.value, { color: theme.colors.onSurface }]}>{value}</Text>
+                <Text style={[styles.value, { color: color }]}>{value}</Text>
                 <Text style={[styles.label, { color: theme.colors.onSurfaceVariant }]}>
                     {label}
                 </Text>

@@ -93,7 +93,7 @@ export const ConsistencyHeatmap: React.FC<ConsistencyHeatmapProps> = ({ data }) 
             {/* Header with month nav */}
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
-                    <Text style={[styles.title, { color: theme.colors.onSurface }]}>Consistency</Text>
+                    <Text style={[styles.title, { color: theme.colors.primary }]}>Consistency</Text>
                     <Text style={[styles.activeDays, { color: theme.colors.onSurfaceVariant }]}>
                         {activeDays} active day{activeDays !== 1 ? 's' : ''}
                     </Text>

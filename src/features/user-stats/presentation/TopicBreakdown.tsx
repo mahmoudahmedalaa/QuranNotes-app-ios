@@ -43,7 +43,7 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({ data = [], total
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.surface }, Shadows.sm]}>
-            <Text style={[styles.title, { color: theme.colors.onSurface }]}>Content Breakdown</Text>
+            <Text style={[styles.title, { color: theme.colors.primary }]}>Content Breakdown</Text>
 
             <View style={styles.chartContainer}>
                 <PieChart
@@ -60,7 +60,7 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({ data = [], total
                                 <Text
                                     style={{
                                         fontSize: 22,
-                                        color: theme.colors.onSurface,
+                                        color: theme.colors.primary,
                                         fontWeight: 'bold',
                                     }}>
                                     {totalTime}

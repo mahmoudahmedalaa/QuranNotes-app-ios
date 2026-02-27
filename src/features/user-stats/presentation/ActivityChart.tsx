@@ -16,7 +16,7 @@ export const ActivityChart: React.FC<ActivityChartProps> = ({ data }) => {
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.surface }, Shadows.sm]}>
             <View style={styles.header}>
-                <Text style={[styles.title, { color: theme.colors.onSurface }]}>
+                <Text style={[styles.title, { color: theme.colors.primary }]}>
                     Weekly Activity
                 </Text>
                 <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>

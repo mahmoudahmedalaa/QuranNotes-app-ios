@@ -26,7 +26,7 @@ export default function InsightsScreen() {
                 style={styles.container}>
                 <SafeAreaView style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center', padding: Spacing.xl }]}>
                     <View style={styles.header}>
-                        <Text style={[styles.headerTitle, { color: theme.colors.onBackground, textAlign: 'center' }]}>
+                        <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>
                             Insights
                         </Text>
                     </View>
@@ -57,7 +57,7 @@ export default function InsightsScreen() {
             style={styles.container}>
             <SafeAreaView style={styles.safeArea} edges={['top']}>
                 <View style={styles.header}>
-                    <Text style={[styles.headerTitle, { color: theme.colors.onBackground }]}>
+                    <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>
                         Insights
                     </Text>
                 </View>
