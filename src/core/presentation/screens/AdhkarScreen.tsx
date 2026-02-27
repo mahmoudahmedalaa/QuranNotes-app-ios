@@ -598,9 +598,9 @@ export const AdhkarScreen = ({ onClose, initialPeriod }: AdhkarScreenProps) => {
                         showsVerticalScrollIndicator={false}
                         bounces={false}
                     >
-                        {/* Arabic text — pure black/white for maximum readability */}
+                        {/* Arabic text — always black, card is always light surface */}
                         <Text style={[styles.arabicText, {
-                            color: theme.dark ? '#FFFFFF' : '#000000',
+                            color: '#000000',
                             opacity: isDhikrComplete ? 0.4 : 1,
                         }]}>
                             {currentDhikr.arabic}

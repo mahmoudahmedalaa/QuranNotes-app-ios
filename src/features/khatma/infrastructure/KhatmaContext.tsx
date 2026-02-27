@@ -254,11 +254,11 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (state.completedSurahs.length === 0) return;
 
         (async () => {
-            const flag = await AsyncStorage.getItem('reading_log_v2_seeded');
+            const flag = await AsyncStorage.getItem('reading_log_v3_seeded');
             if (flag === 'true') return; // already done
 
             const seeded = await ReadingActivityLog.reseed(state.completedSurahs);
-            await AsyncStorage.setItem('reading_log_v2_seeded', 'true');
+            await AsyncStorage.setItem('reading_log_v3_seeded', 'true');
             if (Object.keys(seeded).length > 0) {
                 setReadingLog(seeded);
             }

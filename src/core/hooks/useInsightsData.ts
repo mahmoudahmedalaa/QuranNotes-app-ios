@@ -113,11 +113,14 @@ export const useInsightsData = (breakdownTimeframe: TimeframePeriod = 'all'): In
 
     // Pages read filtered by timeframe using actual date-stamped reading log
     const filteredPagesRead = useMemo(() => {
-        if (breakdownTimeframe === 'all') return totalPagesRead;
-        const cutoff = getCutoffDate(breakdownTimeframe);
-        const logPages = ReadingActivityLog.getPagesInRange(readingLog, cutoff);
-        // If readingLog has data, use it. Otherwise fall back to total (pre-log data).
-        return Object.keys(readingLog).length > 0 ? logPages : totalPagesRead;
+        // Always use the readingLog if it has data — it's the source of truth
+        // for date-aware filtering. getPagesInRange(log, null) sums ALL entries.
+        if (Object.keys(readingLog).length > 0) {
+            const cutoff = getCutoffDate(breakdownTimeframe);
+            return ReadingActivityLog.getPagesInRange(readingLog, cutoff);
+        }
+        // Fallback if no readingLog yet
+        return totalPagesRead;
     }, [totalPagesRead, breakdownTimeframe, readingLog]);
 
     // 1. Daily Activity (Last 7 Days)
