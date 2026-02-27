@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, FlatList, StyleSheet, Alert, Pressable, Dimensions } from 'react-native';
+import { View, FlatList, StyleSheet, Alert, Pressable, Platform } from 'react-native';
 import {
     Text,
     useTheme,
@@ -11,9 +11,9 @@ import {
     IconButton,
 } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useFolders } from '../../../src/infrastructure/notes/FolderContext';
-import { Folder, DEFAULT_FOLDER } from '../../../src/domain/entities/Folder';
-import { Spacing, BorderRadius, Shadows } from '../../../src/presentation/theme/DesignSystem';
+import { useFolders } from '../../../src/features/notes/infrastructure/FolderContext';
+import { Folder, DEFAULT_FOLDER } from '../../../src/core/domain/entities/Folder';
+import { Spacing, BorderRadius, Shadows } from '../../../src/core/theme/DesignSystem';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
@@ -51,7 +51,8 @@ export default function FoldersScreen() {
         setEditingFolder(null);
     };
 
-    const handleDelete = (folder: Folder) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _handleDelete = (folder: Folder) => {
         Alert.alert(
             'Delete Folder',
             `Delete "${folder.name}"? Items in this folder will be unassigned.`,
@@ -187,7 +188,7 @@ const styles = StyleSheet.create({
     },
     list: {
         paddingHorizontal: Spacing.md,
-        paddingBottom: 100,
+        paddingBottom: Platform.OS === 'ios' ? 180 : 160,
     },
     card: {
         flexDirection: 'row',
@@ -236,6 +237,6 @@ const styles = StyleSheet.create({
     fab: {
         position: 'absolute',
         right: Spacing.lg,
-        bottom: Spacing.lg,
+        bottom: Platform.OS === 'ios' ? 140 : 120,
     },
 });

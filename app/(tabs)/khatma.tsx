@@ -2,7 +2,7 @@
  * Khatma Tab Screen — Surah-based sequential reading
  * "Read the Quran one surah at a time. Juz progress fills in automatically."
  */
-import React, { useState, useMemo, useEffect, useRef, useCallback, Suspense } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,21 +12,20 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
-import { useKhatma } from '../../src/infrastructure/khatma/KhatmaContext';
-import { ProgressRing } from '../../src/presentation/components/khatma/ProgressRing';
-import { JuzGrid } from '../../src/presentation/components/khatma/JuzGrid';
-import { JuzSurahList } from '../../src/presentation/components/khatma/TodayReadingCard';
-import { CatchUpBanner } from '../../src/presentation/components/khatma/CatchUpBanner';
-import { StreakBadge } from '../../src/presentation/components/khatma/StreakBadge';
+import { useKhatma } from '../../src/features/khatma/infrastructure/KhatmaContext';
+import { ProgressRing } from '../../src/features/khatma/presentation/ProgressRing';
+import { JuzGrid } from '../../src/features/khatma/presentation/JuzGrid';
+import { JuzSurahList } from '../../src/features/khatma/presentation/TodayReadingCard';
+import { CatchUpBanner } from '../../src/features/khatma/presentation/CatchUpBanner';
 import {
     Spacing,
     Gradients,
     Shadows,
     BorderRadius,
-} from '../../src/presentation/theme/DesignSystem';
+} from '../../src/core/theme/DesignSystem';
 
 const KhatmaCelebrationModal = React.lazy(() =>
-    import('../../src/presentation/components/khatma/KhatmaCelebrationModal').then(m => ({
+    import('../../src/features/khatma/presentation/KhatmaCelebrationModal').then(m => ({
         default: m.KhatmaCelebrationModal,
     }))
 );
@@ -57,7 +56,6 @@ function ActiveTrackerView() {
         completedRounds,
         startNextRound,
         isGated,
-        debugResetProgress,
         loading,
     } = useKhatma();
 
@@ -69,12 +67,12 @@ function ActiveTrackerView() {
     useEffect(() => {
         AsyncStorage.getItem(ONBOARDING_DISMISSED_KEY).then(val => {
             if (!val) setShowOnboarding(true);
-        });
+        }).catch(() => { /* silent — onboarding state is non-critical */ });
     }, []);
 
     const dismissOnboarding = () => {
         setShowOnboarding(false);
-        AsyncStorage.setItem(ONBOARDING_DISMISSED_KEY, 'true');
+        AsyncStorage.setItem(ONBOARDING_DISMISSED_KEY, 'true').catch(() => { });
     };
 
     // ── Celebration trigger ──
@@ -125,14 +123,11 @@ function ActiveTrackerView() {
                 <View style={styles.header}>
                     <View style={styles.headerTopRow}>
                         <View style={styles.headerLeftGroup}>
-                            <Text style={[styles.headerTitle, { color: theme.colors.onBackground }]}>
-                                ختمة
+                            <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>
+                                Khatma
                             </Text>
-                            {streakDays > 0 && (
-                                <StreakBadge streakDays={streakDays} />
-                            )}
                         </View>
-                        <View style={[styles.progressBadge, { backgroundColor: theme.colors.primaryContainer }]}>
+                        <View style={[styles.progressBadge, { backgroundColor: theme.dark ? theme.colors.surface : '#FFFFFF' }]}>
                             <MaterialCommunityIcons name="book-open-variant" size={14} color={theme.colors.primary} />
                             <Text style={[styles.progressBadgeText, { color: theme.colors.primary }]}>
                                 {completedSurahs.length} of 114 Surahs
@@ -149,11 +144,11 @@ function ActiveTrackerView() {
                     animate={{ opacity: 1, translateY: 0 }}
                     transition={{ type: 'spring', damping: 18, delay: 50 }}
                 >
-                    <View style={[styles.onboardingBanner, { backgroundColor: theme.colors.primaryContainer }]}>
+                    <View style={[styles.onboardingBanner, { backgroundColor: theme.dark ? theme.colors.surface : '#FFFFFF' }]}>
                         <View style={styles.onboardingContent}>
                             <MaterialCommunityIcons name="information-outline" size={18} color={theme.colors.primary} />
                             <Text style={[styles.onboardingText, { color: theme.colors.primary }]}>
-                                Read one surah at a time. Your Juz progress fills in automatically as you go. 📖
+                                Read one surah at a time. Your Juz progress fills in automatically as you go.
                             </Text>
                         </View>
                         <Pressable onPress={dismissOnboarding} hitSlop={12}>
@@ -162,6 +157,29 @@ function ActiveTrackerView() {
                     </View>
                 </MotiView>
             )}
+
+            {/* ── Swipeable Surah Cards (top) ── */}
+            <JuzSurahList
+                currentJuz={currentJuz}
+                displayJuz={selectedJuz}
+                completedSurahs={completedSurahs}
+                nextSurahNumber={nextSurah.number}
+                onMarkComplete={(n) => markSurahComplete(n)}
+                onUnmark={(n) => {
+                    // Pin the view to the currently active juz BEFORE unmark
+                    // so that currentJuz recalculation doesn't cause a jump
+                    const activeJuz = selectedJuz ?? currentJuz;
+                    setSelectedJuz(activeJuz);
+                    unmarkSurah(n);
+                }}
+                isGated={isGated}
+                onAdvanceJuz={() => {
+                    const nextJuz = (selectedJuz ?? currentJuz) + 1;
+                    if (nextJuz <= 30) {
+                        setSelectedJuz(nextJuz);
+                    }
+                }}
+            />
 
             {/* ── Progress Ring + Status ── */}
             <MotiView
@@ -205,27 +223,17 @@ function ActiveTrackerView() {
                     <CatchUpBanner
                         isComplete={isComplete}
                         completedCount={completedJuz.length}
+                        totalPagesRead={totalPagesRead}
                     />
                 </View>
             </MotiView>
 
-            {/* ── Juz Grid (read-only, auto-derived) ── */}
+            {/* ── Juz Grid (collapsible, auto-derived) ── */}
             <JuzGrid
                 completedJuz={completedJuz}
                 currentJuz={currentJuz}
                 selectedJuz={selectedJuz}
                 onJuzPress={(juz) => setSelectedJuz(prev => prev === juz ? null : juz)}
-            />
-
-            {/* ── Juz Surah List ── */}
-            <JuzSurahList
-                currentJuz={currentJuz}
-                displayJuz={selectedJuz}
-                completedSurahs={completedSurahs}
-                nextSurahNumber={nextSurah.number}
-                onMarkComplete={(n) => markSurahComplete(n)}
-                onUnmark={(n) => unmarkSurah(n)}
-                isGated={isGated}
             />
 
             {/* ── Celebration Modal ── */}
@@ -235,13 +243,13 @@ function ActiveTrackerView() {
                         visible={showCelebration}
                         onDismiss={() => {
                             setShowCelebration(false);
-                            AsyncStorage.setItem(CELEBRATION_SHOWN_KEY, String(currentRound));
+                            AsyncStorage.setItem(CELEBRATION_SHOWN_KEY, String(currentRound)).catch(() => { });
                         }}
                         onStartNextRound={() => {
                             const nextRound = currentRound + 1;
                             startNextRound();
                             setShowCelebration(false);
-                            AsyncStorage.setItem(CELEBRATION_SHOWN_KEY, String(nextRound));
+                            AsyncStorage.setItem(CELEBRATION_SHOWN_KEY, String(nextRound)).catch(() => { });
                         }}
                         currentRound={currentRound}
                         totalPagesRead={totalPagesRead}

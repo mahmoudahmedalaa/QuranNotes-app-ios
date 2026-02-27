@@ -1,13 +1,13 @@
 import { useEffect, useState, useMemo } from 'react';
-import { View, FlatList, StyleSheet, Pressable } from 'react-native';
+import { View, FlatList, StyleSheet, Pressable, Platform } from 'react-native';
 import { Text, useTheme, Searchbar, IconButton, FAB } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { useNotes } from '../../../src/presentation/hooks/useNotes';
-import { useFolders } from '../../../src/infrastructure/notes/FolderContext';
-import { Note } from '../../../src/domain/entities/Note';
-import { DEFAULT_FOLDER } from '../../../src/domain/entities/Folder';
-import { Spacing, BorderRadius, Shadows } from '../../../src/presentation/theme/DesignSystem';
-import { ModernDropdown } from '../../../src/presentation/components/common/ModernDropdown';
+import { useNotes } from '../../../src/core/hooks/useNotes';
+import { useFolders } from '../../../src/features/notes/infrastructure/FolderContext';
+import { Note } from '../../../src/features/notes/domain/Note';
+import { DEFAULT_FOLDER } from '../../../src/core/domain/entities/Folder';
+import { Spacing, BorderRadius, Shadows } from '../../../src/core/theme/DesignSystem';
+import { ModernDropdown } from '../../../src/core/components/common/ModernDropdown';
 import * as Haptics from 'expo-haptics';
 
 export default function NotesScreen() {
@@ -149,7 +149,7 @@ export default function NotesScreen() {
             {/* Floating Action Button for creating new note */}
             <FAB
                 icon="plus"
-                style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+                style={[styles.fab, { backgroundColor: theme.colors.primary }, Shadows.primary]}
                 color={theme.colors.onPrimary}
                 onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     },
     list: {
         paddingHorizontal: Spacing.md,
-        paddingBottom: 100,
+        paddingBottom: Platform.OS === 'ios' ? 180 : 160,
     },
     card: {
         padding: Spacing.md,
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         margin: 16,
         right: 0,
-        bottom: 16,
+        bottom: Platform.OS === 'ios' ? 130 : 110,
         borderRadius: BorderRadius.xl,
     },
 });

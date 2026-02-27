@@ -1,35 +1,39 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, Pressable, Animated, ViewToken, AppState } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Animated, ViewToken, AppState, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { IconButton, useTheme, FAB } from 'react-native-paper';
+import { IconButton, useTheme } from 'react-native-paper';
 import { MotiView, AnimatePresence } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
-import { useQuran } from '../../src/presentation/hooks/useQuran';
-import { useAudio } from '../../src/infrastructure/audio/AudioContext';
-import { useAudioRecorder } from '../../src/presentation/hooks/useAudioRecorder';
-import { VerseItem } from '../../src/presentation/components/quran/VerseItem';
-import { useNotes } from '../../src/presentation/hooks/useNotes';
-import { useVoiceFollowAlong } from '../../src/presentation/hooks/useVoiceFollowAlong';
-import { WaveBackground } from '../../src/presentation/components/animated/WaveBackground';
-import { NoorMascot } from '../../src/presentation/components/mascot/NoorMascot';
-import { StickyAudioPlayer } from '../../src/presentation/components/quran/StickyAudioPlayer';
-import { RecordingIndicatorBar } from '../../src/presentation/components/recording/RecordingIndicatorBar';
-import { RecordingSaveModal } from '../../src/presentation/components/recording/RecordingSaveModal';
-import { VoiceFollowAlongOverlay } from '../../src/presentation/components/voice/VoiceFollowAlongOverlay';
-import { FollowAlongSaveModal } from '../../src/presentation/components/voice/FollowAlongSaveModal';
-import { FollowAlongSession } from '../../src/domain/entities/FollowAlongSession';
+import { useQuran } from '../../src/core/hooks/useQuran';
+import { useAudio } from '../../src/features/audio-player/infrastructure/AudioContext';
+import { useAudioRecorder } from '../../src/core/hooks/useAudioRecorder';
+import { VerseItem } from '../../src/features/quran-reading/presentation/VerseItem';
+import { useNotes } from '../../src/core/hooks/useNotes';
+import { useVoiceFollowAlong } from '../../src/core/hooks/useVoiceFollowAlong';
+import { useSettings } from '../../src/features/settings/infrastructure/SettingsContext';
+import { WaveBackground } from '../../src/core/components/animated/WaveBackground';
+import { NoorMascot } from '../../src/core/components/mascot/NoorMascot';
+import { StickyAudioPlayer } from '../../src/features/quran-reading/presentation/StickyAudioPlayer';
+import { RecordingIndicatorBar } from '../../src/features/recording/presentation/RecordingIndicatorBar';
 
-import { Verse } from '../../src/domain/entities/Quran';
-import { ReadingPositionService, ReadingPosition } from '../../src/infrastructure/reading/ReadingPositionService';
+import { RecordingSaveModal } from '../../src/features/recording/presentation/RecordingSaveModal';
+import { VoiceFollowAlongOverlay } from '../../src/features/voice/presentation/VoiceFollowAlongOverlay';
+import { FollowAlongSaveModal } from '../../src/features/voice/presentation/FollowAlongSaveModal';
+import { FollowAlongSession } from '../../src/core/domain/entities/FollowAlongSession';
+
+import { Verse } from '../../src/core/domain/entities/Quran';
+import { ReadingPositionService, ReadingPosition } from '../../src/features/quran-reading/infrastructure/ReadingPositionService';
+import { ShareCardGenerator, ShareCardHandle, VerseShareData } from '../../src/features/sharing/presentation/ShareCardGenerator';
+
 
 
 import {
     Spacing,
-    Gradients,
     Shadows,
     BorderRadius,
-} from '../../src/presentation/theme/DesignSystem';
+} from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 const ACCENT_GOLD = '#D4A853';
@@ -42,8 +46,10 @@ export default function SurahDetail() {
     const scrollY = useRef(new Animated.Value(0)).current;
 
     const { surah, loading, error, loadSurah } = useQuran();
-    const { playingVerse, isPlaying, playFromVerse, pause, resume, stop, lastCompletedPlayback } = useAudio();
-    const { isRecording, startRecording, stopRecording } = useAudioRecorder();
+    const { settings } = useSettings();
+    const { playingVerse, isPlaying, playFromVerse, pause, resume, stop } = useAudio();
+    const { isRecording, isPaused, startRecording, stopRecording, forceCleanup } = useAudioRecorder();
+    const navigation = useNavigation();
     const { notes } = useNotes();
 
     const followAlong = useVoiceFollowAlong(surah?.verses || [], surah?.number, surah?.englishName, surah?.name);
@@ -53,6 +59,7 @@ export default function SurahDetail() {
     const [lastRecordingUri, setLastRecordingUri] = useState<string | null>(null);
     const [recordingVerseId, setRecordingVerseId] = useState<number | undefined>();
     const [isStudyMode, setIsStudyMode] = useState(false);
+
     const [followAlongModalVisible, setFollowAlongModalVisible] = useState(false);
     const [completedFollowAlongSession, setCompletedFollowAlongSession] = useState<FollowAlongSession | null>(null);
     const flatListRef = useRef<any>(null);
@@ -74,9 +81,19 @@ export default function SurahDetail() {
     const [showResumeBanner, setShowResumeBanner] = useState(false);
     const [showReturnToAudio, setShowReturnToAudio] = useState(false);
 
+    // ── Share state ──
+    const shareCardRef = useRef<ShareCardHandle>(null);
+    const [shareVerseData, setShareVerseData] = useState<VerseShareData | null>(null);
+
+    // ── Tafseer state ──
+    // tafseerVerse state kept for future tafseer modal integration
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [, setTafseerVerse] = useState<{ arabicText: string; translation: string; surahName: string; verseNumber: number } | null>(null);
+
     useEffect(() => {
-        if (id) loadSurah(Number(id));
-    }, [id]);
+        if (id) loadSurah(Number(id), settings.translationEdition, settings.showTransliteration);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id, settings.translationEdition, settings.showTransliteration]);
 
     // ── Compute whether we need boosted rendering for a high verse target ──
     const hasHighVerseTarget = useMemo(() => {
@@ -103,7 +120,8 @@ export default function SurahDetail() {
                     setShowResumeBanner(true);
                 }
             }
-        });
+        }).catch(() => { /* silent — position loading is non-critical */ });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id, verseParam, pageParam]);
 
 
@@ -189,6 +207,7 @@ export default function SurahDetail() {
             };
             setTimeout(tryScroll, 300);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [verseParam, surah]);
 
     // ── Autoplay from verse 1 when no specific verse is given ──
@@ -228,6 +247,7 @@ export default function SurahDetail() {
             }
         };
         setTimeout(tryScroll, 300);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pageParam, verseParam, surah]);
 
     // ── Auto-scroll to currently playing verse ──
@@ -326,17 +346,65 @@ export default function SurahDetail() {
         },
     ]);
 
+    // Duration timer — ticks while recording, pauses (not resets) when paused
     useEffect(() => {
         let interval: ReturnType<typeof setInterval> | null = null;
         if (isRecording) {
             interval = setInterval(() => setRecordingDuration(d => d + 1), 1000);
-        } else {
-            setRecordingDuration(0);
         }
+        // Only reset duration when we fully stop (save modal takes over)
         return () => {
             if (interval) clearInterval(interval);
         };
     }, [isRecording]);
+
+    // Navigation guard — prevent accidental back navigation during recording
+    useEffect(() => {
+        if (!isRecording && !isPaused) return;
+
+        const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
+            e.preventDefault();
+            Alert.alert(
+                'Recording in Progress',
+                'You have an active recording. What would you like to do?',
+                [
+                    {
+                        text: 'Stay',
+                        style: 'cancel',
+                    },
+                    {
+                        text: 'Discard & Leave',
+                        style: 'destructive',
+                        onPress: async () => {
+                            await forceCleanup();
+                            setRecordingDuration(0);
+                            navigation.dispatch(e.data.action);
+                        },
+                    },
+                    {
+                        text: 'Save & Leave',
+                        onPress: async () => {
+                            const uri = await stopRecording();
+                            if (uri) {
+                                setLastRecordingUri(uri);
+                                setSaveModalVisible(true);
+                            }
+                            // Don't navigate yet — let them save first
+                        },
+                    },
+                ],
+            );
+        });
+
+        return unsubscribe;
+    }, [isRecording, isPaused, navigation, forceCleanup, stopRecording]);
+
+    // Unmount safety — force-cleanup if screen is removed while recording
+    useEffect(() => {
+        return () => {
+            forceCleanup();
+        };
+    }, [forceCleanup]);
 
     // Auto-scroll to highlighted verse during Follow Along
     // Uses direct scrollToIndex (NOT scrollToVerse) because Follow Along fires
@@ -403,6 +471,22 @@ export default function SurahDetail() {
         }
     };
 
+    // ── Share a verse ──
+    const handleShareVerse = useCallback((verse: Verse) => {
+        if (!surah) return;
+        setShareVerseData({
+            surahName: surah.englishName,
+            surahNameArabic: surah.name,
+            verseNumber: verse.number,
+            arabicText: verse.text,
+            englishText: verse.translation,
+        });
+        // Wait for render, then capture
+        setTimeout(() => {
+            shareCardRef.current?.capture();
+        }, 100);
+    }, [surah]);
+
     if (loading) {
         return (
             <WaveBackground variant="spiritual" intensity="subtle">
@@ -464,8 +548,11 @@ export default function SurahDetail() {
                             })
                         }
                         onRecord={() => handleRecordVerse(item.number)}
+                        onShare={() => handleShareVerse(item)}
+
                         isStudyMode={isStudyMode}
                         isHighlighted={followAlong.matchedVerseId === item.number}
+                        showTransliteration={settings.showTransliteration}
                     />
                 )}
                 contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 20 }]}
@@ -555,7 +642,7 @@ export default function SurahDetail() {
                                     <View
                                         style={[
                                             styles.metaBadge,
-                                            { backgroundColor: theme.colors.primaryContainer },
+                                            { backgroundColor: '#FFFFFF' },
                                         ]}>
                                         <Text
                                             style={[
@@ -568,12 +655,12 @@ export default function SurahDetail() {
                                     <View
                                         style={[
                                             styles.metaBadge,
-                                            { backgroundColor: theme.colors.surfaceVariant },
+                                            { backgroundColor: '#FFFFFF' },
                                         ]}>
                                         <Text
                                             style={[
                                                 styles.metaText,
-                                                { color: theme.colors.onSurfaceVariant },
+                                                { color: theme.colors.primary },
                                             ]}>
                                             {surah.numberOfAyahs} Verses
                                         </Text>
@@ -599,7 +686,7 @@ export default function SurahDetail() {
                                     <IconButton
                                         icon="pencil-outline"
                                         mode="contained-tonal"
-                                        containerColor={theme.colors.surfaceVariant}
+                                        containerColor="#FFFFFF"
                                         iconColor={theme.colors.primary}
                                         size={22}
                                         onPress={handleNoteSurah}
@@ -607,8 +694,8 @@ export default function SurahDetail() {
                                     <IconButton
                                         icon="microphone-outline"
                                         mode="contained-tonal"
-                                        containerColor={theme.colors.surfaceVariant}
-                                        iconColor={theme.colors.secondary}
+                                        containerColor="#FFFFFF"
+                                        iconColor={theme.colors.primary}
                                         size={22}
                                         onPress={handleRecordSurah}
                                     />
@@ -619,19 +706,16 @@ export default function SurahDetail() {
                                         containerColor={
                                             isStudyMode
                                                 ? theme.colors.primaryContainer
-                                                : theme.colors.surfaceVariant
+                                                : '#FFFFFF'
                                         }
-                                        iconColor={
-                                            isStudyMode
-                                                ? theme.colors.primary
-                                                : theme.colors.onSurfaceVariant
-                                        }
+                                        iconColor={theme.colors.primary}
                                         size={22}
                                         onPress={() => {
                                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                                             setIsStudyMode(!isStudyMode);
                                         }}
                                     />
+
                                 </View>
 
                             </Animated.View>
@@ -698,6 +782,7 @@ export default function SurahDetail() {
                         }}
                         style={styles.stickyActionIcon}
                     />
+
                     <IconButton
                         icon="play"
                         iconColor={theme.colors.primary}
@@ -840,6 +925,21 @@ export default function SurahDetail() {
                     </MotiView>
                 )}
             </AnimatePresence>
+
+            {/* Share Card Generator — rendered offscreen for capture */}
+            {shareVerseData && (
+                <ShareCardGenerator
+                    ref={shareCardRef}
+                    type="verse"
+                    verseData={shareVerseData}
+                />
+            )}
+
+
+
+
+
+
 
         </View>
     );

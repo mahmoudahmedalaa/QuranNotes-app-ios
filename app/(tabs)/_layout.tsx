@@ -1,18 +1,23 @@
 import { View } from 'react-native';
 import { Tabs } from 'expo-router';
-import { FloatingTabBar } from '../../src/presentation/components/navigation/FloatingTabBar';
-import { GlobalMiniPlayer } from '../../src/presentation/components/audio/GlobalMiniPlayer';
+import { FloatingTabBar } from '../../src/core/navigation/FloatingTabBar';
+import { GlobalMiniPlayer } from '../../src/features/audio-player/presentation/GlobalMiniPlayer';
 
 export default function TabsLayout() {
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: 'transparent' }}>
             <Tabs
                 tabBar={(props) => <FloatingTabBar {...props} />}
                 screenOptions={{
                     headerShown: false,
+                    sceneStyle: { backgroundColor: 'transparent' } // Ensures the underlying layout is visible
                 }}>
                 <Tabs.Screen
                     name="index"
+                    options={{ title: 'Home' }}
+                />
+                <Tabs.Screen
+                    name="read"
                     options={{ title: 'Read' }}
                 />
                 <Tabs.Screen

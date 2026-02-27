@@ -13,25 +13,22 @@ import {
     ActivityIndicator,
     IconButton,
     Text,
-    Portal,
-    Modal,
     Button,
 } from 'react-native-paper';
-import { useNoteContext } from '../../src/infrastructure/notes/NoteContext';
+
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
+
 import { Ionicons } from '@expo/vector-icons';
-import { useNotes } from '../../src/presentation/hooks/useNotes';
-import { useFolders } from '../../src/infrastructure/notes/FolderContext';
-import { Note } from '../../src/domain/entities/Note';
+import { useNotes } from '../../src/core/hooks/useNotes';
+import { useFolders } from '../../src/features/notes/infrastructure/FolderContext';
+import { Note } from '../../src/features/notes/domain/Note';
 import {
     Spacing,
     BorderRadius,
     Shadows,
-    Gradients,
-} from '../../src/presentation/theme/DesignSystem';
-import { FolderPicker } from '../../src/presentation/components/common/FolderPicker';
+} from '../../src/core/theme/DesignSystem';
+import { FolderPicker } from '../../src/core/components/common/FolderPicker';
 import * as Haptics from 'expo-haptics';
 
 export default function NoteEditorScreen() {
@@ -51,6 +48,7 @@ export default function NoteEditorScreen() {
 
     useEffect(() => {
         loadNote();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [surah, verse, id]);
 
     const loadNote = async () => {
@@ -106,7 +104,8 @@ export default function NoteEditorScreen() {
         }
     };
 
-    const handleFolderSelect = (folderId: string | undefined) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _handleFolderSelect = (folderId: string | undefined) => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         setSelectedFolderId(folderId);
     };
@@ -125,9 +124,8 @@ export default function NoteEditorScreen() {
     }
 
     return (
-        <LinearGradient
-            colors={theme.dark ? ['#0F1419', '#1A1F26'] : (Gradients.sereneSky as any)}
-            style={styles.container}>
+        <View
+            style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <SafeAreaView style={styles.safeArea} edges={['top']}>
                 <KeyboardAvoidingView
                     style={styles.keyboardView}
@@ -151,8 +149,8 @@ export default function NoteEditorScreen() {
                                 {isStandalone
                                     ? 'New Note'
                                     : verse
-                                      ? `Surah ${surah}:${verse}`
-                                      : `Surah ${surah}`}
+                                        ? `Surah ${surah}:${verse}`
+                                        : `Surah ${surah}`}
                             </Text>
                         </View>
                         <View style={styles.headerActions}>
@@ -250,7 +248,7 @@ export default function NoteEditorScreen() {
                     </ScrollView>
                 </KeyboardAvoidingView>
             </SafeAreaView>
-        </LinearGradient>
+        </View>
     );
 }
 

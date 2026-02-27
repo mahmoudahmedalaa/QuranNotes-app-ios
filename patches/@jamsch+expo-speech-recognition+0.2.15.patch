@@ -1,0 +1,32 @@
+diff --git a/node_modules/@jamsch/expo-speech-recognition/app.plugin.js b/node_modules/@jamsch/expo-speech-recognition/app.plugin.js
+index 6b93eb6..d152656 100644
+--- a/node_modules/@jamsch/expo-speech-recognition/app.plugin.js
++++ b/node_modules/@jamsch/expo-speech-recognition/app.plugin.js
+@@ -15,12 +15,12 @@ const withAndroidPackageVisibilityFiltering = (config, { packages = [] }) => {
+       packages.length > 0
+         ? packages
+         : [
+-            "com.google.android.googlequicksearchbox",
+-            // "com.samsung.android.bixby.agent",
+-            // "com.microsoft.cortana",
+-            // "com.nuance.balerion",
+-            // "com.htc.sense.hsp",
+-          ];
++          "com.google.android.googlequicksearchbox",
++          // "com.samsung.android.bixby.agent",
++          // "com.microsoft.cortana",
++          // "com.nuance.balerion",
++          // "com.htc.sense.hsp",
++        ];
+ 
+     // Add speech recognition packages to the manifest if not already present
+     config.modResults.manifest.queries =
+@@ -63,7 +63,7 @@ const withAndroidPackageVisibilityFiltering = (config, { packages = [] }) => {
+  * androidSpeechServicePackages?: string[];
+  * }>}
+  */
+-const withExpoSpeechRecognition = (config, props) => {
++const withExpoSpeechRecognition = (config, props = {}) => {
+   if (!config.ios) {
+     config.ios = {};
+   }

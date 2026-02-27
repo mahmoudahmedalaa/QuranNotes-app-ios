@@ -13,13 +13,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
+import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
 import {
     Spacing,
     BorderRadius,
     Shadows,
     Gradients,
-} from '../../src/presentation/theme/DesignSystem';
+} from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 export default function OnboardingNote() {
@@ -83,7 +83,7 @@ export default function OnboardingNote() {
                         <View
                             style={[styles.coachBubble, { backgroundColor: theme.colors.primary }]}>
                             <Text style={styles.coachText}>
-                                📝 Write your thoughts on any verse
+                                Write your thoughts on any verse
                             </Text>
                         </View>
                     </MotiView>
@@ -99,7 +99,7 @@ export default function OnboardingNote() {
                             Ash-Sharh (The Relief) • Verses 5-6
                         </Text>
                         <Text style={[styles.verseArabic, { color: theme.colors.onSurface }]}>
-                            "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا ۝ إِنَّ مَعَ الْعُسْرِ يُسْرًا"
+                            {'"'}فَإِنَّ مَعَ الْعُسْرِ يُسْرًا ۝ إِنَّ مَعَ الْعُسْرِ يُسْرًا{'"'}
                         </Text>
                     </MotiView>
 

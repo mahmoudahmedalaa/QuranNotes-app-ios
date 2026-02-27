@@ -1,26 +1,26 @@
 import React from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Text, useTheme, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
-import { Spacing, BorderRadius, Gradients } from '../../src/presentation/theme/DesignSystem';
+import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
+import { Spacing, BorderRadius, Gradients, BrandTokens } from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
-const { width, height } = Dimensions.get('window');
+
 
 export default function OnboardingWelcome() {
-    const theme = useTheme();
+    useTheme();
     const router = useRouter();
     const { goToStep } = useOnboarding();
 
     const handleBegin = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         goToStep(2);
-        router.push('/onboarding/pick-surah');
+        router.push('/onboarding/listen');
     };
 
     return (
@@ -38,7 +38,7 @@ export default function OnboardingWelcome() {
                         transition={{ type: 'spring', delay: 200 }}
                         style={styles.iconContainer}>
                         <View style={styles.iconCircle}>
-                            <Ionicons name="book" size={48} color="#5B7FFF" />
+                            <Ionicons name="book" size={48} color={BrandTokens.light.accentPrimary} />
                         </View>
                     </MotiView>
 
@@ -85,7 +85,7 @@ export default function OnboardingWelcome() {
                         style={styles.ctaButton}
                         labelStyle={styles.ctaLabel}
                         buttonColor="#FFFFFF"
-                        textColor="#5B7FFF">
+                        textColor={BrandTokens.light.accentPrimary}>
                         Begin
                     </Button>
                 </MotiView>

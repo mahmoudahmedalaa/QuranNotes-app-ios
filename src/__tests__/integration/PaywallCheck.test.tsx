@@ -1,16 +1,10 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import PaywallScreen from '../../presentation/components/paywall/PaywallScreen';
-import { ProProvider } from '../../infrastructure/auth/ProContext';
+import PaywallScreen from '../../features/payments/presentation/PaywallScreen';
+import { ProProvider } from '../../features/auth/infrastructure/ProContext';
 import { PaperProvider } from 'react-native-paper';
 
-// Mock Navigation
-jest.mock('expo-router', () => ({
-    useRouter: () => ({
-        back: jest.fn(),
-        push: jest.fn(),
-    }),
-}));
+// Use global expo-router mock from jest.setup.js
 
 // Mock Moti due to Reanimated issues in Jest
 jest.mock('moti', () => ({
@@ -18,7 +12,7 @@ jest.mock('moti', () => ({
 }));
 
 // Mock RevenueCat
-jest.mock('../../infrastructure/payments/RevenueCatService', () => ({
+jest.mock('../../features/payments/infrastructure/RevenueCatService', () => ({
     revenueCatService: {
         getOfferings: jest.fn().mockResolvedValue({
             current: {
@@ -41,6 +35,11 @@ jest.mock('../../infrastructure/payments/RevenueCatService', () => ({
     PurchasesPackage: {},
 }));
 
+// Mock Ramadan utils
+jest.mock('../../core/utils/ramadanUtils', () => ({
+    isRamadanSeason: jest.fn().mockReturnValue(false),
+}));
+
 describe('PaywallScreen Integration', () => {
     it('renders correctly without crashing', async () => {
         const component = render(
@@ -55,7 +54,7 @@ describe('PaywallScreen Integration', () => {
 
         // Wait for loading to finish
         await waitFor(() => {
-            expect(component.getByText('Unlock Premium')).toBeTruthy();
+            expect(component.getByText('Unlimited Recordings')).toBeTruthy();
         });
     });
 
@@ -69,8 +68,7 @@ describe('PaywallScreen Integration', () => {
         );
 
         await waitFor(() => {
-            expect(getByText('Pro Monthly')).toBeTruthy();
-            expect(getByText('$4.99')).toBeTruthy();
+            expect(getByText('$35.99')).toBeTruthy();
         });
     });
 });

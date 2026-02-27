@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, FlatList, StyleSheet, Alert, Pressable } from 'react-native';
+import { View, FlatList, StyleSheet, Alert, Pressable, Platform } from 'react-native';
 import {
     Text,
     useTheme,
@@ -10,18 +10,17 @@ import {
     Button,
     IconButton,
     ProgressBar,
-    SegmentedButtons,
 } from 'react-native-paper';
-import { useRecordingStorage } from '../../../src/presentation/hooks/useRecordingStorage';
-import { useRecordingPlayback } from '../../../src/presentation/hooks/useRecordingPlayback';
-import { useAudioRecorder } from '../../../src/presentation/hooks/useAudioRecorder';
-import { useFolders } from '../../../src/infrastructure/notes/FolderContext';
-import { Recording } from '../../../src/domain/entities/Recording';
-import { FollowAlongSession } from '../../../src/domain/entities/FollowAlongSession';
-import { LocalFollowAlongRepository } from '../../../src/data/local/LocalFollowAlongRepository';
-import { DEFAULT_FOLDER } from '../../../src/domain/entities/Folder';
-import { Spacing, BorderRadius, Shadows } from '../../../src/presentation/theme/DesignSystem';
-import { ModernDropdown } from '../../../src/presentation/components/common/ModernDropdown';
+import { useRecordingStorage } from '../../../src/core/hooks/useRecordingStorage';
+import { useRecordingPlayback } from '../../../src/core/hooks/useRecordingPlayback';
+import { useAudioRecorder } from '../../../src/core/hooks/useAudioRecorder';
+import { useFolders } from '../../../src/features/notes/infrastructure/FolderContext';
+import { Recording } from '../../../src/core/domain/entities/Recording';
+import { FollowAlongSession } from '../../../src/core/domain/entities/FollowAlongSession';
+import { LocalFollowAlongRepository } from '../../../src/core/data/local/LocalFollowAlongRepository';
+import { DEFAULT_FOLDER } from '../../../src/core/domain/entities/Folder';
+import { Spacing, BorderRadius, Shadows } from '../../../src/core/theme/DesignSystem';
+import { ModernDropdown } from '../../../src/core/components/common/ModernDropdown';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
@@ -47,13 +46,13 @@ export default function RecordingsScreen() {
     const [editFolderId, setEditFolderId] = useState<string | undefined>();
 
     // View mode for toggling between recordings and follow alongs
-    const [viewMode, setViewMode] = useState<'recordings' | 'follow-alongs'>('recordings'); // Default to recordings
-    // const [viewMode, setViewMode] = useState<'recordings' | 'follow-alongs'>('recordings');
+    const [viewMode] = useState<'recordings' | 'follow-alongs'>('recordings');
     const [followAlongSessions, setFollowAlongSessions] = useState<FollowAlongSession[]>([]);
 
     useEffect(() => {
         refreshRecordings();
         loadFollowAlongSessions();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const loadFollowAlongSessions = async () => {
@@ -573,7 +572,7 @@ const styles = StyleSheet.create({
     filterBar: { padding: Spacing.md },
     list: {
         paddingHorizontal: Spacing.md,
-        paddingBottom: 100,
+        paddingBottom: Platform.OS === 'ios' ? 180 : 160,
     },
     card: {
         flexDirection: 'row',
@@ -619,7 +618,7 @@ const styles = StyleSheet.create({
     emptyText: { fontSize: 14, textAlign: 'center', marginTop: Spacing.xs },
     recordingTimer: {
         position: 'absolute',
-        bottom: 80,
+        bottom: Platform.OS === 'ios' ? 210 : 190,
         left: Spacing.lg,
         right: Spacing.lg,
         padding: Spacing.md,
@@ -636,7 +635,7 @@ const styles = StyleSheet.create({
     fab: {
         position: 'absolute',
         right: Spacing.lg,
-        bottom: Spacing.lg,
+        bottom: Platform.OS === 'ios' ? 140 : 120,
     },
     folderSelectRow: { marginTop: Spacing.sm },
     folderChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

@@ -12,7 +12,7 @@ import {
     BorderRadius,
     Shadows,
     Gradients,
-} from '../../../src/presentation/theme/DesignSystem';
+} from '../../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 // Only 3 tabs - Follow Alongs integrated into Recordings
@@ -40,7 +40,7 @@ export default function LibraryLayout() {
             <SafeAreaView style={styles.safeArea} edges={['top']}>
                 {/* Header */}
                 <View style={styles.header}>
-                    <Text style={[styles.headerTitle, { color: theme.colors.onBackground }]}>
+                    <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>
                         Library
                     </Text>
                     <Text style={[styles.headerSubtitle, { color: theme.colors.onSurfaceVariant }]}>
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: Spacing.sm,
+        paddingVertical: 12, // Ensure >44px height
         borderRadius: BorderRadius.md,
         gap: 6,
     },

@@ -1,25 +1,24 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Pressable, Switch, Dimensions, Alert } from 'react-native';
-import { Text, useTheme, Button, ActivityIndicator } from 'react-native-paper';
+import { View, StyleSheet, Pressable, Switch, Alert } from 'react-native';
+import { Text, useTheme, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
+import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
 import {
     Spacing,
     BorderRadius,
-    Shadows,
-    Gradients,
-} from '../../src/presentation/theme/DesignSystem';
+    BrandTokens,
+} from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
-import { revenueCatService, PurchasesOffering } from '../../src/infrastructure/payments/RevenueCatService';
-import { usePro } from '../../src/infrastructure/auth/ProContext';
-import { isRamadanSeason } from '../../src/utils/ramadanUtils';
-import RamadanPaywallScreen from '../../src/presentation/components/paywall/RamadanPaywallScreen';
+import { revenueCatService, PurchasesOffering } from '../../src/features/payments/infrastructure/RevenueCatService';
+import { usePro } from '../../src/features/auth/infrastructure/ProContext';
+import { isRamadanSeason } from '../../src/core/utils/ramadanUtils';
+import RamadanPaywallScreen from '../../src/features/payments/presentation/RamadanPaywallScreen';
 
-const { width } = Dimensions.get('window');
+
 
 const FEATURES = [
     { icon: 'infinity', title: 'Unlimited Recordings', description: 'No 5-recording limit' },
@@ -35,7 +34,7 @@ const MONTHLY_PRICE = 4.99;
 const ANNUAL_PRICE = 35.99;
 
 export default function OnboardingPremium() {
-    const theme = useTheme();
+    useTheme();
     const router = useRouter();
     const { highlight } = useLocalSearchParams();
     const { completeOnboarding } = useOnboarding();
@@ -59,7 +58,7 @@ export default function OnboardingPremium() {
             try {
                 const current = await revenueCatService.getOfferings();
                 setOffering(current);
-            } catch (e) {
+            } catch (_e) {
                 // Offerings may fail on simulator — still allow free start
             }
         };
@@ -92,7 +91,7 @@ export default function OnboardingPremium() {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
         try {
-            const { success, userCancelled, error } = await revenueCatService.purchasePackage(packageToBuy);
+            const { success, userCancelled, error: purchaseError } = await revenueCatService.purchasePackage(packageToBuy);
             if (success) {
                 checkStatus();
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -100,9 +99,9 @@ export default function OnboardingPremium() {
                 router.dismissAll();
                 router.replace('/');
             } else if (!userCancelled) {
-                Alert.alert('Purchase Failed', error || 'Could not complete purchase. Please try again.');
+                Alert.alert('Purchase Failed', purchaseError || 'Could not complete purchase. Please try again.');
             }
-        } catch (error) {
+        } catch (_error) {
             Alert.alert('Error', 'Something went wrong. Please try again.');
         } finally {
             setPurchasing(false);
@@ -121,7 +120,7 @@ export default function OnboardingPremium() {
 
     return (
         <LinearGradient
-            colors={Gradients.primary}
+            colors={['#1A1340', '#312E81', '#1A1340']}
             style={styles.container}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}>
@@ -218,7 +217,7 @@ export default function OnboardingPremium() {
                         style={styles.ctaButton}
                         labelStyle={styles.ctaLabel}
                         buttonColor="#FFFFFF"
-                        textColor="#5B7FFF"
+                        textColor={BrandTokens.light.accentPrimary}
                         loading={purchasing}
                         disabled={purchasing}>
                         Unlock Full Access

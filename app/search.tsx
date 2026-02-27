@@ -4,9 +4,9 @@ import { Searchbar, Card, Text, useTheme, ActivityIndicator } from 'react-native
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useSearch } from '../src/presentation/hooks/useSearch';
-import { Verse } from '../src/domain/entities/Quran';
-import { Spacing, BorderRadius, Shadows } from '../src/presentation/theme/DesignSystem';
+import { useSearch } from '../src/core/hooks/useSearch';
+import { Verse } from '../src/core/domain/entities/Quran';
+import { Spacing, BorderRadius } from '../src/core/theme/DesignSystem';
 
 export default function SearchScreen() {
     const router = useRouter();

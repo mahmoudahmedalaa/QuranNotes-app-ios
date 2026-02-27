@@ -1,0 +1,200 @@
+/**
+ * FloatingTabBar — Dark pill-shaped floating tab bar
+ * Inspired by Calm/fitness app design: icon-only, dark container, press animations
+ */
+import React from 'react';
+import { View, Pressable, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from 'react-native-paper';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import Animated, {
+    useAnimatedStyle,
+    useSharedValue,
+    withSpring,
+} from 'react-native-reanimated';
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { BlurView } from 'expo-blur';
+
+// Tab icon configuration
+const TAB_ICONS: Record<string, {
+    library: 'ionicons' | 'material';
+    active: string;
+    inactive: string;
+}> = {
+    index: { library: 'ionicons', active: 'home', inactive: 'home-outline' },
+    read: { library: 'ionicons', active: 'book', inactive: 'book-outline' },
+    library: { library: 'ionicons', active: 'library', inactive: 'library-outline' },
+    khatma: { library: 'material', active: 'book-open-page-variant', inactive: 'book-open-page-variant-outline' },
+    insights: { library: 'ionicons', active: 'stats-chart', inactive: 'stats-chart-outline' },
+};
+
+// Theme-adaptive pill backgrounds
+const ICON_SIZE = 24;
+const ACTIVE_DOT_SIZE = 4;
+
+interface TabButtonProps {
+    routeName: string;
+    isFocused: boolean;
+    onPress: () => void;
+    onLongPress: () => void;
+    activeColor: string;
+    inactiveColor: string;
+}
+
+function TabButton({ routeName, isFocused, onPress, onLongPress, activeColor, inactiveColor }: TabButtonProps) {
+    const scale = useSharedValue(1);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: scale.value }],
+    }));
+
+    const handlePressIn = () => {
+        scale.value = withSpring(0.85, { damping: 15, stiffness: 400 });
+    };
+
+    const handlePressOut = () => {
+        scale.value = withSpring(1, { damping: 12, stiffness: 200 });
+    };
+
+    const iconConfig = TAB_ICONS[routeName];
+    if (!iconConfig) return null;
+
+    const iconName = isFocused ? iconConfig.active : iconConfig.inactive;
+    const iconColor = isFocused ? activeColor : inactiveColor;
+
+    return (
+        <Pressable
+            onPress={onPress}
+            onLongPress={onLongPress}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+            style={styles.tabButton}
+            accessibilityRole="button"
+            accessibilityState={isFocused ? { selected: true } : {}}
+        >
+            <Animated.View style={[styles.tabIconContainer, animatedStyle]}>
+                {iconConfig.library === 'material' ? (
+                    <MaterialCommunityIcons
+                        name={iconName as React.ComponentProps<typeof MaterialCommunityIcons>['name']}
+                        size={ICON_SIZE}
+                        color={iconColor}
+                    />
+                ) : (
+                    <Ionicons
+                        name={iconName as React.ComponentProps<typeof Ionicons>['name']}
+                        size={ICON_SIZE}
+                        color={iconColor}
+                    />
+                )}
+                {/* Active indicator dot */}
+                {isFocused && (
+                    <View style={[styles.activeDot, { backgroundColor: activeColor }]} />
+                )}
+            </Animated.View>
+        </Pressable>
+    );
+}
+
+export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+    const insets = useSafeAreaInsets();
+    const theme = useTheme();
+
+    // Filter to only show tabs that have icons configured (visible tabs)
+    const visibleRoutes = state.routes.filter(route => TAB_ICONS[route.name]);
+
+    const activeColor = theme.dark ? '#FFFFFF' : theme.colors.primary;
+    const inactiveColor = theme.dark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)';
+
+    const pillBorder = theme.dark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+
+    return (
+        <View style={[styles.wrapper, { bottom: Math.max(insets.bottom, 16) + 8 }]}>
+            <BlurView
+                intensity={60}
+                tint={theme.dark ? 'dark' : 'light'}
+                style={[
+                    styles.pill,
+                    {
+                        borderColor: pillBorder,
+                        borderWidth: 1,
+                    }
+                ]}
+            >
+                {visibleRoutes.map((route) => {
+                    const realIndex = state.routes.indexOf(route);
+                    const isFocused = state.index === realIndex;
+
+                    const onPress = () => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        const event = navigation.emit({
+                            type: 'tabPress',
+                            target: route.key,
+                            canPreventDefault: true,
+                        });
+
+                        if (!isFocused && !event.defaultPrevented) {
+                            navigation.navigate(route.name);
+                        }
+                    };
+
+                    const onLongPress = () => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                        navigation.emit({
+                            type: 'tabLongPress',
+                            target: route.key,
+                        });
+                    };
+
+                    return (
+                        <TabButton
+                            key={route.key}
+                            routeName={route.name}
+                            isFocused={isFocused}
+                            onPress={onPress}
+                            onLongPress={onLongPress}
+                            activeColor={activeColor}
+                            inactiveColor={inactiveColor}
+                        />
+                    );
+                })}
+            </BlurView>
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+    wrapper: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        pointerEvents: 'box-none',
+    },
+    pill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-around',
+        width: '92%',
+        borderRadius: 24,
+        height: 64, // Strict height for predictable layout math
+        overflow: 'hidden',
+    },
+    tabButton: {
+        flex: 1,
+        height: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    tabIconContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 5,
+    },
+    activeDot: {
+        width: ACTIVE_DOT_SIZE,
+        height: ACTIVE_DOT_SIZE,
+        borderRadius: ACTIVE_DOT_SIZE / 2,
+    },
+});

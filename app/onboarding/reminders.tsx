@@ -1,34 +1,34 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Pressable, Switch } from 'react-native';
+import { View, StyleSheet, Pressable, Switch, ScrollView } from 'react-native';
 import { Text, useTheme, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
-import { useSettings } from '../../src/infrastructure/settings/SettingsContext';
-import { NotificationService } from '../../src/infrastructure/notifications/NotificationService';
+import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
+import { useSettings } from '../../src/features/settings/infrastructure/SettingsContext';
+import { NotificationService } from '../../src/features/notifications/infrastructure/NotificationService';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import {
     Spacing,
     BorderRadius,
     Shadows,
     Gradients,
-} from '../../src/presentation/theme/DesignSystem';
+} from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 export default function OnboardingReminders() {
     const theme = useTheme();
     const router = useRouter();
     const { goToStep } = useOnboarding();
-    const { settings, updateSettings } = useSettings();
+    const { updateSettings } = useSettings();
 
     const [enabled, setEnabled] = useState(true); // Opted-in by default
-    const [selectedChip, setSelectedChip] = useState<string>('Fajr');
+    const [selectedChip, setSelectedChip] = useState<string>('Dhuhr');
     const [pickerDate, setPickerDate] = useState(() => {
         const d = new Date();
-        d.setHours(6, 0, 0, 0); // Default to 6:00 AM for Fajr
+        d.setHours(12, 30, 0, 0); // Default to 12:30 PM for Dhuhr
         return d;
     });
 
@@ -62,13 +62,13 @@ export default function OnboardingReminders() {
             }
         }
 
-        goToStep(10);
+        goToStep(6);
         router.push('/onboarding/premium');
     };
 
     const handleSkip = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        goToStep(10);
+        goToStep(6);
         router.push('/onboarding/premium');
     };
 
@@ -79,16 +79,17 @@ export default function OnboardingReminders() {
             <SafeAreaView style={styles.safeArea}>
                 {/* Progress Indicator */}
                 <View style={styles.progressContainer}>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(step => (
+                    {Array.from({ length: 6 }).map((_, i) => (
                         <View
-                            key={step}
+                            key={i}
                             style={[
                                 styles.progressDot,
                                 {
                                     backgroundColor:
-                                        step <= 9
+                                        i < 5
                                             ? theme.colors.primary
                                             : theme.colors.surfaceVariant,
+                                    width: i === 4 ? 20 : 8,
                                 },
                             ]}
                         />
@@ -112,120 +113,131 @@ export default function OnboardingReminders() {
                         Daily Quran Reminder
                     </Text>
                     <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-                        A gentle nudge to keep your heart connected to Allah's words ✨
+                        A gentle nudge to keep your heart connected to Allah&apos;s words
                     </Text>
                 </MotiView>
 
-                {/* Main Card */}
-                <MotiView
-                    from={{ opacity: 0, translateY: 20 }}
-                    animate={{ opacity: 1, translateY: 0 }}
-                    transition={{ type: 'spring', delay: 300 }}
-                    style={styles.content}>
-                    <View
-                        style={[
-                            styles.card,
-                            { backgroundColor: theme.colors.surface },
-                            Shadows.md,
-                        ]}>
-                        {/* Toggle Row */}
-                        <View style={styles.toggleRow}>
-                            <View style={styles.toggleInfo}>
-                                <Text style={[styles.toggleTitle, { color: theme.colors.onSurface }]}>
-                                    📿 Daily Reminders
-                                </Text>
-                                <Text style={[styles.toggleDesc, { color: theme.colors.onSurfaceVariant }]}>
-                                    Get notified to read Quran daily
-                                </Text>
-                            </View>
-                            <Switch
-                                value={enabled}
-                                onValueChange={handleToggle}
-                                trackColor={{ false: '#48484A', true: theme.colors.primary }}
-                                thumbColor={enabled ? '#FFF' : '#F4F4F4'}
-                            />
-                        </View>
-
-                        {/* Time Picker — visible when enabled */}
-                        {enabled && (
-                            <MotiView
-                                from={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ type: 'timing', duration: 300 }}
-                            >
-                                <View style={[styles.timeSeparator, { backgroundColor: theme.colors.outlineVariant }]} />
-
-                                {/* Prayer Time Selection */}
-                                <View style={styles.suggestedTimes}>
-                                    <Text style={[styles.suggestedLabel, { color: theme.colors.onSurfaceVariant }]}>
-                                        Set by prayer time:
+                {/* Main Card — scrollable to prevent overflow */}
+                <ScrollView
+                    style={styles.content}
+                    contentContainerStyle={styles.contentInner}
+                    showsVerticalScrollIndicator={false}
+                    bounces={false}
+                >
+                    <MotiView
+                        from={{ opacity: 0, translateY: 20 }}
+                        animate={{ opacity: 1, translateY: 0 }}
+                        transition={{ type: 'spring', delay: 300 }}
+                    >
+                        <View
+                            style={[
+                                styles.card,
+                                { backgroundColor: theme.colors.surface },
+                                Shadows.md,
+                            ]}>
+                            {/* Toggle Row */}
+                            <View style={styles.toggleRow}>
+                                <View style={styles.toggleInfo}>
+                                    <Text style={[styles.toggleTitle, { color: theme.colors.onSurface }]}>
+                                        Daily Reminders
                                     </Text>
-                                    {[
-                                        { label: 'Fajr', emoji: '🌅', key: 'Fajr', hour: 5, minute: 30, desc: '5:30 AM' },
-                                        { label: 'Dhuhr', emoji: '☀️', key: 'Dhuhr', hour: 12, minute: 30, desc: '12:30 PM' },
-                                        { label: 'Asr', emoji: '🌤️', key: 'Asr', hour: 15, minute: 30, desc: '3:30 PM' },
-                                        { label: 'Maghrib', emoji: '🌇', key: 'Maghrib', hour: 18, minute: 15, desc: '6:15 PM' },
-                                        { label: 'Isha', emoji: '🌙', key: 'Isha', hour: 21, minute: 0, desc: '9:00 PM' },
-                                    ].map((time) => {
-                                        const isActive = selectedChip === time.key;
-                                        return (
-                                            <Pressable
-                                                key={time.key}
-                                                style={({ pressed }) => [
-                                                    styles.prayerRow,
-                                                    isActive && { backgroundColor: theme.colors.primaryContainer },
-                                                    pressed && { opacity: 0.7 },
-                                                ]}
-                                                onPress={() => {
-                                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                                    setSelectedChip(time.key);
-                                                    const d = new Date();
-                                                    d.setHours(time.hour, time.minute, 0, 0);
-                                                    setPickerDate(d);
-                                                }}>
-                                                <Text style={styles.prayerEmoji}>{time.emoji}</Text>
-                                                <Text style={[styles.prayerLabel, { color: theme.colors.onSurface }]}>
-                                                    {time.label}
-                                                </Text>
-                                                <Text style={[styles.prayerTime, { color: theme.colors.onSurfaceVariant }]}>
-                                                    {time.desc}
-                                                </Text>
-                                                {isActive && (
-                                                    <Ionicons
-                                                        name="checkmark-circle"
-                                                        size={20}
-                                                        color={theme.colors.primary}
-                                                        style={{ marginLeft: Spacing.xs }}
-                                                    />
-                                                )}
-                                            </Pressable>
-                                        );
-                                    })}
-
-                                    {/* Custom Time */}
-                                    <View style={[styles.customDivider, { backgroundColor: theme.colors.outlineVariant }]} />
-                                    <View style={styles.customTimeRow}>
-                                        <Text style={styles.prayerEmoji}>⏰</Text>
-                                        <Text style={[styles.prayerLabel, {
-                                            color: selectedChip === 'Custom' ? theme.colors.primary : theme.colors.onSurface,
-                                            fontWeight: selectedChip === 'Custom' ? '700' : '500',
-                                        }]}>
-                                            Custom Time
-                                        </Text>
-                                        <DateTimePicker
-                                            value={pickerDate}
-                                            mode="time"
-                                            is24Hour={false}
-                                            onChange={handleTimeChange}
-                                            display="default"
-                                            themeVariant={theme.dark ? 'dark' : 'light'}
-                                        />
-                                    </View>
+                                    <Text style={[styles.toggleDesc, { color: theme.colors.onSurfaceVariant }]}>
+                                        Get notified to read Quran daily
+                                    </Text>
                                 </View>
-                            </MotiView>
-                        )}
-                    </View>
-                </MotiView>
+                                <Switch
+                                    value={enabled}
+                                    onValueChange={handleToggle}
+                                    trackColor={{ false: '#48484A', true: theme.colors.primary }}
+                                    thumbColor={enabled ? '#FFF' : '#F4F4F4'}
+                                />
+                            </View>
+
+                            {/* Time Picker — visible when enabled */}
+                            {enabled && (
+                                <MotiView
+                                    from={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ type: 'timing', duration: 300 }}
+                                >
+                                    <View style={[styles.timeSeparator, { backgroundColor: theme.colors.outlineVariant }]} />
+
+                                    {/* Prayer Time Selection */}
+                                    <View style={styles.suggestedTimes}>
+                                        <Text style={[styles.suggestedLabel, { color: theme.colors.onSurfaceVariant }]}>
+                                            Set by prayer time:
+                                        </Text>
+                                        {[
+                                            { label: 'Fajr', icon: 'partly-sunny-outline', key: 'Fajr', hour: 5, minute: 30, desc: '5:30 AM' },
+                                            { label: 'Dhuhr', icon: 'sunny-outline', key: 'Dhuhr', hour: 12, minute: 30, desc: '12:30 PM' },
+                                            { label: 'Asr', icon: 'time-outline', key: 'Asr', hour: 15, minute: 30, desc: '3:30 PM' },
+                                            { label: 'Maghrib', icon: 'partly-sunny-outline', key: 'Maghrib', hour: 18, minute: 15, desc: '6:15 PM' },
+                                            { label: 'Isha', icon: 'moon-outline', key: 'Isha', hour: 21, minute: 0, desc: '9:00 PM' },
+                                        ].map((time) => {
+                                            const isActive = selectedChip === time.key;
+                                            return (
+                                                <Pressable
+                                                    key={time.key}
+                                                    style={({ pressed }) => [
+                                                        styles.prayerRow,
+                                                        isActive && { backgroundColor: theme.colors.primaryContainer },
+                                                        pressed && { opacity: 0.7 },
+                                                    ]}
+                                                    onPress={() => {
+                                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                                        setSelectedChip(time.key);
+                                                        const d = new Date();
+                                                        d.setHours(time.hour, time.minute, 0, 0);
+                                                        setPickerDate(d);
+                                                    }}>
+                                                    <View style={styles.prayerIconContainer}>
+                                                        <Ionicons name={time.icon as any} size={20} color={theme.colors.onSurfaceVariant} />
+                                                    </View>
+                                                    <Text style={[styles.prayerLabel, { color: theme.colors.onSurface }]}>
+                                                        {time.label}
+                                                    </Text>
+                                                    <Text style={[styles.prayerTime, { color: theme.colors.onSurfaceVariant }]}>
+                                                        {time.desc}
+                                                    </Text>
+                                                    {isActive && (
+                                                        <Ionicons
+                                                            name="checkmark-circle"
+                                                            size={20}
+                                                            color={theme.colors.primary}
+                                                            style={{ marginLeft: Spacing.xs }}
+                                                        />
+                                                    )}
+                                                </Pressable>
+                                            );
+                                        })}
+
+                                        {/* Custom Time */}
+                                        <View style={[styles.customDivider, { backgroundColor: theme.colors.outlineVariant }]} />
+                                        <View style={styles.customTimeRow}>
+                                            <View style={styles.prayerIconContainer}>
+                                                <Ionicons name="time-outline" size={20} color={theme.colors.onSurfaceVariant} />
+                                            </View>
+                                            <Text style={[styles.prayerLabel, {
+                                                color: selectedChip === 'Custom' ? theme.colors.primary : theme.colors.onSurface,
+                                                fontWeight: selectedChip === 'Custom' ? '700' : '500',
+                                            }]}>
+                                                Custom Time
+                                            </Text>
+                                            <DateTimePicker
+                                                value={pickerDate}
+                                                mode="time"
+                                                is24Hour={false}
+                                                onChange={handleTimeChange}
+                                                display="default"
+                                                themeVariant={theme.dark ? 'dark' : 'light'}
+                                            />
+                                        </View>
+                                    </View>
+                                </MotiView>
+                            )}
+                        </View>
+                    </MotiView>
+                </ScrollView>
 
                 {/* CTA Buttons */}
                 <MotiView
@@ -301,6 +313,9 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingHorizontal: Spacing.lg,
     },
+    contentInner: {
+        paddingBottom: Spacing.md,
+    },
     card: {
         borderRadius: BorderRadius.xl,
         padding: Spacing.lg,
@@ -372,10 +387,10 @@ const styles = StyleSheet.create({
         borderRadius: BorderRadius.md,
         marginBottom: 2,
     },
-    prayerEmoji: {
-        fontSize: 18,
+    prayerIconContainer: {
         width: 28,
-        textAlign: 'center',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     prayerLabel: {
         fontSize: 14,

@@ -1,20 +1,21 @@
 import React from 'react';
-import { View, StyleSheet, FlatList, Pressable, Dimensions } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { useRouter } from 'expo-router';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
+import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
 import {
     Spacing,
     BorderRadius,
     Shadows,
     Gradients,
-} from '../../src/presentation/theme/DesignSystem';
+    BrandTokens,
+} from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
-const { width } = Dimensions.get('window');
+
 
 // Sample surahs for onboarding (just show first few)
 const SAMPLE_SURAHS = [
@@ -53,7 +54,7 @@ export default function OnboardingPickSurah() {
                     transition={{ type: 'timing', duration: 400 }}
                     style={styles.header}>
                     <View style={[styles.coachBubble, { backgroundColor: theme.colors.primary }]}>
-                        <Text style={styles.coachText}>👆 Tap a Surah to explore</Text>
+                        <Text style={styles.coachText}>Tap a Surah to explore</Text>
                     </View>
                     <View style={[styles.coachArrow, { borderTopColor: theme.colors.primary }]} />
                 </MotiView>
@@ -196,8 +197,8 @@ const styles = StyleSheet.create({
     },
     spotlightCard: {
         borderWidth: 2,
-        borderColor: '#5B7FFF',
-        shadowColor: '#5B7FFF',
+        borderColor: BrandTokens.light.accentPrimary,
+        shadowColor: BrandTokens.light.accentPrimary,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 12,
