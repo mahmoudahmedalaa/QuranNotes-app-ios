@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, Pressable, Animated, ViewToken, AppState } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Animated, ViewToken, AppState, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IconButton, useTheme } from 'react-native-paper';
 import { MotiView, AnimatePresence } from 'moti';
@@ -47,7 +48,8 @@ export default function SurahDetail() {
     const { surah, loading, error, loadSurah } = useQuran();
     const { settings } = useSettings();
     const { playingVerse, isPlaying, playFromVerse, pause, resume, stop } = useAudio();
-    const { isRecording, startRecording, stopRecording } = useAudioRecorder();
+    const { isRecording, isPaused, startRecording, stopRecording, forceCleanup } = useAudioRecorder();
+    const navigation = useNavigation();
     const { notes } = useNotes();
 
     const followAlong = useVoiceFollowAlong(surah?.verses || [], surah?.number, surah?.englishName, surah?.name);
@@ -344,17 +346,65 @@ export default function SurahDetail() {
         },
     ]);
 
+    // Duration timer — ticks while recording, pauses (not resets) when paused
     useEffect(() => {
         let interval: ReturnType<typeof setInterval> | null = null;
         if (isRecording) {
             interval = setInterval(() => setRecordingDuration(d => d + 1), 1000);
-        } else {
-            setRecordingDuration(0);
         }
+        // Only reset duration when we fully stop (save modal takes over)
         return () => {
             if (interval) clearInterval(interval);
         };
     }, [isRecording]);
+
+    // Navigation guard — prevent accidental back navigation during recording
+    useEffect(() => {
+        if (!isRecording && !isPaused) return;
+
+        const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
+            e.preventDefault();
+            Alert.alert(
+                'Recording in Progress',
+                'You have an active recording. What would you like to do?',
+                [
+                    {
+                        text: 'Stay',
+                        style: 'cancel',
+                    },
+                    {
+                        text: 'Discard & Leave',
+                        style: 'destructive',
+                        onPress: async () => {
+                            await forceCleanup();
+                            setRecordingDuration(0);
+                            navigation.dispatch(e.data.action);
+                        },
+                    },
+                    {
+                        text: 'Save & Leave',
+                        onPress: async () => {
+                            const uri = await stopRecording();
+                            if (uri) {
+                                setLastRecordingUri(uri);
+                                setSaveModalVisible(true);
+                            }
+                            // Don't navigate yet — let them save first
+                        },
+                    },
+                ],
+            );
+        });
+
+        return unsubscribe;
+    }, [isRecording, isPaused, navigation, forceCleanup, stopRecording]);
+
+    // Unmount safety — force-cleanup if screen is removed while recording
+    useEffect(() => {
+        return () => {
+            forceCleanup();
+        };
+    }, [forceCleanup]);
 
     // Auto-scroll to highlighted verse during Follow Along
     // Uses direct scrollToIndex (NOT scrollToVerse) because Follow Along fires
