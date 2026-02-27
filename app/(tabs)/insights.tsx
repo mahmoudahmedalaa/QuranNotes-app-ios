@@ -18,8 +18,10 @@ export default function InsightsScreen() {
     const theme = useTheme();
     const router = useRouter();
     const { isPro } = usePro();
-    const { dailyActivity, heatmapData, topicBreakdown, stats } = useInsightsData();
     const [breakdownTimeframe, setBreakdownTimeframe] = useState<TimeframePeriod>('all');
+
+    // Pass timeframe to hook so breakdown data updates dynamically
+    const { dailyActivity, heatmapData, topicBreakdown, filteredTotalTime, stats } = useInsightsData(breakdownTimeframe);
 
     if (!isPro) {
         return (
@@ -84,7 +86,7 @@ export default function InsightsScreen() {
 
                     <TopicBreakdown
                         data={topicBreakdown}
-                        totalTime={stats.totalTimeFormatted}
+                        totalTime={filteredTotalTime}
                         timeframe={breakdownTimeframe}
                         onTimeframeChange={setBreakdownTimeframe}
                     />

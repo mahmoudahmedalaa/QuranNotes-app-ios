@@ -119,16 +119,15 @@ export const StatsWidgetGrid: React.FC<StatsWidgetGridProps> = ({
                 icon="book"
                 label="Pages Read"
                 value={(pagesRead || 0).toLocaleString()}
-                badge={recordingsCount > 0 ? `${recordingsCount} rec` : undefined}
                 color={Colors.widgetPurple}
                 gradientColors={theme.dark ? cardGradients[2].dark : cardGradients[2].light}
                 delay={300}
             />
             <StatCard
-                icon="pencil"
-                label="Notes Written"
-                value={(notesCount || 0).toString()}
-                badge={totalRecordingMinutes > 0 ? `${totalRecordingMinutes}m rec` : undefined}
+                icon="sparkles"
+                label="Reflections"
+                value={((notesCount || 0) + (recordingsCount || 0)).toString()}
+                badge={`${notesCount} notes · ${recordingsCount} rec`}
                 color={Colors.widgetEmerald}
                 gradientColors={theme.dark ? cardGradients[3].dark : cardGradients[3].light}
                 delay={400}

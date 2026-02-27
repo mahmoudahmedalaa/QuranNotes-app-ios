@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { useStreaks } from '../../features/auth/infrastructure/StreakContext';
 import { useKhatma } from '../../features/khatma/infrastructure/KhatmaContext';
@@ -7,6 +7,7 @@ import { useRepositories } from '../di/RepositoryContext';
 import { Colors } from '../theme/DesignSystem';
 import { Recording } from '../domain/entities/Recording';
 import { Note } from '../../features/notes/domain/Note';
+import { TimeframePeriod } from '../../shared/components/TimeframeSelector';
 
 // ── Smart time formatting ────────────────────────────────────────────
 export function formatTime(totalMinutes: number): string {
@@ -22,6 +23,15 @@ export function formatTime(totalMinutes: number): string {
     return h > 0 ? `${d}d ${h}h` : `${d}d`;
 }
 
+// ── Date filtering helper ──────────────────────────────────────────
+function getCutoffDate(period: TimeframePeriod): Date | null {
+    if (period === 'all') return null;
+    const cutoff = new Date();
+    cutoff.setHours(0, 0, 0, 0);
+    cutoff.setDate(cutoff.getDate() - (period === '7d' ? 7 : 30));
+    return cutoff;
+}
+
 export interface InsightMetrics {
     dailyActivity: { value: number; label: string }[];
     heatmapData: { date: string; count: number }[];
@@ -32,6 +42,7 @@ export interface InsightMetrics {
         label?: string;
         focused?: boolean;
     }[];
+    filteredTotalTime: string;
     stats: {
         currentStreak: number;
         longestStreak: number;
@@ -46,7 +57,7 @@ export interface InsightMetrics {
     loading: boolean;
 }
 
-export const useInsightsData = (): InsightMetrics => {
+export const useInsightsData = (breakdownTimeframe: TimeframePeriod = 'all'): InsightMetrics => {
     const { streak } = useStreaks();
     const { totalPagesRead, completedJuz, completedSurahs } = useKhatma();
     const { getCompletionPercentage } = useAdhkar();
@@ -76,6 +87,35 @@ export const useInsightsData = (): InsightMetrics => {
             fetchData();
         }, [fetchData]),
     );
+
+    // ── Filtered data for breakdown (memoized on timeframe) ──────────
+    const filteredRecordings = useMemo(() => {
+        const cutoff = getCutoffDate(breakdownTimeframe);
+        if (!cutoff) return recordings;
+        return recordings.filter(r => new Date(r.createdAt) >= cutoff);
+    }, [recordings, breakdownTimeframe]);
+
+    const filteredNotes = useMemo(() => {
+        const cutoff = getCutoffDate(breakdownTimeframe);
+        if (!cutoff) return notes;
+        return notes.filter(n => new Date(n.createdAt) >= cutoff);
+    }, [notes, breakdownTimeframe]);
+
+    // Are active days within the timeframe?
+    const activeDaysInTimeframe = useMemo(() => {
+        const cutoff = getCutoffDate(breakdownTimeframe);
+        if (!cutoff || !streak?.activityHistory) return Object.keys(streak?.activityHistory || {}).length || 1;
+        return Object.entries(streak.activityHistory)
+            .filter(([date]) => new Date(date) >= cutoff)
+            .length || 1;
+    }, [streak?.activityHistory, breakdownTimeframe]);
+
+    // Filtered pages read estimate (proportional to active days in timeframe)
+    const filteredPagesRead = useMemo(() => {
+        if (breakdownTimeframe === 'all') return totalPagesRead;
+        const totalActiveDays = Object.keys(streak?.activityHistory || {}).length || 1;
+        return Math.round(totalPagesRead * (activeDaysInTimeframe / totalActiveDays));
+    }, [totalPagesRead, breakdownTimeframe, activeDaysInTimeframe, streak?.activityHistory]);
 
     // 1. Calculate Activity (Last 7 Days) — distribute reading across active days
     const getDailyActivity = () => {
@@ -112,59 +152,53 @@ export const useInsightsData = (): InsightMetrics => {
             }
         });
 
-        // Distribute Khatma reading across active days (from activityHistory)
-        // Instead of dumping all pages on today, spread across days user was active
+        // Distribute Khatma reading across active days
         if (totalPagesRead > 0 && streak?.activityHistory) {
             const last7Dates = Array.from(activityMap.keys());
             const activeDatesIn7 = last7Dates.filter(d => (streak.activityHistory[d] || 0) > 0);
 
             if (activeDatesIn7.length > 0) {
-                // Estimate: distribute total reading minutes across active days
-                const totalReadingMins = totalPagesRead * 2; // ~2 min/page
+                const totalReadingMins = totalPagesRead * 2;
                 const minsPerDay = Math.round(totalReadingMins / Math.max(activeDatesIn7.length, 7));
                 activeDatesIn7.forEach(dateStr => {
                     activityMap.set(dateStr, (activityMap.get(dateStr) || 0) + minsPerDay);
                 });
             } else {
-                // Fallback: add to today
                 const todayStr = today.toISOString().split('T')[0];
                 if (activityMap.has(todayStr)) {
-                    const readingMins = Math.min(totalPagesRead * 2, 30); // Cap at 30 to be reasonable
+                    const readingMins = Math.min(totalPagesRead * 2, 30);
                     activityMap.set(todayStr, (activityMap.get(todayStr) || 0) + readingMins);
                 }
             }
         }
 
-        // Add Adhkar session estimate (~5min per completed session)
+        // Add Adhkar session estimate
         const adhkarPeriods: ('morning' | 'evening' | 'night')[] = ['morning', 'evening', 'night'];
         const todayStr = today.toISOString().split('T')[0];
         adhkarPeriods.forEach(period => {
             const pct = getCompletionPercentage(period);
             if (pct > 0 && activityMap.has(todayStr)) {
-                const adhkarMins = Math.round(5 * (pct / 100)); // ~5 min for full session
+                const adhkarMins = Math.round(5 * (pct / 100));
                 activityMap.set(todayStr, (activityMap.get(todayStr) || 0) + adhkarMins);
             }
         });
 
-        // Map back to result array
         return result.map(item => ({
             label: item.label,
             value: activityMap.get(item.date) || 0,
         }));
     };
 
-    // 2. Heatmap Data — merge streak activityHistory with Khatma reading days
+    // 2. Heatmap Data
     const getHeatmapData = () => {
         const heatmap = new Map<string, number>();
 
-        // Add streak activity history
         if (streak?.activityHistory) {
             for (const [date, count] of Object.entries(streak.activityHistory)) {
                 heatmap.set(date, (heatmap.get(date) || 0) + count);
             }
         }
 
-        // Add Khatma reading days (each completed juz = activity on that day)
         if (completedSurahs.length > 0 || totalPagesRead > 0) {
             const today = new Date();
             const year = today.getFullYear();
@@ -184,28 +218,31 @@ export const useInsightsData = (): InsightMetrics => {
         }));
     };
 
-    // 3. Topic Breakdown — Real app features: Reading, Adhkar, Recording, Notes
-    const getTopicBreakdown = () => {
-        const khatmaReadingUnits = Math.max(completedSurahs.length, Math.floor(totalPagesRead / 20));
+    // 3. Topic Breakdown — Uses FILTERED data based on breakdownTimeframe
+    const topicBreakdown = useMemo(() => {
+        const khatmaReadingUnits = Math.max(
+            breakdownTimeframe === 'all' ? completedSurahs.length : Math.round(completedSurahs.length * (activeDaysInTimeframe / Math.max(Object.keys(streak?.activityHistory || {}).length, 1))),
+            Math.floor(filteredPagesRead / 20),
+        );
 
-        // Calculate Adhkar units from today's completion
+        // For adhkar: only count if timeframe includes today or is 'all'
         const adhkarPeriods: ('morning' | 'evening' | 'night')[] = ['morning', 'evening', 'night'];
         const adhkarUnits = adhkarPeriods.reduce((sum, period) => {
             const pct = getCompletionPercentage(period);
-            return sum + (pct > 0 ? Math.ceil(pct / 25) : 0); // 1 unit per 25% completion
+            return sum + (pct > 0 ? Math.ceil(pct / 25) : 0);
         }, 0);
 
-        const totalItems = khatmaReadingUnits + adhkarUnits + recordings.length + notes.length;
+        const totalItems = khatmaReadingUnits + adhkarUnits + filteredRecordings.length + filteredNotes.length;
 
         if (totalItems === 0)
             return [
-                { value: 1, color: Colors.chartEmpty, text: '0%', label: 'None' },
+                { value: 1, color: Colors.chartEmpty, text: '0%', label: 'No data' },
             ];
 
         const readingPct = Math.round((khatmaReadingUnits / totalItems) * 100);
         const adhkarPct = Math.round((adhkarUnits / totalItems) * 100);
-        const recordingPct = Math.round((recordings.length / totalItems) * 100);
-        const notesPct = Math.round((notes.length / totalItems) * 100);
+        const recordingPct = Math.round((filteredRecordings.length / totalItems) * 100);
+        const notesPct = Math.round((filteredNotes.length / totalItems) * 100);
 
         return [
             {
@@ -234,13 +271,21 @@ export const useInsightsData = (): InsightMetrics => {
                 focused: notesPct > 30,
             },
         ].filter(item => item.value > 0);
-    };
+    }, [filteredRecordings, filteredNotes, filteredPagesRead, completedSurahs, activeDaysInTimeframe, streak?.activityHistory, breakdownTimeframe, getCompletionPercentage]);
 
-    // 4. Total Stats — include all tracked time
+    // Filtered total time for the breakdown center
+    const filteredTotalTime = useMemo(() => {
+        const recordingSeconds = filteredRecordings.reduce((acc, r) => acc + (r.duration || 0), 0);
+        const noteSeconds = filteredNotes.length * 5 * 60;
+        const khatmaSeconds = filteredPagesRead * 2 * 60;
+        return Math.round((recordingSeconds + noteSeconds + khatmaSeconds) / 60);
+    }, [filteredRecordings, filteredNotes, filteredPagesRead]);
+
+    // 4. Total Stats (always all-time)
     const getTotalTime = () => {
         const recordingSeconds = recordings.reduce((acc, r) => acc + (r.duration || 0), 0);
-        const noteSeconds = notes.length * 5 * 60; // 5 mins per note
-        const khatmaSeconds = totalPagesRead * 2 * 60; // ~2 min per page
+        const noteSeconds = notes.length * 5 * 60;
+        const khatmaSeconds = totalPagesRead * 2 * 60;
         return Math.round((recordingSeconds + noteSeconds + khatmaSeconds) / 60);
     };
 
@@ -250,7 +295,8 @@ export const useInsightsData = (): InsightMetrics => {
     return {
         dailyActivity: getDailyActivity(),
         heatmapData: getHeatmapData(),
-        topicBreakdown: getTopicBreakdown(),
+        topicBreakdown,
+        filteredTotalTime: formatTime(filteredTotalTime),
         stats: {
             currentStreak: streak?.currentStreak || 0,
             longestStreak: streak?.longestStreak || 0,
