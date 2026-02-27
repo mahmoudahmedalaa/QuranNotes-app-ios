@@ -104,9 +104,6 @@ export default function MoodInsightWidget() {
         });
     }, [moodFrequency, totalCheckins]);
 
-    // Find the top mood for center label
-    const topMood = moodFrequency.length > 0 ? moodFrequency[0] : null;
-
     return (
         <MotiView
             from={{ opacity: 0, translateY: 10 }}

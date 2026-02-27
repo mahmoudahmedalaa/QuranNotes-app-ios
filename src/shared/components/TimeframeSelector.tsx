@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 import { Text, Menu, useTheme } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { BorderRadius } from '../../core/theme/DesignSystem';

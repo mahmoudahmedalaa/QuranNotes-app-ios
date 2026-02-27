@@ -62,7 +62,7 @@ export const useAudioRecorder = () => {
             setIsRecording(true);
             setIsPaused(false);
         } catch (error) {
-            console.error('Failed to start recording:', error);
+            if (__DEV__) console.error('Failed to start recording:', error);
             // Cleanup on failure
             await forceCleanup();
             Alert.alert('Recording Error', 'Failed to start recording. Please try again.');
@@ -119,7 +119,7 @@ export const useAudioRecorder = () => {
             setRecording(null);
             return uri;
         } catch (error) {
-            console.error('Failed to stop recording:', error);
+            if (__DEV__) console.error('Failed to stop recording:', error);
             recordingRef.current = null;
             setRecording(null);
             return null;

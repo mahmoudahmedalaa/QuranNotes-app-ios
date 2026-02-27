@@ -33,14 +33,6 @@ function getCutoffDate(period: TimeframePeriod): Date | null {
     return cutoff;
 }
 
-/** Count calendar days from the user's first activity to now */
-function getTotalCalendarDays(activityHistory: Record<string, number> | undefined): number {
-    if (!activityHistory || Object.keys(activityHistory).length === 0) return 1;
-    const dates = Object.keys(activityHistory).map(d => new Date(d).getTime());
-    const earliest = Math.min(...dates);
-    const now = Date.now();
-    return Math.max(Math.ceil((now - earliest) / (1000 * 60 * 60 * 24)), 1);
-}
 
 export interface InsightMetrics {
     dailyActivity: { value: number; label: string }[];
