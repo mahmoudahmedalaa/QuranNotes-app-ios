@@ -66,9 +66,9 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({
                 <PieChart
                     data={chartData.length > 0 ? chartData : [{ value: 1, color: theme.colors.surfaceVariant, text: '' }]}
                     donut
-                    showGradient
-                    sectionAutoFocus
                     focusOnPress
+                    toggleFocusOnPress
+                    extraRadius={15}
                     radius={90}
                     innerRadius={60}
                     innerCircleColor={theme.colors.surface}

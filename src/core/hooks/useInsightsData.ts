@@ -219,7 +219,7 @@ export const useInsightsData = (breakdownTimeframe: TimeframePeriod = 'all'): In
         // ─ Actual minutes per category ────────────────────────────
         const readingMins = filteredPagesRead * 2; // ~2 min per page
 
-        const recordingMins = Math.round(
+        const recordingMins = Math.ceil(
             filteredRecordings.reduce((acc, r) => acc + (r.duration || 0), 0) / 60,
         );
 
