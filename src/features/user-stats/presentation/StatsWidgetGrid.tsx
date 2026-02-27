@@ -123,7 +123,7 @@ export const StatsWidgetGrid: React.FC<StatsWidgetGridProps> = ({
             />
             <StatCard
                 icon="book-outline"
-                label="Khatma"
+                label="Khatma Progress"
                 value={`${completedJuzCount}/30 Juz`}
                 badge={currentRound > 1 ? `Round ${currentRound}` : undefined}
                 color={Colors.widgetEmerald}
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
         gap: 6,
     },
     value: {
-        fontSize: 22,
+        fontSize: 19,
         fontWeight: '800',
         letterSpacing: -0.5,
     },

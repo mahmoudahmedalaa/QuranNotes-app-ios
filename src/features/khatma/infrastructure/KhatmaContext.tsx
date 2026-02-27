@@ -247,6 +247,21 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // One-time backfill: seed readingLog from existing completedSurahs + activity dates
+    // so that pre-existing data is filterable by timeframe
+    useEffect(() => {
+        if (loading) return; // wait for khatma state to load
+        if (Object.keys(readingLog).length > 0) return; // already has data
+        if (state.completedSurahs.length === 0) return; // nothing to seed
+
+        ReadingActivityLog.backfillFromHistory(state.completedSurahs)
+            .then(seeded => {
+                if (Object.keys(seeded).length > 0) {
+                    setReadingLog(seeded);
+                }
+            });
+    }, [loading, state.completedSurahs, readingLog]);
+
     // Reset on auth change
     useEffect(() => {
         const currentUid = user?.id ?? null;

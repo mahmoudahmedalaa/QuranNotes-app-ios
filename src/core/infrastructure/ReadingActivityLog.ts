@@ -94,6 +94,60 @@ export const ReadingActivityLog = {
         return total;
     },
 
+    /**
+     * One-time backfill: distribute existing completed surahs across
+     * known activity dates from streak history. Reads activityHistory
+     * directly from AsyncStorage to avoid circular dependency.
+     * Once seeded, this never runs again (readingLog is no longer empty).
+     */
+    async backfillFromHistory(completedSurahs: number[]): Promise<ReadingLog> {
+        if (completedSurahs.length === 0) return {};
+
+        try {
+            // Read activity history from streak storage (no import needed)
+            const streakRaw = await AsyncStorage.getItem('reflection_streaks');
+            const activityHistory: Record<string, number> = streakRaw
+                ? (JSON.parse(streakRaw).activityHistory || {})
+                : {};
+
+            const activeDates = Object.keys(activityHistory)
+                .filter(d => (activityHistory[d] || 0) > 0)
+                .sort(); // oldest first
+
+            const sorted = [...completedSurahs].sort((a, b) => a - b);
+            const log: ReadingLog = {};
+
+            if (activeDates.length === 0) {
+                // No history at all — put everything on today
+                const today = todayStr();
+                log[today] = {
+                    surahs: sorted,
+                    pages: sorted.reduce((sum, s) => sum + estimateSurahPages(s), 0),
+                };
+            } else {
+                // Distribute surahs evenly across active dates
+                const perDay = Math.max(1, Math.ceil(sorted.length / activeDates.length));
+                let idx = 0;
+
+                for (const dateStr of activeDates) {
+                    if (idx >= sorted.length) break;
+                    const chunk = sorted.slice(idx, idx + perDay);
+                    log[dateStr] = {
+                        surahs: chunk,
+                        pages: chunk.reduce((sum, s) => sum + estimateSurahPages(s), 0),
+                    };
+                    idx += perDay;
+                }
+            }
+
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(log));
+            return log;
+        } catch (e) {
+            if (__DEV__) console.warn('[ReadingActivityLog] backfill failed', e);
+            return {};
+        }
+    },
+
     /** Clear all data (for logout) */
     async clearAll(): Promise<void> {
         await AsyncStorage.removeItem(STORAGE_KEY);
