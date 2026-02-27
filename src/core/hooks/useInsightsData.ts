@@ -38,6 +38,7 @@ export interface InsightMetrics {
         totalTimeMinutes: number;
         totalTimeFormatted: string;
         pagesRead: number;
+        notesCount: number;
         recordingsCount: number;
         totalRecordingMinutes: number;
         favoritesCount: number;
@@ -215,19 +216,19 @@ export const useInsightsData = (): InsightMetrics => {
             },
             {
                 value: adhkarPct || 0,
-                color: Colors.chartReciting,
+                color: Colors.chartAdhkar,
                 text: `${adhkarPct}%`,
                 label: 'Adhkar',
             },
             {
                 value: recordingPct || 0,
-                color: Colors.chartReflection,
+                color: Colors.chartRecording,
                 text: `${recordingPct}%`,
                 label: 'Recording',
             },
             {
                 value: notesPct || 0,
-                color: '#60A5FA', // Soft blue for notes
+                color: Colors.chartNotes,
                 text: `${notesPct}%`,
                 label: 'Notes',
                 focused: notesPct > 30,
@@ -256,6 +257,7 @@ export const useInsightsData = (): InsightMetrics => {
             totalTimeMinutes,
             totalTimeFormatted: formatTime(totalTimeMinutes),
             pagesRead: totalPagesRead,
+            notesCount: notes.length,
             recordingsCount: recordings.length,
             totalRecordingMinutes: Math.round(totalRecordingSeconds / 60),
             favoritesCount: completedSurahs.length,

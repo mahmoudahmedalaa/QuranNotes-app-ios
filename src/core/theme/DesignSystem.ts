@@ -58,22 +58,23 @@ const lightColors = {
     warning: '#F59E0B',
     info: '#3B82F6',
 
-    // Charts & Data (Simplified to brand colors)
-    chartReading: '#6246EA',
-    chartReciting: '#8B74F0',
-    chartReflection: '#A78BFA',
-    chartEmpty: '#E2E8F0', // Grey 3: Borders/Empty states
+    // Charts & Data — Distinct, accessible palette
+    chartReading: '#6246EA',   // Brand purple (Reading/Quran)
+    chartAdhkar: '#F59E0B',    // Warm amber (Adhkar)
+    chartRecording: '#EF4444', // Coral red (Recording)
+    chartNotes: '#3B82F6',     // Sky blue (Notes)
+    chartEmpty: '#E2E8F0',     // Grey 3: Borders/Empty states
 
     // Heatmap (Strict Purple scale)
     heatmapLow: '#E9E5FF',
     heatmapMedium: '#A78BFA',
     heatmapHigh: '#6246EA',
 
-    // Widgets (Stats) - Normalized
-    widgetOrange: '#6246EA',
-    widgetBlue: '#4B2FD4',
-    widgetPurple: '#6246EA',
-    widgetPink: '#A78BFA',
+    // Widgets (Stats) - Truly distinct accents
+    widgetOrange: '#F97316',   // Vivid orange (Streak flame)
+    widgetBlue: '#3B82F6',     // Blue (Time)
+    widgetPurple: '#6246EA',   // Brand purple (Pages)
+    widgetEmerald: '#10B981',  // Emerald (Notes)
 
     // Borders & Dividers
     outline: '#E2E8F0', // Grey 3: Borders/Dividers (Slate 200)
@@ -109,11 +110,12 @@ const darkColors = {
     success: '#10B981',
     warning: '#F59E0B',
 
-    // Charts & Data
-    chartReading: '#A78BFA',
-    chartReciting: '#8B74F0',
-    chartReflection: '#6246EA',
-    chartEmpty: '#27272A', // Grey 3
+    // Charts & Data — Distinct, accessible palette (dark)
+    chartReading: '#A78BFA',   // Lighter purple for dark bg
+    chartAdhkar: '#FBBF24',    // Warm amber
+    chartRecording: '#F87171', // Light coral
+    chartNotes: '#60A5FA',     // Lighter blue
+    chartEmpty: '#27272A',     // Grey 3
 
     // Heatmap
     heatmapLow: '#2D1F6E',
@@ -121,10 +123,10 @@ const darkColors = {
     heatmapHigh: '#A78BFA',
 
     // Widgets
-    widgetOrange: '#A78BFA',
-    widgetBlue: '#8B74F0',
-    widgetPurple: '#6246EA',
-    widgetPink: '#C4B5FD',
+    widgetOrange: '#FB923C',   // Light orange
+    widgetBlue: '#60A5FA',     // Light blue
+    widgetPurple: '#A78BFA',   // Light purple
+    widgetEmerald: '#34D399',  // Light emerald
 
     // Borders & Dividers
     outline: '#27272A', // Grey 3 (Zinc 800)

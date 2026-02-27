@@ -2,7 +2,7 @@
  * MoodInsightWidget — Insights tab widget showing mood check-in history.
  * Donut chart for mood frequency + horizontal scrolling dot strip with text labels.
  */
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
@@ -10,6 +10,7 @@ import Svg, { Path, Circle as SvgCircle } from 'react-native-svg';
 import { MoodType, MOOD_CONFIGS } from '../../../core/domain/entities/Mood';
 import { useMood } from '../infrastructure/MoodContext';
 import { Spacing, BorderRadius, Shadows, Typography } from '../../../core/theme/DesignSystem';
+import { TimeframeSelector, TimeframePeriod } from '../../../shared/components/TimeframeSelector';
 
 const MAX_TIMELINE_DAYS = 7;
 
@@ -54,28 +55,31 @@ function describeArc(cx: number, cy: number, r: number, startAngle: number, endA
 export default function MoodInsightWidget() {
     const theme = useTheme();
     const { moodHistory } = useMood();
+    const [moodTimeframe, setMoodTimeframe] = useState<TimeframePeriod>('30d');
 
     const dailyMoods = useMemo(() => groupByDay(moodHistory), [moodHistory]);
 
-    // Filter to last 30 days for the donut chart
-    const last30DaysHistory = useMemo(() => {
+    // Filter based on selected timeframe
+    const filteredHistory = useMemo(() => {
+        if (moodTimeframe === 'all') return moodHistory;
+        const days = moodTimeframe === '7d' ? 7 : 30;
         const cutoff = new Date();
-        cutoff.setDate(cutoff.getDate() - 30);
+        cutoff.setDate(cutoff.getDate() - days);
         return moodHistory.filter(e => new Date(e.timestamp) >= cutoff);
-    }, [moodHistory]);
+    }, [moodHistory, moodTimeframe]);
 
-    const totalCheckins = last30DaysHistory.length;
+    const totalCheckins = filteredHistory.length;
 
     // Frequency map sorted by count descending, top 5 (scoped to 30 days)
     const moodFrequency = useMemo(() => {
         const freq: Partial<Record<MoodType, number>> = {};
-        last30DaysHistory.forEach((entry) => {
+        filteredHistory.forEach((entry) => {
             freq[entry.mood] = (freq[entry.mood] || 0) + 1;
         });
         return Object.entries(freq)
             .sort(([, a], [, b]) => b - a)
             .slice(0, 5) as [MoodType, number][];
-    }, [last30DaysHistory]);
+    }, [filteredHistory]);
 
     // Donut chart data
     const donutSize = 120;
@@ -112,20 +116,19 @@ export default function MoodInsightWidget() {
             <View style={[styles.card, { backgroundColor: theme.colors.surface }, Shadows.sm]}>
                 {/* Header */}
                 <View style={styles.headerRow}>
-                    <View>
-                        <Text style={[styles.title, { color: theme.colors.primary }]}>
-                            Mood Journey
-                        </Text>
-                        <Text style={[styles.timeframeText, { color: theme.colors.onSurfaceVariant }]}>
-                            Last 30 days
-                        </Text>
-                    </View>
-                    {totalCheckins > 0 && (
-                        <Text style={[styles.countText, { color: theme.colors.onSurfaceVariant }]}>
-                            {totalCheckins} {totalCheckins === 1 ? 'check-in' : 'check-ins'}
-                        </Text>
-                    )}
+                    <Text style={[styles.title, { color: theme.colors.primary }]}>
+                        Mood Journey
+                    </Text>
+                    <TimeframeSelector
+                        selected={moodTimeframe}
+                        onSelect={setMoodTimeframe}
+                    />
                 </View>
+                {totalCheckins > 0 && (
+                    <Text style={[styles.countText, { color: theme.colors.onSurfaceVariant, marginBottom: Spacing.sm }]}>
+                        {totalCheckins} {totalCheckins === 1 ? 'check-in' : 'check-ins'}
+                    </Text>
+                )}
 
                 {dailyMoods.length === 0 ? (
                     <View style={styles.emptyState}>

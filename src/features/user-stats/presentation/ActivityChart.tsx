@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Dimensions, Pressable } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { LineChart } from 'react-native-gifted-charts';
 import { Spacing, BorderRadius, Shadows } from '../../../core/theme/DesignSystem';
@@ -12,6 +12,19 @@ interface ActivityChartProps {
 
 export const ActivityChart: React.FC<ActivityChartProps> = ({ data }) => {
     const theme = useTheme();
+    const [selectedPoint, setSelectedPoint] = useState<{ value: number; label: string } | null>(null);
+
+    const maxVal = Math.max(...data.map(d => d.value), 1);
+    // Round up to a nice number for sections
+    const niceMax = Math.ceil(maxVal / 10) * 10 + 10;
+
+    // Prepare data with onPress for each point
+    const chartData = data.map((d) => ({
+        value: d.value,
+        label: d.label,
+        dataPointColor: theme.colors.primary,
+        onPress: () => setSelectedPoint(d),
+    }));
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.surface }, Shadows.sm]}>
@@ -24,20 +37,36 @@ export const ActivityChart: React.FC<ActivityChartProps> = ({ data }) => {
                 </Text>
             </View>
 
+            {/* Selected point detail */}
+            {selectedPoint && (
+                <Pressable onPress={() => setSelectedPoint(null)}>
+                    <View style={[styles.detailPill, { backgroundColor: theme.colors.primaryContainer || theme.colors.surfaceVariant }]}>
+                        <Text style={[styles.detailDay, { color: theme.colors.primary }]}>
+                            {selectedPoint.label}
+                        </Text>
+                        <Text style={[styles.detailValue, { color: theme.colors.onSurface }]}>
+                            {selectedPoint.value} min
+                        </Text>
+                    </View>
+                </Pressable>
+            )}
+
             <View style={styles.chartContainer}>
                 <LineChart
                     areaChart
                     curved
-                    data={data}
-                    height={180}
-                    width={width - Spacing.lg * 4} // adjust width based on padding
+                    data={chartData}
+                    height={200}
+                    width={width - Spacing.lg * 4}
                     spacing={40}
                     initialSpacing={20}
+                    endSpacing={20}
                     color1={theme.colors.primary}
                     startFillColor1={theme.colors.primary}
                     endFillColor1={theme.colors.primary}
                     startOpacity={0.3}
                     endOpacity={0.05}
+                    maxValue={niceMax}
                     noOfSections={4}
                     yAxisThickness={0}
                     xAxisThickness={0}
@@ -46,58 +75,18 @@ export const ActivityChart: React.FC<ActivityChartProps> = ({ data }) => {
                     hideRules
                     hideDataPoints={false}
                     dataPointsColor={theme.colors.primary}
-                    dataPointsRadius={4}
+                    dataPointsRadius={6}
+                    focusedDataPointRadius={8}
                     thickness={3}
                     isAnimated
                     animationDuration={1200}
-                    pointerConfig={{
-                        pointerStripHeight: 160,
-                        pointerStripColor: theme.colors.onSurfaceVariant,
-                        pointerStripWidth: 2,
-                        pointerColor: theme.colors.primary,
-                        radius: 6,
-                        pointerLabelWidth: 100,
-                        pointerLabelHeight: 90,
-                        activatePointersOnLongPress: false,
-                        autoAdjustPointerLabelPosition: false,
-                        pointerLabelComponent: (items: { value: number; label: string }[]) => {
-                            return (
-                                <View
-                                    style={{
-                                        height: 90,
-                                        width: 100,
-                                        justifyContent: 'center',
-                                        marginTop: -30,
-                                        marginLeft: -40,
-                                    }}>
-                                    <Text
-                                        style={{
-                                            color: theme.colors.onSurface,
-                                            fontSize: 14,
-                                            marginBottom: 6,
-                                            textAlign: 'center',
-                                        }}>
-                                        {items[0].value} mins
-                                    </Text>
-                                    <View
-                                        style={{
-                                            paddingHorizontal: 14,
-                                            paddingVertical: 6,
-                                            borderRadius: 16,
-                                            backgroundColor: theme.colors.surfaceVariant,
-                                        }}>
-                                        <Text
-                                            style={{
-                                                fontWeight: 'bold',
-                                                textAlign: 'center',
-                                                color: theme.colors.onSurfaceVariant,
-                                            }}>
-                                            {items[0].label}
-                                        </Text>
-                                    </View>
-                                </View>
-                            );
-                        },
+                    focusEnabled
+                    showDataPointOnFocus
+                    showStripOnFocus
+                    stripColor={theme.colors.onSurfaceVariant + '30'}
+                    stripWidth={2}
+                    onFocus={(_item: { value: number; label: string }, index: number) => {
+                        setSelectedPoint(data[index]);
                     }}
                 />
             </View>
@@ -113,7 +102,7 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.md,
     },
     header: {
-        marginBottom: Spacing.lg,
+        marginBottom: Spacing.sm,
     },
     title: {
         fontSize: 18,
@@ -123,9 +112,28 @@ const styles = StyleSheet.create({
     subtitle: {
         fontSize: 12,
     },
+    detailPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        marginBottom: Spacing.sm,
+        alignSelf: 'center',
+    },
+    detailDay: {
+        fontSize: 14,
+        fontWeight: '700',
+    },
+    detailValue: {
+        fontSize: 14,
+        fontWeight: '500',
+    },
     chartContainer: {
         alignItems: 'center',
         justifyContent: 'center',
-        marginLeft: -10, // Alignment fix for y-axis labels
+        marginLeft: -10,
     },
 });

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, useTheme, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Spacing, Gradients, BorderRadius } from '../../src/core/theme/DesignSystem';
+import { TimeframePeriod } from '../../src/shared/components/TimeframeSelector';
 import { ConsistencyHeatmap } from '../../src/features/user-stats/presentation/ConsistencyHeatmap';
 import { ActivityChart } from '../../src/features/user-stats/presentation/ActivityChart';
 import { TopicBreakdown } from '../../src/features/user-stats/presentation/TopicBreakdown';
@@ -18,6 +19,7 @@ export default function InsightsScreen() {
     const router = useRouter();
     const { isPro } = usePro();
     const { dailyActivity, heatmapData, topicBreakdown, stats } = useInsightsData();
+    const [breakdownTimeframe, setBreakdownTimeframe] = useState<TimeframePeriod>('all');
 
     if (!isPro) {
         return (
@@ -71,6 +73,7 @@ export default function InsightsScreen() {
                         longestStreak={stats.longestStreak}
                         totalTime={stats.totalTimeFormatted}
                         pagesRead={stats.pagesRead}
+                        notesCount={stats.notesCount}
                         recordingsCount={stats.recordingsCount}
                         totalRecordingMinutes={stats.totalRecordingMinutes}
                     />
@@ -82,6 +85,8 @@ export default function InsightsScreen() {
                     <TopicBreakdown
                         data={topicBreakdown}
                         totalTime={stats.totalTimeFormatted}
+                        timeframe={breakdownTimeframe}
+                        onTimeframeChange={setBreakdownTimeframe}
                     />
 
                     <MoodInsightWidget />
