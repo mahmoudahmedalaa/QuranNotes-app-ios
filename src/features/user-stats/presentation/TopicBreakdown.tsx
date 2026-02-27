@@ -19,6 +19,7 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({
     onTimeframeChange,
 }) => {
     const theme = useTheme();
+    const centerSubtitle = timeframe === 'all' ? 'Total' : 'Activity';
 
     const renderDot = (color: string) => (
         <View
@@ -81,7 +82,7 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({
                             </Text>
                             <Text
                                 style={{ fontSize: 14, color: theme.colors.onSurfaceVariant }}>
-                                Total
+                                {centerSubtitle}
                             </Text>
                         </View>
                     )}

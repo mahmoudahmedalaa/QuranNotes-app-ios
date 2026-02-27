@@ -109,13 +109,18 @@ export const useInsightsData = (breakdownTimeframe: TimeframePeriod = 'all'): In
         return notes.filter(n => new Date(n.createdAt) >= cutoff);
     }, [notes, breakdownTimeframe]);
 
-    // Estimate pages read for the timeframe using calendar-day ratio
+    // Estimate pages read for the timeframe using activity-history day counts
     const filteredPagesRead = useMemo(() => {
         if (breakdownTimeframe === 'all') return totalPagesRead;
-        const timeframeDays = breakdownTimeframe === '7d' ? 7 : 30;
-        const totalDays = getTotalCalendarDays(streak?.activityHistory);
-        // Proportional: if user has been active 60 days, last 7 days ≈ 7/60 of total
-        const ratio = Math.min(timeframeDays / totalDays, 1);
+        const cutoff = getCutoffDate(breakdownTimeframe);
+        if (!cutoff) return totalPagesRead;
+
+        const history = streak?.activityHistory || {};
+        const allActiveDays = Object.keys(history).filter(d => (history[d] || 0) > 0);
+        if (allActiveDays.length === 0) return 0;
+
+        const daysInTimeframe = allActiveDays.filter(d => new Date(d) >= cutoff);
+        const ratio = daysInTimeframe.length / allActiveDays.length;
         return Math.round(totalPagesRead * ratio);
     }, [totalPagesRead, breakdownTimeframe, streak?.activityHistory]);
 
@@ -245,12 +250,19 @@ export const useInsightsData = (breakdownTimeframe: TimeframePeriod = 'all'): In
     }, [filteredRecordings, filteredNotes, filteredPagesRead, getCompletionPercentage]);
 
     // Filtered total time for the breakdown donut center
+    // For non-"all" timeframes: only include time from date-stamped sources
+    // (recordings + notes). Khatma reading has no per-day timestamps so we
+    // can only include it accurately for "all time".
     const filteredTotalTime = useMemo(() => {
         const recSecs = filteredRecordings.reduce((acc, r) => acc + (r.duration || 0), 0);
         const noteSecs = filteredNotes.length * 5 * 60;
-        const khatmaSecs = filteredPagesRead * 2 * 60;
-        return Math.round((recSecs + noteSecs + khatmaSecs) / 60);
-    }, [filteredRecordings, filteredNotes, filteredPagesRead]);
+        if (breakdownTimeframe === 'all') {
+            const khatmaSecs = totalPagesRead * 2 * 60;
+            return Math.round((recSecs + noteSecs + khatmaSecs) / 60);
+        }
+        // For 7d/30d: only recordings + notes (we can track these by date)
+        return Math.round((recSecs + noteSecs) / 60);
+    }, [filteredRecordings, filteredNotes, breakdownTimeframe, totalPagesRead]);
 
     // 4. Overall Stats (always all-time)
     const totalRecordingSeconds = recordings.reduce((acc, r) => acc + (r.duration || 0), 0);
