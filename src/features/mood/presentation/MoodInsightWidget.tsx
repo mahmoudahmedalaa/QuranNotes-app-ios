@@ -56,18 +56,26 @@ export default function MoodInsightWidget() {
     const { moodHistory } = useMood();
 
     const dailyMoods = useMemo(() => groupByDay(moodHistory), [moodHistory]);
-    const totalCheckins = moodHistory.length;
 
-    // Frequency map sorted by count descending, top 5
+    // Filter to last 30 days for the donut chart
+    const last30DaysHistory = useMemo(() => {
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - 30);
+        return moodHistory.filter(e => new Date(e.timestamp) >= cutoff);
+    }, [moodHistory]);
+
+    const totalCheckins = last30DaysHistory.length;
+
+    // Frequency map sorted by count descending, top 5 (scoped to 30 days)
     const moodFrequency = useMemo(() => {
         const freq: Partial<Record<MoodType, number>> = {};
-        moodHistory.forEach((entry) => {
+        last30DaysHistory.forEach((entry) => {
             freq[entry.mood] = (freq[entry.mood] || 0) + 1;
         });
         return Object.entries(freq)
             .sort(([, a], [, b]) => b - a)
             .slice(0, 5) as [MoodType, number][];
-    }, [moodHistory]);
+    }, [last30DaysHistory]);
 
     // Donut chart data
     const donutSize = 120;
@@ -104,9 +112,14 @@ export default function MoodInsightWidget() {
             <View style={[styles.card, { backgroundColor: theme.colors.surface }, Shadows.sm]}>
                 {/* Header */}
                 <View style={styles.headerRow}>
-                    <Text style={[styles.title, { color: theme.colors.primary }]}>
-                        Mood Journey
-                    </Text>
+                    <View>
+                        <Text style={[styles.title, { color: theme.colors.primary }]}>
+                            Mood Journey
+                        </Text>
+                        <Text style={[styles.timeframeText, { color: theme.colors.onSurfaceVariant }]}>
+                            Last 30 days
+                        </Text>
+                    </View>
                     {totalCheckins > 0 && (
                         <Text style={[styles.countText, { color: theme.colors.onSurfaceVariant }]}>
                             {totalCheckins} {totalCheckins === 1 ? 'check-in' : 'check-ins'}
@@ -232,6 +245,11 @@ const styles = StyleSheet.create({
     countText: {
         ...Typography.caption,
         fontWeight: '500',
+    },
+    timeframeText: {
+        fontSize: 11,
+        fontWeight: '500',
+        marginTop: 2,
     },
     emptyState: {
         alignItems: 'center',

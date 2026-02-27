@@ -154,7 +154,7 @@ export default function DashboardScreen() {
                                 <Text style={[styles.greeting, { color: theme.colors.primary }]}>
                                     Assalamualaikum
                                 </Text>
-                                <Text style={[styles.headerTitle, { color: theme.colors.onBackground }]}>
+                                <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>
                                     Dashboard
                                 </Text>
                             </View>

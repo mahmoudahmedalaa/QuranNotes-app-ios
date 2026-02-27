@@ -20,7 +20,7 @@ export const ActivityChart: React.FC<ActivityChartProps> = ({ data }) => {
                     Weekly Activity
                 </Text>
                 <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-                    Minutes spent reading/listening
+                    Daily activity (est. minutes)
                 </Text>
             </View>
 
@@ -58,7 +58,7 @@ export const ActivityChart: React.FC<ActivityChartProps> = ({ data }) => {
                         radius: 6,
                         pointerLabelWidth: 100,
                         pointerLabelHeight: 90,
-                        activatePointersOnLongPress: true,
+                        activatePointersOnLongPress: false,
                         autoAdjustPointerLabelPosition: false,
                         pointerLabelComponent: (items: { value: number; label: string }[]) => {
                             return (

@@ -98,7 +98,7 @@ export default function ReadScreen() {
                     animate={{ opacity: 1, translateY: 0 }}
                     transition={{ type: 'spring', damping: 18, delay: 50 }}
                     style={styles.header}>
-                    <Text style={[styles.headerTitle, { color: theme.colors.onBackground }]}>
+                    <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>
                         Quran
                     </Text>
                     <View style={styles.headerActions}>

@@ -68,9 +68,11 @@ export default function InsightsScreen() {
                     showsVerticalScrollIndicator={false}>
                     <StatsWidgetGrid
                         currentStreak={stats.currentStreak}
-                        totalTime={`${stats.totalTimeMinutes}m`}
-                        versesRead={stats.versesRead}
+                        longestStreak={stats.longestStreak}
+                        totalTime={stats.totalTimeFormatted}
+                        pagesRead={stats.pagesRead}
                         recordingsCount={stats.recordingsCount}
+                        totalRecordingMinutes={stats.totalRecordingMinutes}
                     />
 
                     <ActivityChart data={dailyActivity} />
@@ -79,7 +81,7 @@ export default function InsightsScreen() {
 
                     <TopicBreakdown
                         data={topicBreakdown}
-                        totalTime={`${stats.totalTimeMinutes}m`}
+                        totalTime={stats.totalTimeFormatted}
                     />
 
                     <MoodInsightWidget />

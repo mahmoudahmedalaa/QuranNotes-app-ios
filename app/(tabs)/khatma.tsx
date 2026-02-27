@@ -123,7 +123,7 @@ function ActiveTrackerView() {
                 <View style={styles.header}>
                     <View style={styles.headerTopRow}>
                         <View style={styles.headerLeftGroup}>
-                            <Text style={[styles.headerTitle, { color: theme.colors.onBackground }]}>
+                            <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>
                                 Khatma
                             </Text>
                         </View>

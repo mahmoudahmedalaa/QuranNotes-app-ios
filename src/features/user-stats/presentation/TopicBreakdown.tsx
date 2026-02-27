@@ -43,7 +43,10 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({ data = [], total
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.surface }, Shadows.sm]}>
-            <Text style={[styles.title, { color: theme.colors.primary }]}>Content Breakdown</Text>
+            <View style={styles.titleRow}>
+                <Text style={[styles.title, { color: theme.colors.primary }]}>Content Breakdown</Text>
+                <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>All time</Text>
+            </View>
 
             <View style={styles.chartContainer}>
                 <PieChart
@@ -90,8 +93,17 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: '700',
+    },
+    titleRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        width: '100%',
         marginBottom: Spacing.lg,
-        alignSelf: 'flex-start',
+    },
+    subtitle: {
+        fontSize: 12,
+        fontWeight: '500',
     },
     chartContainer: {
         marginVertical: Spacing.md,

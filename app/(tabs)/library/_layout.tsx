@@ -40,7 +40,7 @@ export default function LibraryLayout() {
             <SafeAreaView style={styles.safeArea} edges={['top']}>
                 {/* Header */}
                 <View style={styles.header}>
-                    <Text style={[styles.headerTitle, { color: theme.colors.onBackground }]}>
+                    <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>
                         Library
                     </Text>
                     <Text style={[styles.headerSubtitle, { color: theme.colors.onSurfaceVariant }]}>

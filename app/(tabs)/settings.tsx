@@ -222,7 +222,7 @@ export default function SettingsScreen() {
             <SafeAreaView style={styles.safeArea} edges={['top']}>
                 {/* Header */}
                 <View style={styles.header}>
-                    <Text style={[styles.headerTitle, { color: theme.colors.onBackground }]}>
+                    <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>
                         Settings
                     </Text>
                 </View>
