@@ -25,6 +25,7 @@ export default function OnboardingReminders() {
     const { updateSettings } = useSettings();
 
     const [enabled, setEnabled] = useState(true); // Opted-in by default
+    const [navigating, setNavigating] = useState(false);
     const [selectedChip, setSelectedChip] = useState<string>('Dhuhr');
     const [pickerDate, setPickerDate] = useState(() => {
         const d = new Date();
@@ -44,32 +45,58 @@ export default function OnboardingReminders() {
         }
     };
 
-    const handleContinue = async () => {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-        const hour = pickerDate.getHours();
-        const minute = pickerDate.getMinutes();
-
-        if (enabled) {
-            const granted = await NotificationService.requestPermissions();
-            if (granted) {
-                await NotificationService.scheduleDailyReminder(hour, minute);
-                await updateSettings({
-                    dailyReminderEnabled: true,
-                    reminderHour: hour,
-                    reminderMinute: minute,
-                });
-            }
-        }
-
+    const navigateToPremium = () => {
         goToStep(6);
         router.push('/onboarding/premium');
     };
 
+    const handleContinue = async () => {
+        if (navigating) return; // Prevent double-tap
+        setNavigating(true);
+
+        try {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+            const hour = pickerDate.getHours();
+            const minute = pickerDate.getMinutes();
+
+            if (enabled) {
+                try {
+                    const granted = await NotificationService.requestPermissions();
+                    if (granted) {
+                        try {
+                            await NotificationService.scheduleDailyReminder(hour, minute);
+                        } catch (scheduleErr) {
+                            if (__DEV__) console.warn('[Onboarding] Failed to schedule reminder:', scheduleErr);
+                        }
+                        try {
+                            await updateSettings({
+                                dailyReminderEnabled: true,
+                                reminderHour: hour,
+                                reminderMinute: minute,
+                            });
+                        } catch (settingsErr) {
+                            if (__DEV__) console.warn('[Onboarding] Failed to save settings:', settingsErr);
+                        }
+                    }
+                } catch (permErr) {
+                    if (__DEV__) console.warn('[Onboarding] Notification permission error:', permErr);
+                }
+            }
+
+            navigateToPremium();
+        } catch (err) {
+            if (__DEV__) console.warn('[Onboarding] handleContinue error:', err);
+            // Still navigate even if something failed
+            navigateToPremium();
+        }
+    };
+
     const handleSkip = () => {
+        if (navigating) return;
+        setNavigating(true);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        goToStep(6);
-        router.push('/onboarding/premium');
+        navigateToPremium();
     };
 
     return (

@@ -47,10 +47,20 @@ export default function OnboardingPremium() {
 
     // ── Ramadan season? Show the Ramadan paywall instead ──
     const handleOnboardingComplete = useCallback(async () => {
-        await completeOnboarding();
-        // Dismiss entire onboarding stack first to force clean re-evaluation at index.tsx
-        router.dismissAll();
-        router.replace('/');
+        try {
+            await completeOnboarding();
+        } catch (err) {
+            if (__DEV__) console.warn('[Premium] completeOnboarding failed:', err);
+        }
+        try {
+            // Dismiss entire onboarding stack first to force clean re-evaluation at index.tsx
+            router.dismissAll();
+            router.replace('/');
+        } catch (err) {
+            if (__DEV__) console.warn('[Premium] navigation failed:', err);
+            // Fallback: try a simple replace
+            try { router.replace('/'); } catch (_e) { /* last resort */ }
+        }
     }, [completeOnboarding, router]);
 
     useEffect(() => {
@@ -66,7 +76,13 @@ export default function OnboardingPremium() {
     }, []);
 
     // Render Ramadan paywall during Ramadan season (after all hooks)
-    if (isRamadanSeason()) {
+    let showRamadan = false;
+    try {
+        showRamadan = isRamadanSeason();
+    } catch (_e) {
+        // Date computation failure — fall back to standard paywall
+    }
+    if (showRamadan) {
         return (
             <RamadanPaywallScreen
                 onPurchaseSuccess={handleOnboardingComplete}
@@ -93,9 +109,13 @@ export default function OnboardingPremium() {
         try {
             const { success, userCancelled, error: purchaseError } = await revenueCatService.purchasePackage(packageToBuy);
             if (success) {
-                checkStatus();
+                try { checkStatus(); } catch (_e) { /* non-critical */ }
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                await completeOnboarding();
+                try {
+                    await completeOnboarding();
+                } catch (err) {
+                    if (__DEV__) console.warn('[Premium] completeOnboarding failed:', err);
+                }
                 router.dismissAll();
                 router.replace('/');
             } else if (!userCancelled) {
@@ -110,7 +130,11 @@ export default function OnboardingPremium() {
 
     const handleStartFree = async () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        await completeOnboarding();
+        try {
+            await completeOnboarding();
+        } catch (err) {
+            if (__DEV__) console.warn('[Premium] completeOnboarding failed:', err);
+        }
         router.dismissAll();
         router.replace('/');
     };

@@ -122,23 +122,27 @@ export class NotificationService {
 
     // ── Slot 1: Daily Reminder ───────────────────────────────────────
     static async scheduleDailyReminder(hour: number, minute: number): Promise<void> {
-        await this.cancelDailyReminder();
+        try {
+            await this.cancelDailyReminder();
 
-        const reminder = this.DAILY_REMINDERS[Math.floor(Math.random() * this.DAILY_REMINDERS.length)];
+            const reminder = this.DAILY_REMINDERS[Math.floor(Math.random() * this.DAILY_REMINDERS.length)];
 
-        await Notifications.scheduleNotificationAsync({
-            content: {
-                title: reminder.title,
-                body: reminder.body,
-                sound: true,
-            },
-            trigger: {
-                type: Notifications.SchedulableTriggerInputTypes.DAILY,
-                hour,
-                minute,
-            },
-            identifier: this.DAILY_ID,
-        });
+            await Notifications.scheduleNotificationAsync({
+                content: {
+                    title: reminder?.title ?? 'Time for Quran',
+                    body: reminder?.body ?? 'Take a moment to connect with the Quran today.',
+                    sound: true,
+                },
+                trigger: {
+                    type: Notifications.SchedulableTriggerInputTypes.DAILY,
+                    hour,
+                    minute,
+                },
+                identifier: this.DAILY_ID,
+            });
+        } catch (err) {
+            if (__DEV__) console.warn('[NotificationService] scheduleDailyReminder failed:', err);
+        }
     }
 
     static async cancelDailyReminder(): Promise<void> {
