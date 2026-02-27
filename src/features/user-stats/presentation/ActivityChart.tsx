@@ -14,7 +14,7 @@ export const ActivityChart: React.FC<ActivityChartProps> = ({ data }) => {
     const theme = useTheme();
 
     const maxVal = Math.max(...data.map(d => d.value), 1);
-    // Round up to give headroom — never clip the top
+    // Nice max with headroom so peaks never clip
     const niceMax = Math.ceil(maxVal / 10) * 10 + 10;
 
     const chartData = data.map((d) => ({
@@ -37,9 +37,8 @@ export const ActivityChart: React.FC<ActivityChartProps> = ({ data }) => {
             <View style={styles.chartContainer}>
                 <LineChart
                     areaChart
-                    curved
                     data={chartData}
-                    height={180}
+                    height={170}
                     width={width - Spacing.lg * 4}
                     spacing={38}
                     initialSpacing={15}
@@ -47,7 +46,7 @@ export const ActivityChart: React.FC<ActivityChartProps> = ({ data }) => {
                     color1={theme.colors.primary}
                     startFillColor1={theme.colors.primary}
                     endFillColor1={theme.colors.primary}
-                    startOpacity={0.25}
+                    startOpacity={0.2}
                     endOpacity={0.02}
                     maxValue={niceMax}
                     noOfSections={4}
@@ -55,32 +54,32 @@ export const ActivityChart: React.FC<ActivityChartProps> = ({ data }) => {
                     xAxisThickness={1}
                     xAxisColor={theme.colors.onSurfaceVariant + '20'}
                     yAxisTextStyle={{ color: theme.colors.onSurfaceVariant, fontSize: 10 }}
-                    xAxisLabelTextStyle={{ color: theme.colors.onSurfaceVariant, fontSize: 11, marginTop: 4 }}
+                    xAxisLabelTextStyle={{ color: theme.colors.onSurfaceVariant, fontSize: 11 }}
                     hideRules
                     hideDataPoints={false}
                     dataPointsColor={theme.colors.primary}
                     dataPointsRadius={5}
                     thickness={2.5}
                     isAnimated
-                    animationDuration={1000}
+                    animationDuration={800}
                     pointerConfig={{
-                        pointerStripHeight: 160,
+                        pointerStripHeight: 150,
                         pointerStripWidth: 2,
-                        pointerStripColor: theme.colors.primary + '40',
+                        pointerStripColor: theme.colors.primary + '30',
                         pointerColor: theme.colors.primary,
                         radius: 7,
-                        pointerLabelWidth: 100,
-                        pointerLabelHeight: 50,
+                        pointerLabelWidth: 80,
+                        pointerLabelHeight: 40,
                         activatePointersOnLongPress: false,
                         autoAdjustPointerLabelPosition: true,
                         pointerLabelComponent: (items: { value: number }[]) => {
                             return (
-                                <View style={[styles.tooltip, { backgroundColor: theme.colors.surface, borderColor: theme.colors.primary + '30' }]}>
+                                <View style={[styles.tooltip, {
+                                    backgroundColor: theme.colors.surface,
+                                    borderColor: theme.colors.primary + '30',
+                                }]}>
                                     <Text style={[styles.tooltipValue, { color: theme.colors.primary }]}>
-                                        {items[0]?.value || 0}
-                                    </Text>
-                                    <Text style={[styles.tooltipLabel, { color: theme.colors.onSurfaceVariant }]}>
-                                        min
+                                        {items[0]?.value || 0} min
                                     </Text>
                                 </View>
                             );
@@ -95,7 +94,7 @@ export const ActivityChart: React.FC<ActivityChartProps> = ({ data }) => {
 const styles = StyleSheet.create({
     container: {
         padding: Spacing.lg,
-        paddingBottom: Spacing.md,
+        paddingBottom: Spacing.lg,
         borderRadius: BorderRadius.xl,
         marginHorizontal: Spacing.md,
         marginBottom: Spacing.md,
@@ -115,11 +114,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginLeft: -10,
-        paddingBottom: 8,
     },
     tooltip: {
-        paddingHorizontal: 10,
-        paddingVertical: 6,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
         borderRadius: 8,
         borderWidth: 1,
         alignItems: 'center',
@@ -130,11 +128,7 @@ const styles = StyleSheet.create({
         elevation: 3,
     },
     tooltipValue: {
-        fontSize: 16,
-        fontWeight: '800',
-    },
-    tooltipLabel: {
-        fontSize: 10,
-        fontWeight: '500',
+        fontSize: 13,
+        fontWeight: '700',
     },
 });

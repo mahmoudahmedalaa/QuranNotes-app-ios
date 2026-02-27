@@ -127,7 +127,6 @@ export const StatsWidgetGrid: React.FC<StatsWidgetGridProps> = ({
                 icon="sparkles"
                 label="Reflections"
                 value={((notesCount || 0) + (recordingsCount || 0)).toString()}
-                badge={`${notesCount} notes · ${recordingsCount} rec`}
                 color={Colors.widgetEmerald}
                 gradientColors={theme.dark ? cardGradients[3].dark : cardGradients[3].light}
                 delay={400}

@@ -45,6 +45,11 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({
         </View>
     );
 
+    // PieChart can't render 0-value slices correctly, filter those out
+    const chartData = data.filter(item => item.value > 0);
+    // But the legend should always show all categories
+    const legendData = data;
+
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.surface }, Shadows.sm]}>
             <View style={styles.titleRow}>
@@ -57,7 +62,7 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({
 
             <View style={styles.chartContainer}>
                 <PieChart
-                    data={data}
+                    data={chartData.length > 0 ? chartData : [{ value: 1, color: theme.colors.surfaceVariant, text: '' }]}
                     donut
                     showGradient
                     sectionAutoFocus
@@ -82,7 +87,16 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({
                     )}
                 />
             </View>
-            <LegendComponent />
+            <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 20, flexWrap: 'wrap', gap: 16 }}>
+                {legendData.map((item, index) => (
+                    <View key={index} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        {renderDot(item.color)}
+                        <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 12 }}>
+                            {item.label || 'Item'}
+                        </Text>
+                    </View>
+                ))}
+            </View>
         </View>
     );
 };
