@@ -163,14 +163,14 @@ export default function MoodInsightWidget() {
                                         />
                                     ))}
                                 </Svg>
-                                {/* Center label */}
-                                {topMood && (
+                                {/* Center label — total check-ins (the aggregate the slices represent) */}
+                                {totalCheckins > 0 && (
                                     <View style={styles.donutCenter}>
                                         <Text style={[styles.donutPct, { color: theme.colors.primary }]}>
-                                            {Math.round((topMood[1] / totalCheckins) * 100)}%
+                                            {totalCheckins}
                                         </Text>
-                                        <Text style={[styles.donutLabel, { color: MOOD_CONFIGS[topMood[0]].color }]}>
-                                            {MOOD_CONFIGS[topMood[0]].label}
+                                        <Text style={[styles.donutLabel, { color: theme.colors.onSurfaceVariant }]}>
+                                            {totalCheckins === 1 ? 'Check-in' : 'Check-ins'}
                                         </Text>
                                     </View>
                                 )}

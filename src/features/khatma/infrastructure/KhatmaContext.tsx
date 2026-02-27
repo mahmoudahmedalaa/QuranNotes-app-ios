@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { JUZ_DATA } from '../data/khatmaData';
 import { useAuth } from '../../auth/infrastructure/AuthContext';
 import { usePro } from '../../auth/infrastructure/ProContext';
+import { ReadingActivityLog, ReadingLog } from '../../../core/infrastructure/ReadingActivityLog';
 import { WidgetBridge } from '../../../../modules/widget-bridge/src';
 
 // First N Juz are free, then premium required
@@ -174,6 +175,7 @@ interface KhatmaContextType {
     currentRound: number;
     completedRounds: number[];
     isGated: boolean;           // true when premium required (completed >= FREE_JUZ_LIMIT and not pro)
+    readingLog: ReadingLog;     // Date-stamped reading activity for insights filtering
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -237,9 +239,11 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const [state, setState] = useState<KhatmaState>(INITIAL_STATE(currentYear));
     const [loading, setLoading] = useState(true);
+    const [readingLog, setReadingLog] = useState<ReadingLog>({});
 
     useEffect(() => {
         loadProgress();
+        ReadingActivityLog.load().then(setReadingLog);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -327,6 +331,13 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const markSurahComplete = useCallback(async (surahNumber: number) => {
         if (surahNumber < 1 || surahNumber > 114) return;
+
+        // Log to persistent reading activity log (separate from khatma state)
+        await ReadingActivityLog.logSurahCompletion(surahNumber);
+        // Reload the reading log for UI reactivity
+        const updatedLog = await ReadingActivityLog.load();
+        setReadingLog(updatedLog);
+
         setState(prev => {
             if (prev.completedSurahs.includes(surahNumber)) return prev;
             const updated = [...prev.completedSurahs, surahNumber].sort((a, b) => a - b);
@@ -461,6 +472,7 @@ export const KhatmaProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         currentRound: state.currentRound,
         completedRounds: state.completedRounds,
         isGated,
+        readingLog,
     };
 
     return (

@@ -61,9 +61,8 @@ interface StatsWidgetGridProps {
     longestStreak: number;
     totalTime: string;
     pagesRead: number;
-    notesCount: number;
-    recordingsCount: number;
-    totalRecordingMinutes: number;
+    completedJuzCount: number;
+    currentRound: number;
 }
 
 export const StatsWidgetGrid: React.FC<StatsWidgetGridProps> = ({
@@ -71,9 +70,8 @@ export const StatsWidgetGrid: React.FC<StatsWidgetGridProps> = ({
     longestStreak,
     totalTime,
     pagesRead,
-    notesCount,
-    recordingsCount,
-    totalRecordingMinutes,
+    completedJuzCount,
+    currentRound,
 }) => {
     const theme = useTheme();
 
@@ -124,9 +122,10 @@ export const StatsWidgetGrid: React.FC<StatsWidgetGridProps> = ({
                 delay={300}
             />
             <StatCard
-                icon="sparkles"
-                label="Reflections"
-                value={((notesCount || 0) + (recordingsCount || 0)).toString()}
+                icon="book-outline"
+                label="Khatma"
+                value={`${completedJuzCount}/30 Juz`}
+                badge={currentRound > 1 ? `Round ${currentRound}` : undefined}
                 color={Colors.widgetEmerald}
                 gradientColors={theme.dark ? cardGradients[3].dark : cardGradients[3].light}
                 delay={400}

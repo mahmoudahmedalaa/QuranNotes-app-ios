@@ -8,6 +8,7 @@ import { Colors } from '../theme/DesignSystem';
 import { Recording } from '../domain/entities/Recording';
 import { Note } from '../../features/notes/domain/Note';
 import { TimeframePeriod } from '../../shared/components/TimeframeSelector';
+import { ReadingActivityLog } from '../infrastructure/ReadingActivityLog';
 
 // ── Smart time formatting ────────────────────────────────────────────
 export function formatTime(totalMinutes: number): string {
@@ -68,7 +69,7 @@ export interface InsightMetrics {
 
 export const useInsightsData = (breakdownTimeframe: TimeframePeriod = 'all'): InsightMetrics => {
     const { streak } = useStreaks();
-    const { totalPagesRead, completedJuz, completedSurahs } = useKhatma();
+    const { totalPagesRead, completedJuz, completedSurahs, readingLog } = useKhatma();
     const { getCompletionPercentage } = useAdhkar();
     const { recordingRepo, noteRepo } = useRepositories();
     const [recordings, setRecordings] = useState<Recording[]>([]);
@@ -109,20 +110,14 @@ export const useInsightsData = (breakdownTimeframe: TimeframePeriod = 'all'): In
         return notes.filter(n => new Date(n.createdAt) >= cutoff);
     }, [notes, breakdownTimeframe]);
 
-    // Estimate pages read for the timeframe using activity-history day counts
+    // Pages read filtered by timeframe using actual date-stamped reading log
     const filteredPagesRead = useMemo(() => {
         if (breakdownTimeframe === 'all') return totalPagesRead;
         const cutoff = getCutoffDate(breakdownTimeframe);
-        if (!cutoff) return totalPagesRead;
-
-        const history = streak?.activityHistory || {};
-        const allActiveDays = Object.keys(history).filter(d => (history[d] || 0) > 0);
-        if (allActiveDays.length === 0) return 0;
-
-        const daysInTimeframe = allActiveDays.filter(d => new Date(d) >= cutoff);
-        const ratio = daysInTimeframe.length / allActiveDays.length;
-        return Math.round(totalPagesRead * ratio);
-    }, [totalPagesRead, breakdownTimeframe, streak?.activityHistory]);
+        const logPages = ReadingActivityLog.getPagesInRange(readingLog, cutoff);
+        // If readingLog has data, use it. Otherwise fall back to total (pre-log data).
+        return Object.keys(readingLog).length > 0 ? logPages : totalPagesRead;
+    }, [totalPagesRead, breakdownTimeframe, readingLog]);
 
     // 1. Daily Activity (Last 7 Days)
     const getDailyActivity = () => {
@@ -250,19 +245,16 @@ export const useInsightsData = (breakdownTimeframe: TimeframePeriod = 'all'): In
     }, [filteredRecordings, filteredNotes, filteredPagesRead, getCompletionPercentage]);
 
     // Filtered total time for the breakdown donut center
-    // For non-"all" timeframes: only include time from date-stamped sources
-    // (recordings + notes). Khatma reading has no per-day timestamps so we
-    // can only include it accurately for "all time".
+    // All sources now have per-day timestamps:
+    //   - recordings: createdAt
+    //   - notes: createdAt  
+    //   - pages: readingLog (date-stamped)
     const filteredTotalTime = useMemo(() => {
         const recSecs = filteredRecordings.reduce((acc, r) => acc + (r.duration || 0), 0);
         const noteSecs = filteredNotes.length * 5 * 60;
-        if (breakdownTimeframe === 'all') {
-            const khatmaSecs = totalPagesRead * 2 * 60;
-            return Math.round((recSecs + noteSecs + khatmaSecs) / 60);
-        }
-        // For 7d/30d: only recordings + notes (we can track these by date)
-        return Math.round((recSecs + noteSecs) / 60);
-    }, [filteredRecordings, filteredNotes, breakdownTimeframe, totalPagesRead]);
+        const khatmaSecs = filteredPagesRead * 2 * 60;
+        return Math.round((recSecs + noteSecs + khatmaSecs) / 60);
+    }, [filteredRecordings, filteredNotes, filteredPagesRead]);
 
     // 4. Overall Stats (always all-time)
     const totalRecordingSeconds = recordings.reduce((acc, r) => acc + (r.duration || 0), 0);

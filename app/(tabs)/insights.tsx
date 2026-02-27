@@ -13,12 +13,14 @@ import { StatsWidgetGrid } from '../../src/features/user-stats/presentation/Stat
 import MoodInsightWidget from '../../src/features/mood/presentation/MoodInsightWidget';
 import { useInsightsData } from '../../src/core/hooks/useInsightsData';
 import { usePro } from '../../src/features/auth/infrastructure/ProContext';
+import { useKhatma } from '../../src/features/khatma/infrastructure/KhatmaContext';
 
 export default function InsightsScreen() {
     const theme = useTheme();
     const router = useRouter();
     const { isPro } = usePro();
     const [breakdownTimeframe, setBreakdownTimeframe] = useState<TimeframePeriod>('all');
+    const { completedJuz, currentRound } = useKhatma();
 
     // Pass timeframe to hook so breakdown data updates dynamically
     const { dailyActivity, heatmapData, topicBreakdown, filteredTotalTime, stats } = useInsightsData(breakdownTimeframe);
@@ -75,9 +77,8 @@ export default function InsightsScreen() {
                         longestStreak={stats.longestStreak}
                         totalTime={stats.totalTimeFormatted}
                         pagesRead={stats.pagesRead}
-                        notesCount={stats.notesCount}
-                        recordingsCount={stats.recordingsCount}
-                        totalRecordingMinutes={stats.totalRecordingMinutes}
+                        completedJuzCount={completedJuz.length}
+                        currentRound={currentRound}
                     />
 
                     <ActivityChart data={dailyActivity} />
