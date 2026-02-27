@@ -244,11 +244,18 @@ export const useInsightsData = (breakdownTimeframe: TimeframePeriod = 'all'): In
 
         const pct = (v: number) => Math.round((v / totalMins) * 100);
 
+        // Minimum visible value: ensure tiny slices (like a 2-min recording in
+        // 670 total mins) still get a visible sliver in the donut.
+        // We use raw minutes as values (PieChart sizes proportionally to value),
+        // but enforce a floor of 2% of total so nothing disappears.
+        const minVisible = Math.ceil(totalMins * 0.02);
+        const donutVal = (v: number) => (v > 0 ? Math.max(v, minVisible) : 0);
+
         const breakdown = [
-            { value: pct(readingMins), color: Colors.chartReading, text: `${pct(readingMins)}%`, label: 'Reading', minutes: readingMins },
-            { value: pct(adhkarMins), color: Colors.chartAdhkar, text: `${pct(adhkarMins)}%`, label: 'Adhkar', minutes: adhkarMins },
-            { value: pct(recordingMins), color: Colors.chartRecording, text: `${pct(recordingMins)}%`, label: 'Recording', minutes: recordingMins },
-            { value: pct(notesMins), color: Colors.chartNotes, text: `${pct(notesMins)}%`, label: 'Notes', minutes: notesMins },
+            { value: donutVal(readingMins), color: Colors.chartReading, text: `${pct(readingMins)}%`, label: 'Reading', minutes: readingMins },
+            { value: donutVal(adhkarMins), color: Colors.chartAdhkar, text: `${pct(adhkarMins)}%`, label: 'Adhkar', minutes: adhkarMins },
+            { value: donutVal(recordingMins), color: Colors.chartRecording, text: `${pct(recordingMins)}%`, label: 'Recording', minutes: recordingMins },
+            { value: donutVal(notesMins), color: Colors.chartNotes, text: `${pct(notesMins)}%`, label: 'Notes', minutes: notesMins },
         ];
 
         return { topicBreakdown: breakdown, filteredTotalTime: totalMins };
