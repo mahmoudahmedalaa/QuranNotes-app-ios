@@ -46,6 +46,9 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({
         ...item,
         onPress: () => setSelectedIndex(prev => prev === i ? null : i),
         focused: selectedIndex === i,
+        // Ensure even tiny slivers have a visible size for tapping
+        shiftX: selectedIndex === i ? 4 : 0,
+        shiftY: selectedIndex === i ? -2 : 0,
     }));
 
     const selectedItem = selectedIndex !== null && selectedIndex < visibleData.length
@@ -68,8 +71,9 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({
                     donut
                     focusOnPress
                     toggleFocusOnPress
-                    extraRadius={15}
-                    radius={90}
+                    sectionAutoFocus
+                    extraRadius={20}
+                    radius={100}
                     innerRadius={60}
                     innerCircleColor={theme.colors.surface}
                     centerLabelComponent={() => (
@@ -98,7 +102,7 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({
                 />
             </View>
 
-            {/* Tappable legend */}
+            {/* Tappable legend — large touch targets for accessibility */}
             <View style={styles.legendRow}>
                 {data.map((item, index) => {
                     const visibleIdx = visibleData.findIndex(d => d.label === item.label);
@@ -114,15 +118,20 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({
                             style={({ pressed }) => [
                                 styles.legendItem,
                                 pressed && { opacity: 0.7 },
-                                isSelected && { backgroundColor: `${item.color}15`, borderRadius: 8 },
+                                isSelected && {
+                                    backgroundColor: `${item.color}15`,
+                                    borderRadius: 10,
+                                    borderWidth: 1,
+                                    borderColor: `${item.color}30`,
+                                },
                             ]}
                         >
                             <View style={[styles.legendDot, { backgroundColor: item.color }]} />
-                            <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 12 }}>
+                            <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 12, fontWeight: isSelected ? '600' : '400' }}>
                                 {item.label || 'Item'}
                             </Text>
                             {item.minutes !== undefined && item.minutes > 0 && (
-                                <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 10, marginLeft: 2, opacity: 0.7 }}>
+                                <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 10, marginLeft: 3, opacity: 0.7 }}>
                                     ({formatMins(item.minutes)})
                                 </Text>
                             )}
@@ -161,13 +170,14 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginTop: 20,
         flexWrap: 'wrap',
-        gap: 12,
+        gap: 8,
     },
     legendItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 6,
-        paddingVertical: 4,
+        paddingHorizontal: 10,
+        paddingVertical: 8,
+        minHeight: 36,
     },
     legendDot: {
         height: 10,

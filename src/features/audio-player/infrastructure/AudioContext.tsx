@@ -25,6 +25,7 @@ export interface CompletedPlayback {
 interface AudioContextType {
     playingVerse: { surah: number; verse: number } | null;
     isPlaying: boolean;
+    isRecordingActive: boolean;
     currentSurahNum: number | null;
     currentSurahName: string | null;
     playlist: Verse[];
@@ -36,6 +37,7 @@ interface AudioContextType {
     pause: () => Promise<void>;
     resume: () => Promise<void>;
     stop: () => Promise<void>;
+    setRecordingActive: (active: boolean) => void;
 }
 
 const AudioContext = createContext<AudioContextType | null>(null);
@@ -50,6 +52,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const { settings } = useSettings();
     const [playingVerse, setPlayingVerse] = useState<{ surah: number; verse: number } | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
+    const [isRecordingActive, setIsRecordingActive] = useState(false);
     const [currentSurahName, setCurrentSurahName] = useState<string | null>(null);
     const [lastCompletedPlayback, setLastCompletedPlayback] = useState<CompletedPlayback | null>(null);
 
@@ -61,11 +64,13 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const playlistRef = useRef<Verse[]>([]);
     const currentSurahNumRef = useRef<number | null>(null);
     const currentSurahNameRef = useRef<string | null>(null);
+    const isRecordingActiveRef = useRef(false);
 
     // Keep refs in sync with state
     useEffect(() => { playlistRef.current = playlist; }, [playlist]);
     useEffect(() => { currentSurahNumRef.current = currentSurahNum; }, [currentSurahNum]);
     useEffect(() => { currentSurahNameRef.current = currentSurahName; }, [currentSurahName]);
+    useEffect(() => { isRecordingActiveRef.current = isRecordingActive; }, [isRecordingActive]);
 
     // Ref to track previous reciter for live switching
     const prevReciterRef = useRef(settings.reciterId);
@@ -144,6 +149,8 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Play a specific verse (with optional surah context for queue)
     const playVerse = useCallback(
         async (surahNum: number, verseNum: number, surah?: Surah) => {
+            // Block playback while recording is active
+            if (isRecordingActiveRef.current) return;
             try {
                 const { cdnFolder, name } = getReciterInfo();
 
@@ -204,6 +211,8 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Play entire surah from beginning
     const playSurah = useCallback(
         async (surah: Surah) => {
+            // Block playback while recording is active
+            if (isRecordingActiveRef.current) return;
             try {
                 setPlaylist(surah.verses);
                 playlistRef.current = surah.verses;
@@ -235,6 +244,8 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Play from a specific verse within a surah
     const playFromVerse = useCallback(
         async (surah: Surah, verseNum: number) => {
+            // Block playback while recording is active
+            if (isRecordingActiveRef.current) return;
             try {
                 const startIndex = surah.verses.findIndex(v => v.number === verseNum);
                 if (startIndex >= 0) {
@@ -298,9 +309,15 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
     }, []);
 
+    const setRecordingActive = useCallback((active: boolean) => {
+        setIsRecordingActive(active);
+        isRecordingActiveRef.current = active;
+    }, []);
+
     const value: AudioContextType = {
         playingVerse,
         isPlaying,
+        isRecordingActive,
         currentSurahNum,
         currentSurahName,
         playlist,
@@ -311,6 +328,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         pause,
         resume,
         stop,
+        setRecordingActive,
     };
 
     return <AudioContext.Provider value={value}>{children}</AudioContext.Provider>;

@@ -158,6 +158,42 @@ function ActiveTrackerView() {
                 </MotiView>
             )}
 
+            {/* ── Start Next Round Banner (shown when khatma is complete) ── */}
+            {isComplete && !showCelebration && (
+                <MotiView
+                    from={{ opacity: 0, translateY: -8 }}
+                    animate={{ opacity: 1, translateY: 0 }}
+                    transition={{ type: 'spring', damping: 18, delay: 100 }}
+                >
+                    <Pressable
+                        onPress={() => {
+                            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                            startNextRound();
+                        }}
+                        style={({ pressed }) => [
+                            styles.nextRoundBanner,
+                            { backgroundColor: theme.colors.surface },
+                            pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                        ]}
+                    >
+                        <View style={styles.nextRoundBannerContent}>
+                            <View style={styles.nextRoundIconCircle}>
+                                <MaterialCommunityIcons name="restart" size={20} color="#FFF" />
+                            </View>
+                            <View style={styles.nextRoundTextGroup}>
+                                <Text style={[styles.nextRoundTitle, { color: theme.colors.onSurface }]}>
+                                    Masha'Allah! Khatma Complete 🎉
+                                </Text>
+                                <Text style={[styles.nextRoundSubtitle, { color: theme.colors.onSurfaceVariant }]}>
+                                    Tap to start Round {currentRound + 1}
+                                </Text>
+                            </View>
+                            <MaterialCommunityIcons name="chevron-right" size={24} color={ACCENT.gold} />
+                        </View>
+                    </Pressable>
+                </MotiView>
+            )}
+
             {/* ── Swipeable Surah Cards (top) ── */}
             <JuzSurahList
                 currentJuz={currentJuz}
@@ -371,5 +407,38 @@ const styles = StyleSheet.create({
         color: '#FFF',
         fontSize: 13,
         fontWeight: '800',
+    },
+    // ─── Start Next Round Banner ──────────────────────────────────────
+    nextRoundBanner: {
+        borderRadius: BorderRadius.lg,
+        marginHorizontal: Spacing.xs,
+        paddingHorizontal: Spacing.md,
+        paddingVertical: Spacing.md,
+        ...Shadows.sm,
+    },
+    nextRoundBannerContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    nextRoundIconCircle: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#F5A623',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    nextRoundTextGroup: {
+        flex: 1,
+    },
+    nextRoundTitle: {
+        fontSize: 15,
+        fontWeight: '700',
+    },
+    nextRoundSubtitle: {
+        fontSize: 13,
+        fontWeight: '500',
+        marginTop: 2,
     },
 });

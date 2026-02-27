@@ -128,7 +128,7 @@ export function NotificationScheduler() {
                 );
             }
         } catch (error) {
-            console.warn('NotificationScheduler: failed to schedule', error);
+            if (__DEV__) console.warn('NotificationScheduler: failed to schedule', error);
         } finally {
             schedulingRef.current = false;
         }

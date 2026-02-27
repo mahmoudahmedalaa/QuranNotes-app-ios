@@ -47,7 +47,7 @@ export default function SurahDetail() {
 
     const { surah, loading, error, loadSurah } = useQuran();
     const { settings } = useSettings();
-    const { playingVerse, isPlaying, playFromVerse, pause, resume, stop } = useAudio();
+    const { playingVerse, isPlaying, isRecordingActive, playFromVerse, pause, resume, stop, setRecordingActive } = useAudio();
     const { isRecording, isPaused, startRecording, stopRecording, forceCleanup } = useAudioRecorder();
     const navigation = useNavigation();
     const { notes } = useNotes();
@@ -377,6 +377,7 @@ export default function SurahDetail() {
                         style: 'destructive',
                         onPress: async () => {
                             await forceCleanup();
+                            setRecordingActive(false);
                             setRecordingDuration(0);
                             navigation.dispatch(e.data.action);
                         },
@@ -385,6 +386,7 @@ export default function SurahDetail() {
                         text: 'Save & Leave',
                         onPress: async () => {
                             const uri = await stopRecording();
+                            setRecordingActive(false);
                             if (uri) {
                                 setLastRecordingUri(uri);
                                 setSaveModalVisible(true);
@@ -403,6 +405,9 @@ export default function SurahDetail() {
     useEffect(() => {
         return () => {
             forceCleanup();
+            // Note: setRecordingActive can't be called here as component is unmounting
+            // The AudioContext ref will be stale, but isRecordingActiveRef is reset
+            // when the screen re-mounts and no recording is active
         };
     }, [forceCleanup]);
 
@@ -426,12 +431,14 @@ export default function SurahDetail() {
     }, [followAlong.matchedVerseId, surah?.verses]);
 
     const handlePlaySurah = () => {
+        if (isRecording || isPaused) return; // Block play during recording
         if (surah) playFromVerse(surah, 1);
     };
 
     const handleRecordVerse = async (verseId: number) => {
         // Stop audio playback if starting a recording
         if (isPlaying) await stop();
+        setRecordingActive(true);
 
         setRecordingVerseId(verseId);
         await startRecording();
@@ -439,6 +446,7 @@ export default function SurahDetail() {
 
     const handleStopRecording = async () => {
         const uri = await stopRecording();
+        setRecordingActive(false);
         if (uri) {
             setLastRecordingUri(uri);
             setSaveModalVisible(true);
@@ -457,6 +465,7 @@ export default function SurahDetail() {
     const handleRecordSurah = async () => {
         if (!surah) return;
         if (isPlaying) await stop();
+        setRecordingActive(true);
         setRecordingVerseId(undefined); // Surah level
         await startRecording();
     };
@@ -539,7 +548,10 @@ export default function SurahDetail() {
                         hasNote={notes.some(
                             n => n.surahId === surah.number && n.verseId === item.number,
                         )}
-                        onPlay={() => playFromVerse(surah, item.number)}
+                        onPlay={() => {
+                            if (isRecording || isPaused) return; // Block play during recording
+                            playFromVerse(surah, item.number);
+                        }}
                         onPause={pause}
                         onNote={() =>
                             router.push({

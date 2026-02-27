@@ -13,6 +13,7 @@ import {
     Platform,
     Alert,
     DimensionValue,
+    ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
@@ -130,7 +131,7 @@ export const KhatmaCelebrationModal: React.FC<KhatmaCelebrationModalProps> = ({
                 UTI: 'public.png',
             });
         } catch (e) {
-            console.warn('Share failed:', e);
+            if (__DEV__) console.warn('Share failed:', e);
         }
     }, []);
 
@@ -142,15 +143,12 @@ export const KhatmaCelebrationModal: React.FC<KhatmaCelebrationModalProps> = ({
             onRequestClose={onDismiss}
             statusBarTranslucent
         >
-            <View style={styles.backdrop}>
-                {/* Full-screen gradient background */}
-                <LinearGradient
-                    colors={[COLORS.gradientStart, COLORS.gradientMid, COLORS.gradientEnd]}
-                    style={StyleSheet.absoluteFillObject}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                />
-
+            <LinearGradient
+                colors={[COLORS.gradientStart, COLORS.gradientMid, COLORS.gradientEnd]}
+                style={styles.backdrop}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+            >
                 {/* Sparkles */}
                 {SPARKLES.map((sparkle, i) => (
                     <MotiView
@@ -177,158 +175,158 @@ export const KhatmaCelebrationModal: React.FC<KhatmaCelebrationModalProps> = ({
                     />
                 ))}
 
-                {/* ── Shareable Card Content (captured by ViewShot) ── */}
-                <ViewShot
-                    ref={viewShotRef}
-                    options={{ format: 'png', quality: 1.0 }}
-                    style={styles.viewShotContainer}
+                <ScrollView
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
+                    bounces={false}
                 >
-                    <LinearGradient
-                        colors={[COLORS.gradientStart, COLORS.gradientMid, COLORS.gradientEnd]}
-                        style={styles.shareableCard}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
+                    {/* ── Shareable Card Content (captured by ViewShot) ── */}
+                    <ViewShot
+                        ref={viewShotRef}
+                        options={{ format: 'png', quality: 1.0 }}
+                        style={styles.viewShotContainer}
                     >
-                        {/* Sparkles in shareable card */}
-                        {SPARKLES.slice(0, 5).map((sparkle, i) => (
-                            <View
-                                key={i}
-                                style={[
-                                    styles.sparkleStatic,
-                                    {
-                                        top: sparkle.top as DimensionValue,
-                                        left: sparkle.left as DimensionValue,
-                                        right: sparkle.right as DimensionValue,
-                                        width: sparkle.size,
-                                        height: sparkle.size,
-                                        borderRadius: sparkle.size / 2,
-                                    },
-                                ]}
-                            />
-                        ))}
-
-                        {/* Crescent Moon */}
-                        <View style={styles.moonContainer}>
-                            <View style={styles.moonGlow} />
-                            <MaterialCommunityIcons
-                                name="moon-waning-crescent"
-                                size={64}
-                                color={COLORS.gold}
-                            />
-                        </View>
-
-                        {/* Arabic Title */}
-                        <Text style={styles.arabicTitle}>{getArabicText()}</Text>
-
-                        {/* English Headline */}
-                        <Text style={styles.englishHeadline}>{getEnglishHeadline()}</Text>
-
-                        {/* Subtitle */}
-                        <Text style={styles.subtitle}>{getSubtitle()}</Text>
-
-                        {/* ── Stats Row ── */}
-                        <View style={styles.statsRow}>
-                            <View style={styles.statItem}>
-                                <Text style={styles.statNumber}>{totalPagesRead}</Text>
-                                <Text style={styles.statLabel}>Pages</Text>
-                            </View>
-                            <View style={styles.statDivider} />
-                            <View style={styles.statItem}>
-                                <Text style={styles.statNumber}>{completedJuzCount}</Text>
-                                <Text style={styles.statLabel}>Juz</Text>
-                            </View>
-                            <View style={styles.statDivider} />
-                            <View style={styles.statItem}>
-                                <Text style={styles.statNumber}>{streakDays}</Text>
-                                <Text style={styles.statLabel}>Streak</Text>
-                            </View>
-                        </View>
-
-                        {/* Round Badge */}
-                        <View style={styles.roundBadge}>
-                            <MaterialCommunityIcons name="check-decagram" size={18} color={COLORS.badgeText} />
-                            <Text style={styles.roundBadgeText}>
-                                {currentRound === 1 ? '1st Khatma' : `${currentRound} Khatmas`}
-                            </Text>
-                        </View>
-
-                        {/* App branding for share */}
-                        <View style={styles.brandingRow}>
-                            <MaterialCommunityIcons name="bookshelf" size={14} color={COLORS.caption} />
-                            <Text style={styles.branding}>QuranNotes App · Ramadan {new Date().getFullYear()}</Text>
-                        </View>
-                    </LinearGradient>
-                </ViewShot>
-
-                {/* ── Animated content overlay (buttons, not captured in share) ── */}
-                <View style={styles.buttonsContainer}>
-                    {/* Share Button */}
-                    <MotiView
-                        from={{ opacity: 0, translateY: 20 }}
-                        animate={{ opacity: 1, translateY: 0 }}
-                        transition={{ type: 'timing', duration: 400, delay: 800 }}
-                    >
-                        <Pressable
-                            onPress={handleShare}
-                            style={({ pressed }) => [
-                                pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
-                            ]}
+                        <LinearGradient
+                            colors={[COLORS.gradientStart, COLORS.gradientMid, COLORS.gradientEnd]}
+                            style={styles.shareableCard}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
                         >
-                            <LinearGradient
-                                colors={[COLORS.shareStart, COLORS.shareEnd]}
-                                style={styles.shareButton}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 0 }}
-                            >
-                                <MaterialCommunityIcons name="share-variant" size={20} color="#FFF" />
-                                <Text style={styles.shareButtonText}>Share Your Achievement</Text>
-                            </LinearGradient>
-                        </Pressable>
-                    </MotiView>
+                            {/* Sparkles in shareable card */}
+                            {SPARKLES.slice(0, 5).map((sparkle, i) => (
+                                <View
+                                    key={i}
+                                    style={[
+                                        styles.sparkleStatic,
+                                        {
+                                            top: sparkle.top as DimensionValue,
+                                            left: sparkle.left as DimensionValue,
+                                            right: sparkle.right as DimensionValue,
+                                            width: sparkle.size,
+                                            height: sparkle.size,
+                                            borderRadius: sparkle.size / 2,
+                                        },
+                                    ]}
+                                />
+                            ))}
 
-                    {/* Start Next Round */}
-                    {onStartNextRound && (
+                            {/* Crescent Moon */}
+                            <View style={styles.moonContainer}>
+                                <View style={styles.moonGlow} />
+                                <MaterialCommunityIcons
+                                    name="moon-waning-crescent"
+                                    size={56}
+                                    color={COLORS.gold}
+                                />
+                            </View>
+
+                            {/* Arabic Title */}
+                            <Text style={styles.arabicTitle}>{getArabicText()}</Text>
+
+                            {/* English Headline */}
+                            <Text style={styles.englishHeadline}>{getEnglishHeadline()}</Text>
+
+                            {/* Subtitle */}
+                            <Text style={styles.subtitle}>{getSubtitle()}</Text>
+
+                            {/* ── Stats Row ── */}
+                            <View style={styles.statsRow}>
+                                <View style={styles.statItem}>
+                                    <Text style={styles.statNumber}>{totalPagesRead}</Text>
+                                    <Text style={styles.statLabel}>Pages</Text>
+                                </View>
+                                <View style={styles.statDivider} />
+                                <View style={styles.statItem}>
+                                    <Text style={styles.statNumber}>{completedJuzCount}</Text>
+                                    <Text style={styles.statLabel}>Juz</Text>
+                                </View>
+                                <View style={styles.statDivider} />
+                                <View style={styles.statItem}>
+                                    <Text style={styles.statNumber}>{streakDays}</Text>
+                                    <Text style={styles.statLabel}>Streak</Text>
+                                </View>
+                            </View>
+
+                            {/* Round Badge */}
+                            <View style={styles.roundBadge}>
+                                <MaterialCommunityIcons name="check-decagram" size={18} color={COLORS.badgeText} />
+                                <Text style={styles.roundBadgeText}>
+                                    {currentRound === 1 ? '1st Khatma' : `${currentRound} Khatmas`}
+                                </Text>
+                            </View>
+
+                            {/* App branding for share */}
+                            <View style={styles.brandingRow}>
+                                <MaterialCommunityIcons name="bookshelf" size={18} color={COLORS.gold} />
+                                <Text style={styles.branding}>QuranNotes</Text>
+                            </View>
+                        </LinearGradient>
+                    </ViewShot>
+
+                    {/* ── Buttons (inline, not absolutely positioned) ── */}
+                    <View style={styles.buttonsContainer}>
+                        {/* Share Button — subtle outline style */}
                         <MotiView
                             from={{ opacity: 0, translateY: 20 }}
                             animate={{ opacity: 1, translateY: 0 }}
-                            transition={{ type: 'timing', duration: 400, delay: 900 }}
+                            transition={{ type: 'timing', duration: 400, delay: 800 }}
                         >
                             <Pressable
-                                onPress={() => {
-                                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                                    onStartNextRound();
-                                }}
+                                onPress={handleShare}
                                 style={({ pressed }) => [
-                                    styles.nextRoundButton,
-                                    pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
+                                    styles.shareButton,
+                                    pressed && { opacity: 0.8, transform: [{ scale: 0.97 }] },
                                 ]}
                             >
-                                <MaterialCommunityIcons name="restart" size={18} color={COLORS.primary} />
-                                <Text style={styles.nextRoundButtonText}>
-                                    Start Round {currentRound + 1}
-                                </Text>
+                                <MaterialCommunityIcons name="share-variant" size={18} color={COLORS.gold} />
+                                <Text style={styles.shareButtonText}>Share Your Achievement</Text>
                             </Pressable>
                         </MotiView>
-                    )}
 
-                    {/* Close */}
-                    <MotiView
-                        from={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ type: 'timing', duration: 400, delay: 1000 }}
-                    >
-                        <Pressable
-                            onPress={onDismiss}
-                            style={({ pressed }) => [
-                                styles.closeButton,
-                                pressed && { opacity: 0.6 },
-                            ]}
+                        {/* Start Next Round */}
+                        {onStartNextRound && (
+                            <MotiView
+                                from={{ opacity: 0, translateY: 20 }}
+                                animate={{ opacity: 1, translateY: 0 }}
+                                transition={{ type: 'timing', duration: 400, delay: 900 }}
+                            >
+                                <Pressable
+                                    onPress={() => {
+                                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                                        onStartNextRound();
+                                    }}
+                                    style={({ pressed }) => [
+                                        styles.nextRoundButton,
+                                        pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
+                                    ]}
+                                >
+                                    <MaterialCommunityIcons name="restart" size={16} color={COLORS.caption} />
+                                    <Text style={styles.nextRoundButtonText}>
+                                        Start Round {currentRound + 1}
+                                    </Text>
+                                </Pressable>
+                            </MotiView>
+                        )}
+
+                        {/* Close */}
+                        <MotiView
+                            from={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ type: 'timing', duration: 400, delay: 1000 }}
                         >
-                            <Text style={styles.closeButtonText}>Close</Text>
-                        </Pressable>
-                    </MotiView>
-                </View>
-            </View>
+                            <Pressable
+                                onPress={onDismiss}
+                                style={({ pressed }) => [
+                                    styles.closeButton,
+                                    pressed && { opacity: 0.6 },
+                                ]}
+                            >
+                                <Text style={styles.closeButtonText}>Close</Text>
+                            </Pressable>
+                        </MotiView>
+                    </View>
+                </ScrollView>
+            </LinearGradient>
         </Modal>
     );
 };
@@ -336,8 +334,13 @@ export const KhatmaCelebrationModal: React.FC<KhatmaCelebrationModalProps> = ({
 const styles = StyleSheet.create({
     backdrop: {
         flex: 1,
+    },
+
+    scrollContent: {
+        flexGrow: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        paddingVertical: Platform.OS === 'ios' ? 60 : 40,
     },
 
     // ─── Sparkles ────────────────────────────────────────────────────────
@@ -376,27 +379,27 @@ const styles = StyleSheet.create({
     moonContainer: {
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 20,
+        marginBottom: 16,
     },
     moonGlow: {
         position: 'absolute',
-        width: 100,
-        height: 100,
-        borderRadius: 50,
+        width: 88,
+        height: 88,
+        borderRadius: 44,
         backgroundColor: COLORS.goldGlow,
     },
 
     // ─── Text ────────────────────────────────────────────────────────────
     arabicTitle: {
-        fontSize: 42,
+        fontSize: 40,
         fontWeight: '800',
         color: COLORS.headline,
         textAlign: 'center',
-        lineHeight: 60,
-        marginBottom: 4,
+        lineHeight: 56,
+        marginBottom: 6,
     },
     englishHeadline: {
-        fontSize: 28,
+        fontSize: 26,
         fontWeight: '800',
         color: COLORS.primary,
         textAlign: 'center',
@@ -418,9 +421,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: COLORS.surfaceOverlay,
         borderRadius: 16,
-        paddingVertical: 16,
-        paddingHorizontal: 24,
-        marginBottom: 20,
+        paddingVertical: 14,
+        paddingHorizontal: 20,
+        marginBottom: 16,
         gap: 0,
     },
     statItem: {
@@ -433,16 +436,16 @@ const styles = StyleSheet.create({
         color: COLORS.headline,
     },
     statLabel: {
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: '600',
         color: COLORS.caption,
-        marginTop: 2,
+        marginTop: 3,
         textTransform: 'uppercase',
         letterSpacing: 1,
     },
     statDivider: {
         width: 1,
-        height: 30,
+        height: 28,
         backgroundColor: COLORS.divider,
     },
 
@@ -452,81 +455,84 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 6,
         backgroundColor: COLORS.badgeBg,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
+        paddingHorizontal: 14,
+        paddingVertical: 6,
         borderRadius: 20,
-        marginBottom: 16,
+        marginBottom: 12,
     },
     roundBadgeText: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '700',
         color: COLORS.badgeText,
     },
 
     // ─── Branding ────────────────────────────────────────────────────────
     branding: {
-        fontSize: 11,
-        fontWeight: '500',
-        color: COLORS.caption,
-        letterSpacing: 0.5,
+        fontSize: 16,
+        fontWeight: '700',
+        color: COLORS.gold,
+        letterSpacing: 1.2,
     },
     brandingRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
+        gap: 8,
         justifyContent: 'center',
+        marginTop: 16,
+        paddingTop: 14,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: COLORS.divider,
+        alignSelf: 'stretch',
     },
 
-    // ─── Buttons ─────────────────────────────────────────────────────────
+    // ─── Buttons (inline, not absolute) ──────────────────────────────────
     buttonsContainer: {
-        position: 'absolute',
-        bottom: Platform.OS === 'ios' ? 50 : 30,
         width: SCREEN_WIDTH - 40,
-        gap: 10,
+        gap: 8,
+        marginTop: 20,
     },
     shareButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 16,
+        paddingVertical: 13,
         borderRadius: 30,
-        gap: 10,
-        elevation: 6,
-        shadowColor: COLORS.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
+        gap: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(245, 197, 66, 0.4)',
+        backgroundColor: 'rgba(245, 197, 66, 0.08)',
     },
     shareButtonText: {
-        color: '#1A1A2E',
-        fontWeight: '800',
-        fontSize: 17,
-        letterSpacing: 0.3,
+        color: COLORS.gold,
+        fontWeight: '600',
+        fontSize: 15,
+        letterSpacing: 0.2,
     },
     nextRoundButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 14,
+        paddingVertical: 12,
         borderRadius: 30,
-        gap: 8,
-        backgroundColor: 'rgba(212, 168, 83, 0.15)',
+        gap: 6,
+        backgroundColor: 'rgba(255, 255, 255, 0.06)',
         borderWidth: 1,
-        borderColor: 'rgba(212, 168, 83, 0.3)',
+        borderColor: 'rgba(255, 255, 255, 0.12)',
     },
     nextRoundButtonText: {
-        color: COLORS.primary,
-        fontWeight: '700',
-        fontSize: 15,
+        color: COLORS.caption,
+        fontWeight: '600',
+        fontSize: 14,
     },
     closeButton: {
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 10,
+        paddingVertical: 8,
     },
     closeButtonText: {
         color: COLORS.caption,
-        fontWeight: '600',
-        fontSize: 14,
+        fontWeight: '500',
+        fontSize: 13,
+        opacity: 0.7,
     },
 });

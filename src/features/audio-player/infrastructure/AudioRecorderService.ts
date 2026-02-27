@@ -7,7 +7,7 @@ export class AudioRecorderService {
         try {
             const permission = await Audio.requestPermissionsAsync();
             if (permission.status !== 'granted') {
-                console.warn('Audio permission denied');
+                if (__DEV__) console.warn('Audio permission denied');
                 return;
             }
 

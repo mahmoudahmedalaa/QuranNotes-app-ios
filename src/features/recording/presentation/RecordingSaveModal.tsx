@@ -6,6 +6,7 @@ import { useFolders } from '../../notes/infrastructure/FolderContext';
 import { Spacing, BorderRadius, Shadows } from '../../../core/theme/DesignSystem';
 import { WaveBackground } from '../../../core/components/animated/WaveBackground';
 import { FolderPicker } from '../../../core/components/common/FolderPicker';
+import { SuccessBanner } from '../../../core/components/common/SuccessBanner';
 
 interface RecordingSaveModalProps {
     visible: boolean;
@@ -34,6 +35,7 @@ export const RecordingSaveModal = ({
     const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>();
     const [isSaving, setIsSaving] = useState(false);
     const [pickerVisible, setPickerVisible] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
 
     useEffect(() => {
         if (visible) {
@@ -42,6 +44,7 @@ export const RecordingSaveModal = ({
                 : `Recording ${new Date().toLocaleDateString()}`;
             setName(defaultName);
             setSelectedFolderId(undefined);
+            setShowSuccess(false);
         }
     }, [visible, surahId, verseId]);
 
@@ -60,7 +63,12 @@ export const RecordingSaveModal = ({
                 surahId,
                 verseId,
             });
-            onSaveComplete();
+            // Show success banner briefly, then dismiss
+            setShowSuccess(true);
+            setTimeout(() => {
+                setShowSuccess(false);
+                onSaveComplete();
+            }, 1800);
         } catch (error) {
             console.error('Failed to save recording:', error);
         } finally {
@@ -76,6 +84,12 @@ export const RecordingSaveModal = ({
 
     return (
         <Portal>
+            <SuccessBanner
+                visible={showSuccess}
+                title="Recording Saved"
+                subtitle="Your voice note is in the library"
+                icon="check-circle"
+            />
             <Modal
                 visible={visible}
                 onDismiss={onDismiss}
@@ -149,8 +163,9 @@ export const RecordingSaveModal = ({
                             mode="contained"
                             onPress={handleSave}
                             loading={isSaving}
+                            disabled={showSuccess}
                             style={styles.saveButton}>
-                            Save
+                            {showSuccess ? 'Saved!' : 'Save'}
                         </Button>
                     </View>
                 </View>

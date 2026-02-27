@@ -98,7 +98,7 @@ export const AdhkarProvider = ({ children }: { children: React.ReactNode }) => {
                 night: nightData ? JSON.parse(nightData) : null,
             });
         } catch (e) {
-            console.error('Failed to load adhkar progress:', e);
+            if (__DEV__) console.error('Failed to load adhkar progress:', e);
         } finally {
             setIsLoading(false);
         }
@@ -122,7 +122,7 @@ export const AdhkarProvider = ({ children }: { children: React.ReactNode }) => {
                 }
             }
         } catch (e) {
-            console.error('Failed to load adhkar streak:', e);
+            if (__DEV__) console.error('Failed to load adhkar streak:', e);
         }
     };
 
@@ -131,7 +131,7 @@ export const AdhkarProvider = ({ children }: { children: React.ReactNode }) => {
             const today = getToday();
             await AsyncStorage.setItem(getStorageKey(today, period), JSON.stringify(progress));
         } catch (e) {
-            console.error('Failed to save adhkar progress:', e);
+            if (__DEV__) console.error('Failed to save adhkar progress:', e);
         }
     };
 
@@ -154,7 +154,7 @@ export const AdhkarProvider = ({ children }: { children: React.ReactNode }) => {
                 setStreak(count);
             }
         } catch (e) {
-            console.error('Failed to update adhkar streak:', e);
+            if (__DEV__) console.error('Failed to update adhkar streak:', e);
         }
     };
 

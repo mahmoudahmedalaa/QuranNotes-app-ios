@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Alert, AppState, AppStateStatus } from 'react-native';
 import { Audio } from 'expo-av';
+import TrackPlayer, { State as TrackState } from 'react-native-track-player';
 
 export const useAudioRecorder = () => {
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
@@ -33,16 +34,32 @@ export const useAudioRecorder = () => {
         setIsPaused(false);
     }, []);
 
+    /**
+     * Stop all audio sources that might hold the iOS audio session.
+     * TrackPlayer (Quran reciter) and expo-av Sound objects both compete
+     * for the session and block `allowsRecordingIOS: true`.
+     */
+    const releaseAudioSession = useCallback(async () => {
+        try {
+            const state = await TrackPlayer.getPlaybackState();
+            if (state.state === TrackState.Playing || state.state === TrackState.Paused ||
+                state.state === TrackState.Buffering || state.state === TrackState.Ready) {
+                await TrackPlayer.reset();
+            }
+        } catch {
+            // TrackPlayer not initialized — safe to ignore
+        }
+    }, []);
+
     const startRecording = useCallback(async () => {
         try {
             // Always cleanup first — prevents "Only one Recording" crash
             await forceCleanup();
 
-            await Audio.setAudioModeAsync({
-                allowsRecordingIOS: true,
-                playsInSilentModeIOS: true,
-            });
+            // Release any active audio sources (TrackPlayer, etc.)
+            await releaseAudioSession();
 
+            // Request permissions first
             const { status } = await Audio.requestPermissionsAsync();
             if (status !== 'granted') {
                 Alert.alert(
@@ -52,6 +69,12 @@ export const useAudioRecorder = () => {
                 );
                 return;
             }
+
+            // Now set audio mode for recording — must happen AFTER releasing other audio
+            await Audio.setAudioModeAsync({
+                allowsRecordingIOS: true,
+                playsInSilentModeIOS: true,
+            });
 
             const { recording: newRecording } = await Audio.Recording.createAsync(
                 Audio.RecordingOptionsPresets.HIGH_QUALITY,
@@ -65,9 +88,13 @@ export const useAudioRecorder = () => {
             if (__DEV__) console.error('Failed to start recording:', error);
             // Cleanup on failure
             await forceCleanup();
-            Alert.alert('Recording Error', 'Failed to start recording. Please try again.');
+            const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+            Alert.alert(
+                'Recording Error',
+                `Could not start recording: ${errorMsg}. Make sure no other audio is playing and try again.`,
+            );
         }
-    }, [forceCleanup]);
+    }, [forceCleanup, releaseAudioSession]);
 
     const pauseRecording = useCallback(async () => {
         const rec = recordingRef.current;

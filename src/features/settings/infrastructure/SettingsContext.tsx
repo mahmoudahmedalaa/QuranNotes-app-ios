@@ -70,10 +70,13 @@ class ErrorBoundary extends React.Component<
 
     reset = async () => {
         try {
-            await AsyncStorage.clear();
-            alert('Data cleared. Please restart the app completely.');
+            // Only clear settings — NEVER clear all AsyncStorage!
+            // AsyncStorage.clear() destroys user data: streaks, mood history,
+            // khatma progress, recordings metadata, notes, etc.
+            await AsyncStorage.removeItem(STORAGE_KEY);
+            alert('Settings cleared. Please restart the app completely.');
         } catch (e) {
-            alert('Failed to clear data: ' + e);
+            alert('Failed to clear settings: ' + e);
         }
     };
 
@@ -100,7 +103,7 @@ class ErrorBoundary extends React.Component<
                     <Text style={{ marginBottom: 20, textAlign: 'center' }}>
                         {this.state.error?.toString()}
                     </Text>
-                    <Button title="Factory Reset (Clear Data)" onPress={this.reset} color="red" />
+                    <Button title="Reset Settings & Restart" onPress={this.reset} color="red" />
                 </View>
             );
         }

@@ -36,6 +36,44 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
+/**
+ * Clear only user-scoped AsyncStorage keys on account deletion.
+ * NEVER use AsyncStorage.clear() — it destroys device-level config,
+ * onboarding flags, and any data that should persist across accounts.
+ */
+async function clearUserData(uid: string | undefined) {
+    const keysToRemove = [
+        // User-scoped mood data
+        `mood_history_${uid}`,
+        `mood_free_uses_${uid}`,
+        `mood_today_${uid}`,
+        // Streaks — user-scoped key + legacy fallback
+        `reflection_streaks_${uid}`,
+        'reflection_streaks',
+        // User content
+        'recordings',
+        'folders',
+        'user_notes',
+        'bookmarks',
+        // Reading data
+        'reading_position',
+        'reading_positions',
+        'reading_activity_log',
+        // Khatma
+        'reading_log_v3_seeded',
+        'khatma_celebration_shown_round',
+        'khatma_onboarding_dismissed',
+        // Onboarding (user-scoped is handled by OnboardingContext)
+        `@quran_notes:onboarding:${uid}`,
+    ];
+
+    try {
+        await AsyncStorage.multiRemove(keysToRemove);
+    } catch (e) {
+        console.error('[AuthContext] clearUserData error:', e);
+    }
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
@@ -155,9 +193,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const deleteAccount = async () => {
         setLoading(true);
         try {
+            const uid = user?.id;
             await authRepo.deleteAccount();
             setUser(null);
-            await AsyncStorage.clear();
+            // Only clear user-scoped data, not ALL AsyncStorage
+            await clearUserData(uid);
         } catch (e) {
             console.error('[AuthContext] deleteAccount error:', e);
             throw e;
@@ -169,9 +209,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const deleteAccountWithPassword = async (password: string) => {
         setLoading(true);
         try {
+            const uid = user?.id;
             await authRepo.reauthenticateWithPasswordAndDelete(password);
             setUser(null);
-            await AsyncStorage.clear();
+            // Only clear user-scoped data, not ALL AsyncStorage
+            await clearUserData(uid);
         } catch (e) {
             console.error('[AuthContext] deleteAccountWithPassword error:', e);
             throw e;

@@ -63,11 +63,12 @@ export const ActivityChart: React.FC<ActivityChartProps> = ({ data }) => {
                     isAnimated
                     animationDuration={800}
                     pointerConfig={{
-                        pointerStripHeight: 150,
-                        pointerStripWidth: 2,
-                        pointerStripColor: theme.colors.primary + '30',
+                        pointerStripHeight: 170,
+                        pointerStripWidth: 1,
+                        pointerStripColor: theme.colors.primary + '18',
+                        pointerStripUptoDataPoint: true,
                         pointerColor: theme.colors.primary,
-                        radius: 7,
+                        radius: 5,
                         pointerLabelWidth: 80,
                         pointerLabelHeight: 40,
                         activatePointersOnLongPress: false,

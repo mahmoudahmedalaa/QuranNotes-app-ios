@@ -129,7 +129,7 @@ export const MoodProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setTodayVerses([]);
                 }
             } catch (e) {
-                console.error('[MoodContext] Error loading state:', e);
+                if (__DEV__) console.error('[MoodContext] Error loading state:', e);
             } finally {
                 setLoading(false);
             }
@@ -185,7 +185,7 @@ export const MoodProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             return selected;
         } catch (e) {
-            console.error('[MoodContext] Error during check-in:', e);
+            if (__DEV__) console.error('[MoodContext] Error during check-in:', e);
             return null;
         }
     }, [canCheckIn, isPro, freeUsesRemaining, moodHistory, uid, recordActivity]);

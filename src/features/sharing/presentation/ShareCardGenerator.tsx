@@ -55,7 +55,7 @@ export const ShareCardGenerator = forwardRef<ShareCardHandle, ShareCardGenerator
                     await ShareService.shareImage(uri, 'Shared from QuranNotes');
                 }
             } catch (error) {
-                console.error('Share card capture failed:', error);
+                if (__DEV__) console.error('Share card capture failed:', error);
             }
         }, []);
 

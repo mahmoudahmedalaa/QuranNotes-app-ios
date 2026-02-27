@@ -29,7 +29,7 @@ export default function FollowAlongsTab() {
             const allSessions = await repository.getAllSessions();
             setSessions(allSessions);
         } catch (error) {
-            console.error('Failed to load sessions:', error);
+            if (__DEV__) console.error('Failed to load sessions:', error);
         } finally {
             setLoading(false);
             setRefreshing(false);

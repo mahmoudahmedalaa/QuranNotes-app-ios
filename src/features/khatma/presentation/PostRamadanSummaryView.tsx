@@ -53,7 +53,7 @@ export const PostRamadanSummaryView: React.FC<PostRamadanSummaryViewProps> = ({
                     ختمة
                 </Text>
                 <Text style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}>
-                    Ramadan 2026 Summary
+                    Your Reading Journey
                 </Text>
             </MotiView>
 

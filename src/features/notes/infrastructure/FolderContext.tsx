@@ -43,7 +43,7 @@ export function FolderProvider({ children }: { children: React.ReactNode }) {
             const data = await repo.getAllFolders();
             setFolders(data);
         } catch (error) {
-            console.error('Failed to load folders:', error);
+            if (__DEV__) console.error('Failed to load folders:', error);
         } finally {
             setLoading(false);
         }

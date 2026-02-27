@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SuccessBanner } from '../../../src/core/components/common/SuccessBanner';
 import { View, FlatList, StyleSheet, Alert, Pressable, Platform } from 'react-native';
 import {
     Text,
@@ -37,6 +38,8 @@ export default function RecordingsScreen() {
     const [selectedFolderIds, setSelectedFolderIds] = useState<string[]>([]);
     const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>();
     const [pendingRecordingUri, setPendingRecordingUri] = useState<string | null>(null);
+    const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+    const [successMessage, setSuccessMessage] = useState({ title: '', subtitle: '' });
     const [recordingDuration, setRecordingDuration] = useState(0);
 
     // Edit recording state
@@ -61,7 +64,7 @@ export default function RecordingsScreen() {
             const sessions = await repository.getAllSessions();
             setFollowAlongSessions(sessions);
         } catch (error) {
-            console.error('Failed to load follow along sessions:', error);
+            if (__DEV__) console.error('Failed to load follow along sessions:', error);
         }
     };
 
@@ -124,6 +127,10 @@ export default function RecordingsScreen() {
             setRecordingName('');
             setSelectedFolderId(undefined);
             setRecordingDuration(0);
+
+            // Show success confirmation
+            setSuccessMessage({ title: 'Recording Saved', subtitle: 'Your voice note is in the library' });
+            setShowSuccessBanner(true);
         }
     };
 
@@ -171,6 +178,9 @@ export default function RecordingsScreen() {
             setEditingRecording(null);
             setEditName('');
             setEditFolderId(undefined);
+
+            setSuccessMessage({ title: 'Recording Updated', subtitle: 'Changes saved successfully' });
+            setShowSuccessBanner(true);
         }
     };
 
@@ -346,7 +356,7 @@ export default function RecordingsScreen() {
                         setFollowAlongSessions(prev => prev.filter(s => s.id !== sessionId));
                         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                     } catch (error) {
-                        console.error('Failed to delete session:', error);
+                        if (__DEV__) console.error('Failed to delete session:', error);
                     }
                 },
             },
@@ -355,6 +365,13 @@ export default function RecordingsScreen() {
 
     return (
         <View style={styles.container}>
+            <SuccessBanner
+                visible={showSuccessBanner}
+                title={successMessage.title}
+                subtitle={successMessage.subtitle}
+                icon="check-circle"
+                onDismiss={() => setShowSuccessBanner(false)}
+            />
             {/* Segment Control for View Mode */}
             <View style={styles.segmentContainer}>
                 {/* <SegmentedButtons
