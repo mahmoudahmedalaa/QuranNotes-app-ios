@@ -208,7 +208,7 @@ export const PrayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // Add remaining prayers for today
         prayerTimes.prayers.forEach(p => {
             if (!p.isPast || p.isNext) {
-                const [h, m] = p.time.split(':').map(Number);
+                const [h, m] = (p.time || '00:00').split(':').map(Number);
                 const pTime = new Date();
                 pTime.setHours(h, m, 0, 0);
 
@@ -225,7 +225,7 @@ export const PrayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // so the widget doesn't show "Fajr" incorrectly if the user hasn't opened the app.
         [1, 2, 3].forEach(daysAhead => {
             prayerTimes.prayers.forEach(p => {
-                const [h, m] = p.time.split(':').map(Number);
+                const [h, m] = (p.time || '00:00').split(':').map(Number);
                 const projectedDate = new Date();
                 projectedDate.setDate(projectedDate.getDate() + daysAhead);
                 projectedDate.setHours(h, m, 0, 0);

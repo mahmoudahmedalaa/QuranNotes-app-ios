@@ -131,7 +131,8 @@ export const useInsightsData = (breakdownTimeframe: TimeframePeriod = 'all'): In
         }
 
         recordings.forEach(r => {
-            const dateStr = new Date(r.createdAt).toISOString().split('T')[0];
+            const rd = new Date(r.createdAt);
+            const dateStr = isNaN(rd.getTime()) ? '' : rd.toISOString().split('T')[0];
             if (activityMap.has(dateStr)) {
                 const mins = Math.round((r.duration || 0) / 60);
                 activityMap.set(dateStr, (activityMap.get(dateStr) || 0) + mins);
@@ -139,7 +140,8 @@ export const useInsightsData = (breakdownTimeframe: TimeframePeriod = 'all'): In
         });
 
         notes.forEach(n => {
-            const dateStr = new Date(n.updatedAt).toISOString().split('T')[0];
+            const nd = new Date(n.updatedAt);
+            const dateStr = isNaN(nd.getTime()) ? '' : nd.toISOString().split('T')[0];
             if (activityMap.has(dateStr)) {
                 activityMap.set(dateStr, (activityMap.get(dateStr) || 0) + 5);
             }

@@ -81,7 +81,7 @@ export const StickyAudioPlayer = ({
                                                     styles.reciterText,
                                                     { color: theme.colors.onPrimaryContainer },
                                                 ]}>
-                                                {currentReciter?.name.split(' ')[0]}
+                                                {(currentReciter?.name ?? '').split(' ')[0]}
                                             </Text>
                                             <IconButton
                                                 icon="chevron-down"

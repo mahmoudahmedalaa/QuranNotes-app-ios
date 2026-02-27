@@ -12,6 +12,7 @@ const CACHE_KEY_PREFIX = 'prayer_times_cache_';
  * Parse "HH:mm" into minutes-since-midnight for easy comparison.
  */
 function timeToMinutes(t: string): number {
+    if (!t) return 0;
     const [h, m] = t.split(':').map(Number);
     return h * 60 + m;
 }
@@ -234,7 +235,7 @@ export class AladhanAPI {
      */
     static getSecondsToNextPrayer(prayers: PrayerTime[]): number {
         const next = prayers.find(p => p.isNext);
-        if (!next) return 0;
+        if (!next?.time) return 0;
 
         const now = new Date();
         const [h, m] = next.time.split(':').map(Number);
