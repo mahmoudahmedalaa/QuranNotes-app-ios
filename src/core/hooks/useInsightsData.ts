@@ -50,6 +50,7 @@ export interface InsightMetrics {
         color: string;
         text: string;
         label?: string;
+        minutes?: number;
         focused?: boolean;
     }[];
     filteredTotalTime: string;
@@ -209,52 +210,46 @@ export const useInsightsData = (breakdownTimeframe: TimeframePeriod = 'all'): In
         return Array.from(heatmap.entries()).map(([date, count]) => ({ date, count }));
     };
 
-    // 3. Topic Breakdown — uses FILTERED data, always shows all 4 categories
-    const topicBreakdown = useMemo(() => {
-        const khatmaReadingUnits = Math.max(
-            Math.floor(filteredPagesRead / 20),
-            1, // At least 1 if user has read anything
+    // 3. Topic Breakdown — uses FILTERED data with actual TIME (minutes) per category
+    //    Both the donut proportions AND the center total derive from the same values.
+    const { topicBreakdown, filteredTotalTime } = useMemo(() => {
+        // ─ Actual minutes per category ────────────────────────────
+        const readingMins = filteredPagesRead * 2; // ~2 min per page
+
+        const recordingMins = Math.round(
+            filteredRecordings.reduce((acc, r) => acc + (r.duration || 0), 0) / 60,
         );
 
+        const notesMins = filteredNotes.length * 5; // ~5 min per note
+
+        // Adhkar: estimate based on today's completion (not easily filterable by date yet)
         const adhkarPeriods: ('morning' | 'evening' | 'night')[] = ['morning', 'evening', 'night'];
-        const adhkarUnits = adhkarPeriods.reduce((sum, period) => {
+        const adhkarMins = adhkarPeriods.reduce((sum, period) => {
             const pct = getCompletionPercentage(period);
-            return sum + (pct > 0 ? Math.ceil(pct / 25) : 0);
+            // Each completed period ≈ 5 min, proportional
+            return sum + Math.round(5 * (pct / 100));
         }, 0);
 
-        const totalItems = khatmaReadingUnits + adhkarUnits + filteredRecordings.length + filteredNotes.length;
+        const totalMins = readingMins + recordingMins + notesMins + adhkarMins;
 
-        if (totalItems === 0) {
-            return [
-                { value: 1, color: '#E5E7EB', text: '0%', label: 'No data' },
-            ];
+        if (totalMins === 0) {
+            return {
+                topicBreakdown: [{ value: 1, color: '#E5E7EB', text: '0%', label: 'No data', minutes: 0 }],
+                filteredTotalTime: 0,
+            };
         }
 
-        const readingPct = Math.round((khatmaReadingUnits / totalItems) * 100);
-        const adhkarPct = Math.round((adhkarUnits / totalItems) * 100);
-        const recordingPct = Math.round((filteredRecordings.length / totalItems) * 100);
-        const notesPct = Math.round((filteredNotes.length / totalItems) * 100);
+        const pct = (v: number) => Math.round((v / totalMins) * 100);
 
-        // Always show all 4 categories — even if 0%, for consistent legend
-        return [
-            { value: readingPct, color: Colors.chartReading, text: `${readingPct}%`, label: 'Reading' },
-            { value: adhkarPct, color: Colors.chartAdhkar, text: `${adhkarPct}%`, label: 'Adhkar' },
-            { value: recordingPct, color: Colors.chartRecording, text: `${recordingPct}%`, label: 'Recording' },
-            { value: notesPct, color: Colors.chartNotes, text: `${notesPct}%`, label: 'Notes' },
+        const breakdown = [
+            { value: pct(readingMins), color: Colors.chartReading, text: `${pct(readingMins)}%`, label: 'Reading', minutes: readingMins },
+            { value: pct(adhkarMins), color: Colors.chartAdhkar, text: `${pct(adhkarMins)}%`, label: 'Adhkar', minutes: adhkarMins },
+            { value: pct(recordingMins), color: Colors.chartRecording, text: `${pct(recordingMins)}%`, label: 'Recording', minutes: recordingMins },
+            { value: pct(notesMins), color: Colors.chartNotes, text: `${pct(notesMins)}%`, label: 'Notes', minutes: notesMins },
         ];
-    }, [filteredRecordings, filteredNotes, filteredPagesRead, getCompletionPercentage]);
 
-    // Filtered total time for the breakdown donut center
-    // All sources now have per-day timestamps:
-    //   - recordings: createdAt
-    //   - notes: createdAt  
-    //   - pages: readingLog (date-stamped)
-    const filteredTotalTime = useMemo(() => {
-        const recSecs = filteredRecordings.reduce((acc, r) => acc + (r.duration || 0), 0);
-        const noteSecs = filteredNotes.length * 5 * 60;
-        const khatmaSecs = filteredPagesRead * 2 * 60;
-        return Math.round((recSecs + noteSecs + khatmaSecs) / 60);
-    }, [filteredRecordings, filteredNotes, filteredPagesRead]);
+        return { topicBreakdown: breakdown, filteredTotalTime: totalMins };
+    }, [filteredRecordings, filteredNotes, filteredPagesRead, getCompletionPercentage]);
 
     // 4. Overall Stats (always all-time)
     const totalRecordingSeconds = recordings.reduce((acc, r) => acc + (r.duration || 0), 0);

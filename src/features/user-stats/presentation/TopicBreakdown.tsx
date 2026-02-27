@@ -1,12 +1,28 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { PieChart } from 'react-native-gifted-charts';
 import { Spacing, BorderRadius, Shadows } from '../../../core/theme/DesignSystem';
 import { TimeframeSelector, TimeframePeriod } from '../../../shared/components/TimeframeSelector';
 
+function formatMins(m: number): string {
+    if (m < 60) return `${m}m`;
+    const h = Math.floor(m / 60);
+    const r = m % 60;
+    return r > 0 ? `${h}h ${r}m` : `${h}h`;
+}
+
+interface BreakdownItem {
+    value: number;
+    color: string;
+    text: string;
+    label?: string;
+    minutes?: number;
+    focused?: boolean;
+}
+
 interface TopicBreakdownProps {
-    data: { value: number; color: string; text: string; label?: string; focused?: boolean }[];
+    data: BreakdownItem[];
     totalTime: string;
     timeframe: TimeframePeriod;
     onTimeframeChange: (period: TimeframePeriod) => void;
@@ -19,37 +35,22 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({
     onTimeframeChange,
 }) => {
     const theme = useTheme();
+    const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
     const centerSubtitle = timeframe === 'all' ? 'Total' : 'Activity';
 
-    const renderDot = (color: string) => (
-        <View
-            style={{
-                height: 10,
-                width: 10,
-                borderRadius: 5,
-                backgroundColor: color,
-                marginRight: 10,
-            }}
-        />
-    );
+    // Only visible (non-zero) slices go into the chart
+    const visibleData = data.filter(item => item.value > 0);
 
-    const LegendComponent = () => (
-        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 20, flexWrap: 'wrap', gap: 16 }}>
-            {data.map((item, index) => (
-                <View key={index} style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    {renderDot(item.color)}
-                    <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 12 }}>
-                        {item.label || 'Item'}
-                    </Text>
-                </View>
-            ))}
-        </View>
-    );
+    // Build chart data with onPress handlers
+    const chartData = visibleData.map((item, i) => ({
+        ...item,
+        onPress: () => setSelectedIndex(prev => prev === i ? null : i),
+        focused: selectedIndex === i,
+    }));
 
-    // PieChart can't render 0-value slices correctly, filter those out
-    const chartData = data.filter(item => item.value > 0);
-    // But the legend should always show all categories
-    const legendData = data;
+    const selectedItem = selectedIndex !== null && selectedIndex < visibleData.length
+        ? visibleData[selectedIndex]
+        : null;
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.surface }, Shadows.sm]}>
@@ -57,7 +58,7 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({
                 <Text style={[styles.title, { color: theme.colors.primary }]}>Content Breakdown</Text>
                 <TimeframeSelector
                     selected={timeframe}
-                    onSelect={onTimeframeChange}
+                    onSelect={(p) => { onTimeframeChange(p); setSelectedIndex(null); }}
                 />
             </View>
 
@@ -67,36 +68,67 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({
                     donut
                     showGradient
                     sectionAutoFocus
+                    focusOnPress
                     radius={90}
                     innerRadius={60}
                     innerCircleColor={theme.colors.surface}
                     centerLabelComponent={() => (
                         <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                            <Text
-                                style={{
-                                    fontSize: 22,
-                                    color: theme.colors.primary,
-                                    fontWeight: 'bold',
-                                }}>
-                                {totalTime}
-                            </Text>
-                            <Text
-                                style={{ fontSize: 14, color: theme.colors.onSurfaceVariant }}>
-                                {centerSubtitle}
-                            </Text>
+                            {selectedItem ? (
+                                <>
+                                    <Text style={{ fontSize: 20, color: selectedItem.color, fontWeight: 'bold' }}>
+                                        {formatMins(selectedItem.minutes || 0)}
+                                    </Text>
+                                    <Text style={{ fontSize: 12, color: theme.colors.onSurfaceVariant }}>
+                                        {selectedItem.label}
+                                    </Text>
+                                </>
+                            ) : (
+                                <>
+                                    <Text style={{ fontSize: 22, color: theme.colors.primary, fontWeight: 'bold' }}>
+                                        {totalTime}
+                                    </Text>
+                                    <Text style={{ fontSize: 14, color: theme.colors.onSurfaceVariant }}>
+                                        {centerSubtitle}
+                                    </Text>
+                                </>
+                            )}
                         </View>
                     )}
                 />
             </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 20, flexWrap: 'wrap', gap: 16 }}>
-                {legendData.map((item, index) => (
-                    <View key={index} style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        {renderDot(item.color)}
-                        <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 12 }}>
-                            {item.label || 'Item'}
-                        </Text>
-                    </View>
-                ))}
+
+            {/* Tappable legend */}
+            <View style={styles.legendRow}>
+                {data.map((item, index) => {
+                    const visibleIdx = visibleData.findIndex(d => d.label === item.label);
+                    const isSelected = visibleIdx >= 0 && selectedIndex === visibleIdx;
+                    return (
+                        <Pressable
+                            key={index}
+                            onPress={() => {
+                                if (visibleIdx >= 0) {
+                                    setSelectedIndex(prev => prev === visibleIdx ? null : visibleIdx);
+                                }
+                            }}
+                            style={({ pressed }) => [
+                                styles.legendItem,
+                                pressed && { opacity: 0.7 },
+                                isSelected && { backgroundColor: `${item.color}15`, borderRadius: 8 },
+                            ]}
+                        >
+                            <View style={[styles.legendDot, { backgroundColor: item.color }]} />
+                            <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 12 }}>
+                                {item.label || 'Item'}
+                            </Text>
+                            {item.minutes !== undefined && item.minutes > 0 && (
+                                <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 10, marginLeft: 2, opacity: 0.7 }}>
+                                    ({formatMins(item.minutes)})
+                                </Text>
+                            )}
+                        </Pressable>
+                    );
+                })}
             </View>
         </View>
     );
@@ -123,5 +155,24 @@ const styles = StyleSheet.create({
     },
     chartContainer: {
         marginVertical: Spacing.md,
+    },
+    legendRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginTop: 20,
+        flexWrap: 'wrap',
+        gap: 12,
+    },
+    legendItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 6,
+        paddingVertical: 4,
+    },
+    legendDot: {
+        height: 10,
+        width: 10,
+        borderRadius: 5,
+        marginRight: 6,
     },
 });
