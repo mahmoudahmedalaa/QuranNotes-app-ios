@@ -429,13 +429,56 @@ export default function SurahDetail() {
     }, [followAlong.matchedVerseId, surah?.verses]);
 
     const handlePlaySurah = () => {
-        if (isRecording || isPaused) return; // Block play during recording
+        if (isRecording || isPaused) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+            Alert.alert(
+                'Recording in Progress',
+                'Stop your recording first to play audio.',
+                [{ text: 'OK' }],
+            );
+            return;
+        }
         if (surah) playFromVerse(surah, 1);
     };
 
     const handleRecordVerse = async (verseId: number) => {
+        // If already recording on a DIFFERENT verse, prompt the user
+        if ((isRecording || isPaused) && recordingVerseId !== undefined && recordingVerseId !== verseId) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+            Alert.alert(
+                'Recording in Progress',
+                `You are currently recording on Verse ${recordingVerseId}. What would you like to do?`,
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                        text: 'Discard & Record',
+                        style: 'destructive',
+                        onPress: async () => {
+                            await forceCleanup();
+                            setRecordingVerseId(verseId);
+                            await startRecording();
+                        },
+                    },
+                    {
+                        text: 'Save & Record',
+                        onPress: async () => {
+                            const uri = await stopRecording();
+                            if (uri) {
+                                setLastRecordingUri(uri);
+                                setSaveModalVisible(true);
+                            }
+                            // Start new recording after save modal closes
+                            setRecordingVerseId(verseId);
+                            await startRecording();
+                        },
+                    },
+                ],
+            );
+            return;
+        }
+        // If already recording on same verse, just ignore (user can stop via indicator bar)
+        if (isRecording || isPaused) return;
         setRecordingVerseId(verseId);
-        // startRecording() handles forceCleanup + releaseAudioSession (TrackPlayer.reset)
         await startRecording();
     };
 
@@ -467,8 +510,41 @@ export default function SurahDetail() {
 
     const handleRecordSurah = async () => {
         if (!surah) return;
+        // If already recording, prompt the user
+        if (isRecording || isPaused) {
+            const currentLabel = recordingVerseId ? `Verse ${recordingVerseId}` : 'the surah';
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+            Alert.alert(
+                'Recording in Progress',
+                `You are currently recording on ${currentLabel}. What would you like to do?`,
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                        text: 'Discard & Record',
+                        style: 'destructive',
+                        onPress: async () => {
+                            await forceCleanup();
+                            setRecordingVerseId(undefined);
+                            await startRecording();
+                        },
+                    },
+                    {
+                        text: 'Save & Record',
+                        onPress: async () => {
+                            const uri = await stopRecording();
+                            if (uri) {
+                                setLastRecordingUri(uri);
+                                setSaveModalVisible(true);
+                            }
+                            setRecordingVerseId(undefined);
+                            await startRecording();
+                        },
+                    },
+                ],
+            );
+            return;
+        }
         setRecordingVerseId(undefined); // Surah level
-        // startRecording() handles forceCleanup + releaseAudioSession (TrackPlayer.reset)
         await startRecording();
     };
 
@@ -551,7 +627,15 @@ export default function SurahDetail() {
                             n => n.surahId === surah.number && n.verseId === item.number,
                         )}
                         onPlay={() => {
-                            if (isRecording || isPaused) return; // Block play during recording
+                            if (isRecording || isPaused) {
+                                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                                Alert.alert(
+                                    'Recording in Progress',
+                                    'Stop your recording first to play audio.',
+                                    [{ text: 'OK' }],
+                                );
+                                return;
+                            }
                             playFromVerse(surah, item.number);
                         }}
                         onPause={pause}

@@ -120,7 +120,7 @@ export const WaveBackground = ({
             waves: isDark ? ['#D4A853', '#E5B969', '#F0CB7D'] : ['#D4A853', '#E5C387', '#F0D9A8'],
         },
         spiritual: {
-            gradient: isDark ? Gradients.cosmic : Gradients.lavender,
+            gradient: isDark ? (['#1A1028', '#0F0B18'] as const) : Gradients.lavender,
             waves: isDark ? ['#7C3AED', '#8B5CF6', '#A78BFA'] : ['#A78BFA', '#C4B5FD', '#DDD6FE'],
         },
         night: {
