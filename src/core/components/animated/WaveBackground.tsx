@@ -1,17 +1,4 @@
-/**
- * WaveBackground - Animated liquid wave background
- *
- * Creates a serene, calming background with multiple animated waves
- * Similar to Calm/Headspace meditation apps
- *
- * Features:
- * - Multiple layers of waves with different speeds
- * - Gradient sky background
- * - Smooth infinite animation
- * - Dark mode support
- */
-
-import React, { useEffect } from 'react';
+import React, { useEffect, Component, ErrorInfo } from 'react';
 import { View, StyleSheet, Dimensions, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
@@ -22,11 +9,27 @@ import Animated, {
     withTiming,
     Easing,
     interpolate,
+    cancelAnimation,
 } from 'react-native-reanimated';
 import { useTheme } from 'react-native-paper';
 import { Gradients, BrandTokens } from '../../theme/DesignSystem';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+/**
+ * ErrorBoundary for wave animations — if SVG/Reanimated crashes during
+ * theme transitions, swallow the error and render nothing (gradient still shows).
+ */
+class WaveSafeZone extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
+    state = { hasError: false };
+    static getDerivedStateFromError() { return { hasError: true }; }
+    componentDidCatch(error: Error, info: ErrorInfo) {
+        if (__DEV__) console.warn('[WaveSafeZone] Animation crash caught:', error.message);
+    }
+    render() {
+        return this.state.hasError ? null : this.props.children;
+    }
+}
 
 interface WaveBackgroundProps {
     children?: React.ReactNode;
@@ -75,6 +78,11 @@ const WaveLayer = ({ color, opacity, speed, amplitude, frequency, height }: Wave
             -1,
             false,
         );
+
+        return () => {
+            // Cancel animation on unmount to prevent crash during theme switch
+            cancelAnimation(progress);
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -148,38 +156,35 @@ export const WaveBackground = ({
                 end={{ x: 0.5, y: 1 }}
             />
 
-            {/* Wave layers */}
-            <View style={styles.wavesContainer}>
-                {/* Back wave - slowest, most transparent */}
-                <WaveLayer
-                    color={waves[2]}
-                    opacity={opacityMultiplier * 0.6}
-                    speed={12000}
-                    amplitude={30}
-                    frequency={2}
-                    height={200}
-                />
-
-                {/* Middle wave */}
-                <WaveLayer
-                    color={waves[1]}
-                    opacity={opacityMultiplier * 0.8}
-                    speed={8000}
-                    amplitude={20}
-                    frequency={2.5}
-                    height={180}
-                />
-
-                {/* Front wave - fastest, most visible */}
-                <WaveLayer
-                    color={waves[0]}
-                    opacity={opacityMultiplier}
-                    speed={5000}
-                    amplitude={15}
-                    frequency={3}
-                    height={160}
-                />
-            </View>
+            {/* Wave layers — wrapped in ErrorBoundary for crash safety */}
+            <WaveSafeZone>
+                <View style={styles.wavesContainer}>
+                    <WaveLayer
+                        color={waves[2]}
+                        opacity={opacityMultiplier * 0.6}
+                        speed={12000}
+                        amplitude={30}
+                        frequency={2}
+                        height={200}
+                    />
+                    <WaveLayer
+                        color={waves[1]}
+                        opacity={opacityMultiplier * 0.8}
+                        speed={8000}
+                        amplitude={20}
+                        frequency={2.5}
+                        height={180}
+                    />
+                    <WaveLayer
+                        color={waves[0]}
+                        opacity={opacityMultiplier}
+                        speed={5000}
+                        amplitude={15}
+                        frequency={3}
+                        height={160}
+                    />
+                </View>
+            </WaveSafeZone>
 
             {/* Content */}
             {children}

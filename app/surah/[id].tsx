@@ -347,16 +347,22 @@ export default function SurahDetail() {
     ]);
 
     // Duration timer — ticks while recording, pauses (not resets) when paused
+    // Reset to 0 on fresh recording start (not resume from pause)
+    const prevIsRecordingRef = useRef(false);
     useEffect(() => {
         let interval: ReturnType<typeof setInterval> | null = null;
         if (isRecording) {
+            // Fresh start: was not recording before AND not paused => reset timer
+            if (!prevIsRecordingRef.current && !isPaused) {
+                setRecordingDuration(0);
+            }
             interval = setInterval(() => setRecordingDuration(d => d + 1), 1000);
         }
-        // Only reset duration when we fully stop (save modal takes over)
+        prevIsRecordingRef.current = isRecording;
         return () => {
             if (interval) clearInterval(interval);
         };
-    }, [isRecording]);
+    }, [isRecording, isPaused]);
 
     // Navigation guard — prevent accidental back navigation during recording
     useEffect(() => {
@@ -455,6 +461,7 @@ export default function SurahDetail() {
                         style: 'destructive',
                         onPress: async () => {
                             await forceCleanup();
+                            setRecordingDuration(0);
                             setRecordingVerseId(verseId);
                             await startRecording();
                         },
@@ -467,7 +474,7 @@ export default function SurahDetail() {
                                 setLastRecordingUri(uri);
                                 setSaveModalVisible(true);
                             }
-                            // Start new recording after save modal closes
+                            setRecordingDuration(0);
                             setRecordingVerseId(verseId);
                             await startRecording();
                         },
@@ -524,6 +531,7 @@ export default function SurahDetail() {
                         style: 'destructive',
                         onPress: async () => {
                             await forceCleanup();
+                            setRecordingDuration(0);
                             setRecordingVerseId(undefined);
                             await startRecording();
                         },
@@ -536,6 +544,7 @@ export default function SurahDetail() {
                                 setLastRecordingUri(uri);
                                 setSaveModalVisible(true);
                             }
+                            setRecordingDuration(0);
                             setRecordingVerseId(undefined);
                             await startRecording();
                         },
