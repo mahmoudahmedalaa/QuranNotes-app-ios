@@ -76,6 +76,9 @@ export const useAudioRecorder = () => {
                 playsInSilentModeIOS: true,
             });
 
+            // Brief delay to let iOS transition the audio session to recording mode
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             const { recording: newRecording } = await Audio.Recording.createAsync(
                 Audio.RecordingOptionsPresets.HIGH_QUALITY,
             );

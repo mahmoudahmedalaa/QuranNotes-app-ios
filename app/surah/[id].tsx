@@ -377,7 +377,6 @@ export default function SurahDetail() {
                         style: 'destructive',
                         onPress: async () => {
                             await forceCleanup();
-                            setRecordingActive(false);
                             setRecordingDuration(0);
                             navigation.dispatch(e.data.action);
                         },
@@ -386,7 +385,6 @@ export default function SurahDetail() {
                         text: 'Save & Leave',
                         onPress: async () => {
                             const uri = await stopRecording();
-                            setRecordingActive(false);
                             if (uri) {
                                 setLastRecordingUri(uri);
                                 setSaveModalVisible(true);
@@ -436,17 +434,22 @@ export default function SurahDetail() {
     };
 
     const handleRecordVerse = async (verseId: number) => {
-        // Stop audio playback if starting a recording
-        if (isPlaying) await stop();
-        setRecordingActive(true);
-
         setRecordingVerseId(verseId);
+        // startRecording() handles forceCleanup + releaseAudioSession (TrackPlayer.reset)
         await startRecording();
     };
 
+    // Sync AudioContext's isRecordingActive with actual recorder state
+    // This is the SOLE manager of the recording lock flag
+    useEffect(() => {
+        const recorderActive = isRecording || isPaused;
+        if (recorderActive !== isRecordingActive) {
+            setRecordingActive(recorderActive);
+        }
+    }, [isRecording, isPaused, isRecordingActive, setRecordingActive]);
+
     const handleStopRecording = async () => {
         const uri = await stopRecording();
-        setRecordingActive(false);
         if (uri) {
             setLastRecordingUri(uri);
             setSaveModalVisible(true);
@@ -464,9 +467,8 @@ export default function SurahDetail() {
 
     const handleRecordSurah = async () => {
         if (!surah) return;
-        if (isPlaying) await stop();
-        setRecordingActive(true);
         setRecordingVerseId(undefined); // Surah level
+        // startRecording() handles forceCleanup + releaseAudioSession (TrackPlayer.reset)
         await startRecording();
     };
 
