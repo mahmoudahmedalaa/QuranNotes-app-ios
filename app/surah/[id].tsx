@@ -1013,7 +1013,7 @@ export default function SurahDetail() {
                         transition={{ type: 'spring', damping: 18 }}
                         style={[
                             styles.returnToAudioContainer,
-                            { bottom: insets.bottom + 80 },
+                            { bottom: insets.bottom + 160 },
                         ]}
                     >
                         <Pressable

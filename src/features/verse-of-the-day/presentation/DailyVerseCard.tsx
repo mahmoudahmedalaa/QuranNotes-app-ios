@@ -239,7 +239,7 @@ export const DailyVerseCard: React.FC = () => {
                         {/* Header — always visible */}
                         <View style={styles.cardHeader}>
                             <View style={styles.labelRow}>
-                                <Text style={[styles.label, { color: '#D4A853' }]}>✦ Verse of the Day</Text>
+                                <Text style={[styles.label, { color: 'rgba(255,255,255,0.95)' }]}>✦ Verse of the Day</Text>
                             </View>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                                 <IconButton

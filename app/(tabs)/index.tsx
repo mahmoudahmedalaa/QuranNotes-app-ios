@@ -339,7 +339,7 @@ export default function DashboardScreen() {
                     <Pressable
                         onPress={() => {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                            router.push(`/surah/${globalPosition.surah}?verse=${globalPosition.verse}`);
+                            router.push(`/surah/${globalPosition.surah}?verse=${globalPosition.verse}&autoplay=true`);
                         }}
                         style={({ pressed }) => [
                             styles.floatingPillInner,
