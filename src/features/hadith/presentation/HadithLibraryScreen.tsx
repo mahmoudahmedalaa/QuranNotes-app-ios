@@ -21,7 +21,6 @@ import { HADITH_TOPICS, getAllCuratedHadiths } from '../domain/CuratedHadiths';
 import { CuratedHadith, HadithTopic } from '../domain/HadithTypes';
 import { useHadith } from '../infrastructure/HadithContext';
 import { usePro } from '../../auth/infrastructure/ProContext';
-import { useSettings } from '../../settings/infrastructure/SettingsContext';
 
 const FREE_BOOKMARK_LIMIT = 3;
 
@@ -68,13 +67,13 @@ export default function HadithLibraryScreen() {
     const theme = useTheme();
     const router = useRouter();
     const { isPro } = usePro();
-    const { settings, updateSettings } = useSettings();
     const {
         bookmarkedIds, toggleBookmark, isBookmarked, setHadith,
     } = useHadith();
 
     const [mode, setMode] = useState<ScreenMode>('topics');
     const [selectedTopic, setSelectedTopic] = useState<HadithTopic | null>(null);
+    const [favTopicFilter, setFavTopicFilter] = useState<string>('all');
 
     const isDark = theme.dark;
 
@@ -82,6 +81,19 @@ export default function HadithLibraryScreen() {
     const favoriteHadiths = useMemo(
         () => allHadiths.filter(h => bookmarkedIds.includes(h.id)),
         [allHadiths, bookmarkedIds],
+    );
+
+    // Unique topics from favorites for filter chips
+    const favoriteTopics = useMemo(() => {
+        const topics = new Set(favoriteHadiths.map(h => h.topic));
+        return Array.from(topics).sort();
+    }, [favoriteHadiths]);
+
+    const filteredFavorites = useMemo(
+        () => favTopicFilter === 'all'
+            ? favoriteHadiths
+            : favoriteHadiths.filter(h => h.topic === favTopicFilter),
+        [favoriteHadiths, favTopicFilter],
     );
 
     const handleTopicPress = useCallback((topic: HadithTopic) => {
@@ -114,17 +126,7 @@ export default function HadithLibraryScreen() {
         router.back();
     }, [setHadith, router]);
 
-    const handleNotificationToggle = useCallback(() => {
-        if (!isPro) {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-            router.push('/paywall?reason=hadith-notifications' as any);
-            return;
-        }
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        updateSettings({
-            hadithNotificationsEnabled: !settings.hadithNotificationsEnabled,
-        });
-    }, [isPro, settings, updateSettings, router]);
+
 
     const renderHadithRow = useCallback(({ item: hadith }: { item: CuratedHadith }) => {
         const bookmarked = isBookmarked(hadith.id);
@@ -170,13 +172,12 @@ export default function HadithLibraryScreen() {
                             iconColor={bookmarked ? '#F59E0B' : theme.colors.onSurfaceVariant}
                             style={styles.actionBtn}
                         />
-                        <IconButton
-                            icon="calendar-today"
-                            size={20}
+                        <Pressable
                             onPress={() => handleSetAsToday(hadith)}
-                            iconColor={theme.colors.primary}
-                            style={styles.actionBtn}
-                        />
+                            style={[styles.setTodayBtn, { borderColor: theme.colors.primary }]}
+                        >
+                            <Text style={[styles.setTodayText, { color: theme.colors.primary }]}>Set as Today</Text>
+                        </Pressable>
                     </View>
                 </View>
             </MotiView>
@@ -218,7 +219,7 @@ export default function HadithLibraryScreen() {
         return (
             <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
                 <View style={styles.detailHeader}>
-                    <Pressable onPress={() => setMode('topics')} style={styles.backBtn}>
+                    <Pressable onPress={() => { setMode('topics'); setFavTopicFilter('all'); }} style={styles.backBtn}>
                         <Feather name="arrow-left" size={22} color={theme.colors.onSurface} />
                     </Pressable>
                     <View style={styles.detailHeaderContent}>
@@ -226,10 +227,55 @@ export default function HadithLibraryScreen() {
                             Favorites
                         </Text>
                         <Text style={[styles.detailSubtitle, { color: theme.colors.onSurfaceVariant }]}>
-                            {favoriteHadiths.length} saved
+                            {filteredFavorites.length} of {favoriteHadiths.length} saved
                         </Text>
                     </View>
                 </View>
+
+                {/* Topic filter chips */}
+                {favoriteHadiths.length > 0 && favoriteTopics.length > 1 && (
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.filterChips}
+                    >
+                        <Pressable
+                            onPress={() => setFavTopicFilter('all')}
+                            style={[
+                                styles.filterChip,
+                                favTopicFilter === 'all'
+                                    ? { backgroundColor: theme.colors.primary }
+                                    : { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline, borderWidth: StyleSheet.hairlineWidth },
+                            ]}
+                        >
+                            <Text style={[
+                                styles.filterChipText,
+                                { color: favTopicFilter === 'all' ? '#FFFFFF' : theme.colors.onSurfaceVariant },
+                            ]}>All</Text>
+                        </Pressable>
+                        {favoriteTopics.map(topic => (
+                            <Pressable
+                                key={topic}
+                                onPress={() => {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                    setFavTopicFilter(prev => prev === topic ? 'all' : topic);
+                                }}
+                                style={[
+                                    styles.filterChip,
+                                    favTopicFilter === topic
+                                        ? { backgroundColor: theme.colors.primary }
+                                        : { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline, borderWidth: StyleSheet.hairlineWidth },
+                                ]}
+                            >
+                                <Text style={[
+                                    styles.filterChipText,
+                                    { color: favTopicFilter === topic ? '#FFFFFF' : theme.colors.onSurfaceVariant },
+                                ]}>{topic.charAt(0).toUpperCase() + topic.slice(1)}</Text>
+                            </Pressable>
+                        ))}
+                    </ScrollView>
+                )}
+
                 {favoriteHadiths.length === 0 ? (
                     <View style={styles.emptyState}>
                         <MaterialCommunityIcons name="heart-outline" size={48} color={theme.colors.onSurfaceVariant} />
@@ -239,7 +285,7 @@ export default function HadithLibraryScreen() {
                     </View>
                 ) : (
                     <FlatList
-                        data={favoriteHadiths}
+                        data={filteredFavorites}
                         keyExtractor={h => h.id}
                         renderItem={renderHadithRow}
                         contentContainerStyle={styles.listContent}
@@ -251,8 +297,6 @@ export default function HadithLibraryScreen() {
     }
 
     // ── TOPICS GRID ──
-    const notifEnabled = settings.hadithNotificationsEnabled || false;
-
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
             {/* Header */}
@@ -263,15 +307,6 @@ export default function HadithLibraryScreen() {
                 <Text style={[styles.screenTitle, { color: theme.colors.onSurface }]}>
                     Hadith Library
                 </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <IconButton
-                        icon={notifEnabled ? 'bell-ring' : 'bell-outline'}
-                        size={22}
-                        onPress={handleNotificationToggle}
-                        iconColor={notifEnabled ? '#F59E0B' : theme.colors.onSurfaceVariant}
-                        style={styles.actionBtn}
-                    />
-                </View>
             </View>
 
             <ScrollView
@@ -569,6 +604,33 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 4,
         marginLeft: Spacing.xs,
+    },
+    setTodayBtn: {
+        borderWidth: 1,
+        borderRadius: BorderRadius.sm,
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: 4,
+    },
+    setTodayText: {
+        ...Typography.caption,
+        fontWeight: '600',
+    },
+
+    // Filter chips
+    filterChips: {
+        flexDirection: 'row',
+        gap: Spacing.xs,
+        paddingHorizontal: Spacing.md,
+        paddingBottom: Spacing.md,
+    },
+    filterChip: {
+        paddingHorizontal: Spacing.md,
+        paddingVertical: 6,
+        borderRadius: BorderRadius.full,
+    },
+    filterChipText: {
+        ...Typography.labelMedium,
+        fontWeight: '600',
     },
 
     // Empty state

@@ -21,7 +21,7 @@
     <key>CFBundlePackageType</key>
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
     <key>CFBundleShortVersionString</key>
-    <string>2.1.3</string>
+    <string>2.1.4</string>
     <key>CFBundleSignature</key>
     <string>????</string>
     <key>CFBundleURLTypes</key>
@@ -42,7 +42,7 @@
       </dict>
     </array>
     <key>CFBundleVersion</key>
-    <string>10</string>
+    <string>11</string>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
     <key>LSMinimumSystemVersion</key>
@@ -57,13 +57,13 @@
       <true/>
     </dict>
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>QuranNotes uses your location to calculate accurate prayer times for your area, for example to show the next upcoming prayer and countdown on your dashboard and home screen widgets.</string>
+    <string>Allow $(PRODUCT_NAME) to access your location</string>
     <key>NSLocationAlwaysUsageDescription</key>
-    <string>QuranNotes uses your location to calculate accurate prayer times for your area, for example to show the next upcoming prayer and countdown on your dashboard and home screen widgets.</string>
+    <string>Allow $(PRODUCT_NAME) to access your location</string>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>QuranNotes uses your location to calculate accurate prayer times for your area, for example to show the next upcoming prayer and countdown on your dashboard and home screen widgets.</string>
+    <string>Allow $(PRODUCT_NAME) to access your location</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>QuranNotes uses the microphone for voice follow-along recitation, allowing you to recite Quran verses and track your progress.</string>
+    <string>Allow QuranNotes to use the microphone for voice recordings</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Allow QuranNotes to access your photo library to select a profile picture</string>
     <key>NSSpeechRecognitionUsageDescription</key>

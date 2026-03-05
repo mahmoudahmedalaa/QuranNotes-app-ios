@@ -17,6 +17,7 @@ import MoodCheckInCard from '../../src/features/mood/presentation/MoodCheckInCar
 import { PrayerTimesCard } from '../../src/features/prayer/presentation/PrayerTimesCard';
 import { usePrayer } from '../../src/features/prayer/infrastructure/PrayerContext';
 import { DailyVerseCard } from '../../src/features/verse-of-the-day/presentation/DailyVerseCard';
+import { DailyHadithCard } from '../../src/features/hadith/presentation/DailyHadithCard';
 import { ReadingPositionService, ReadingPosition } from '../../src/features/quran-reading/infrastructure/ReadingPositionService';
 import { useKhatma } from '../../src/features/khatma/infrastructure/KhatmaContext';
 import { useAudio } from '../../src/features/audio-player/infrastructure/AudioContext';
@@ -309,6 +310,9 @@ export default function DashboardScreen() {
 
                     {/* ── 4. Daily Verse (full width, collapsible) ── */}
                     <DailyVerseCard />
+
+                    {/* ── 5. Daily Hadith (full width, collapsible) ── */}
+                    <DailyHadithCard />
 
                     {/* Bottom padding — extra when floating pill is visible */}
                     <View style={{ height: showContinueReading ? 176 : 120 }} />

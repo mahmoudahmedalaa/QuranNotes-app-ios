@@ -246,9 +246,9 @@ export const DailyHadithCard: React.FC = () => {
                                 {/* Explore Topics link */}
                                 {!isCapturing && (
                                     <Pressable onPress={handleExploreTopics} style={styles.exploreRow}>
-                                        <MaterialCommunityIcons name="book-open-variant" size={14} color={BOOKMARK_ACTIVE} />
-                                        <Text style={styles.exploreText}>Explore Topics</Text>
-                                        <Feather name="chevron-right" size={14} color={BOOKMARK_ACTIVE} />
+                                        <MaterialCommunityIcons name="book-open-variant" size={18} color={BOOKMARK_ACTIVE} />
+                                        <Text style={styles.exploreText}>Explore Hadith Library</Text>
+                                        <Feather name="chevron-right" size={16} color={BOOKMARK_ACTIVE} />
                                     </Pressable>
                                 )}
                             </>
@@ -369,15 +369,16 @@ const styles = StyleSheet.create({
     exploreRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
+        gap: 8,
         marginTop: Spacing.md,
-        paddingTop: Spacing.sm,
-        borderTopWidth: StyleSheet.hairlineWidth,
-        borderTopColor: 'rgba(255,255,255,0.15)',
+        paddingVertical: 10,
+        paddingHorizontal: Spacing.md,
+        backgroundColor: 'rgba(245,158,11,0.15)',
+        borderRadius: BorderRadius.md,
     },
     exploreText: {
-        fontSize: 13,
-        fontWeight: '600',
+        fontSize: 15,
+        fontWeight: '700',
         color: BOOKMARK_ACTIVE,
         flex: 1,
     },

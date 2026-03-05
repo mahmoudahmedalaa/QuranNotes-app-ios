@@ -1,0 +1,6 @@
+module Pods_QuranNotes {
+  umbrella header "Pods-QuranNotes-umbrella.h"
+
+  export *
+  module * { export * }
+}
