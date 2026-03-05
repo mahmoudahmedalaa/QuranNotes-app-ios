@@ -22,6 +22,9 @@ interface AppSettings {
     prayerNotifications: boolean;
     prayerLocation: string;
     adhkarReminderEnabled: boolean;
+    hadithNotificationsEnabled: boolean;
+    hadithNotificationHour: number;
+    hadithNotificationMinute: number;
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -40,6 +43,9 @@ const DEFAULT_SETTINGS: AppSettings = {
     prayerNotifications: false,
     prayerLocation: '',
     adhkarReminderEnabled: true,
+    hadithNotificationsEnabled: false,
+    hadithNotificationHour: 8,
+    hadithNotificationMinute: 0,
 };
 
 const STORAGE_KEY = 'app_settings';
@@ -142,6 +148,9 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
                     prayerNotifications: parsed.prayerNotifications ?? DEFAULT_SETTINGS.prayerNotifications,
                     prayerLocation: parsed.prayerLocation ?? DEFAULT_SETTINGS.prayerLocation,
                     adhkarReminderEnabled: parsed.adhkarReminderEnabled ?? DEFAULT_SETTINGS.adhkarReminderEnabled,
+                    hadithNotificationsEnabled: parsed.hadithNotificationsEnabled ?? DEFAULT_SETTINGS.hadithNotificationsEnabled,
+                    hadithNotificationHour: parsed.hadithNotificationHour ?? DEFAULT_SETTINGS.hadithNotificationHour,
+                    hadithNotificationMinute: parsed.hadithNotificationMinute ?? DEFAULT_SETTINGS.hadithNotificationMinute,
                 };
 
                 setSettings({ ...DEFAULT_SETTINGS, ...loaded });

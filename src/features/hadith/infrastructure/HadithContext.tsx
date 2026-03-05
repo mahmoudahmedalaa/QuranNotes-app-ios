@@ -1,28 +1,46 @@
 /**
  * HadithContext — Provides curated daily hadith with local data.
- * Mirrors DailyVerseCard's approach: local curated data, history tracking,
- * day-based picking with refresh support.
+ * Includes: refresh limits (3/day free), bookmark system, and history tracking.
  */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CuratedHadith } from '../domain/HadithTypes';
 import { getAllCuratedHadiths } from '../domain/CuratedHadiths';
+import { HadithBookmarkService } from './HadithBookmarkService';
 import { WidgetBridge } from '../../../../modules/widget-bridge/src';
 
 const STORAGE_KEY = 'daily_hadith_data';
 const HISTORY_KEY = 'daily_hadith_history';
+const REFRESH_COUNT_KEY = 'daily_hadith_refresh_count';
+const FREE_REFRESH_LIMIT = 3;
 
 interface HadithContextType {
     hadith: CuratedHadith | null;
     loading: boolean;
     refresh: () => Promise<void>;
+    /** How many refreshes used today */
+    refreshCount: number;
+    /** Whether the user can still refresh (based on free limit) */
+    canRefresh: boolean;
+    /** Bookmark state */
+    bookmarkedIds: string[];
+    toggleBookmark: (hadithId: string) => Promise<boolean>;
+    isBookmarked: (hadithId: string) => boolean;
+    /** Set a specific hadith as today's (from library) */
+    setHadith: (h: CuratedHadith) => Promise<void>;
 }
 
 const HadithContext = createContext<HadithContextType>({
     hadith: null,
     loading: true,
     refresh: async () => { },
+    refreshCount: 0,
+    canRefresh: true,
+    bookmarkedIds: [],
+    toggleBookmark: async () => false,
+    isBookmarked: () => false,
+    setHadith: async () => { },
 });
 
 export const useHadith = () => useContext(HadithContext);
@@ -57,7 +75,6 @@ async function pickNextHadith(): Promise<CuratedHadith> {
     // Filter out recently shown hadiths
     let available = allHadiths.filter(h => !history.includes(h.id));
     if (available.length === 0) {
-        // Reset history when all hadiths have been shown
         history = [];
         available = allHadiths;
     }
@@ -79,9 +96,38 @@ function todayKey(): string {
     return new Date().toISOString().split('T')[0];
 }
 
+/** Load today's refresh count from AsyncStorage */
+async function loadRefreshCount(): Promise<number> {
+    try {
+        const stored = await AsyncStorage.getItem(REFRESH_COUNT_KEY);
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            if (parsed.date === todayKey()) return parsed.count;
+        }
+    } catch (_e) { /* ignore */ }
+    return 0;
+}
+
+/** Save today's refresh count */
+async function saveRefreshCount(count: number): Promise<void> {
+    await AsyncStorage.setItem(REFRESH_COUNT_KEY, JSON.stringify({
+        date: todayKey(),
+        count,
+    }));
+}
+
 export const HadithProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [hadith, setHadith] = useState<CuratedHadith | null>(null);
+    const [hadith, setHadithState] = useState<CuratedHadith | null>(null);
     const [loading, setLoading] = useState(true);
+    const [refreshCount, setRefreshCount] = useState(0);
+    const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
+
+    const canRefresh = refreshCount < FREE_REFRESH_LIMIT;
+
+    // Load bookmarks on mount
+    useEffect(() => {
+        HadithBookmarkService.getBookmarks().then(setBookmarkedIds);
+    }, []);
 
     const loadDailyHadith = useCallback(async () => {
         try {
@@ -89,38 +135,45 @@ export const HadithProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             if (stored) {
                 const parsed = JSON.parse(stored);
                 if (parsed.date === todayKey()) {
-                    setHadith(parsed.hadith);
+                    setHadithState(parsed.hadith);
                     syncHadithToWidget(parsed.hadith);
                     setLoading(false);
+                    // Load today's refresh count
+                    const count = await loadRefreshCount();
+                    setRefreshCount(count);
                     return;
                 }
             }
 
-            // New day — pick a fresh hadith
+            // New day — pick a fresh hadith, reset refresh count
             const nextHadith = await pickNextHadith();
-            setHadith(nextHadith);
+            setHadithState(nextHadith);
             syncHadithToWidget(nextHadith);
+            setRefreshCount(0);
+            await saveRefreshCount(0);
             await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({
                 date: todayKey(),
                 hadith: nextHadith,
             }));
         } catch (err) {
             if (__DEV__) console.warn('[HadithContext] Load failed:', err);
-            // Fallback to first hadith
             const fallback = getAllCuratedHadiths()[0];
-            setHadith(fallback);
+            setHadithState(fallback);
             syncHadithToWidget(fallback);
         } finally {
             setLoading(false);
         }
     }, []);
 
-    /** Refresh — pick a new hadith (user-triggered) */
+    /** Refresh — pick a new hadith (user-triggered). Increments refresh count. */
     const refresh = useCallback(async () => {
         try {
             const nextHadith = await pickNextHadith();
-            setHadith(nextHadith);
+            setHadithState(nextHadith);
             syncHadithToWidget(nextHadith);
+            const newCount = refreshCount + 1;
+            setRefreshCount(newCount);
+            await saveRefreshCount(newCount);
             await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({
                 date: todayKey(),
                 hadith: nextHadith,
@@ -128,7 +181,35 @@ export const HadithProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         } catch (err) {
             if (__DEV__) console.warn('[HadithContext] Refresh failed:', err);
         }
+    }, [refreshCount]);
+
+    /** Set a specific hadith from the library */
+    const setHadith = useCallback(async (h: CuratedHadith) => {
+        setHadithState(h);
+        syncHadithToWidget(h);
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({
+            date: todayKey(),
+            hadith: h,
+        }));
     }, []);
+
+    /** Toggle bookmark — returns true if added, false if removed */
+    const toggleBookmark = useCallback(async (hadithId: string): Promise<boolean> => {
+        const isCurrentlyBookmarked = bookmarkedIds.includes(hadithId);
+        if (isCurrentlyBookmarked) {
+            await HadithBookmarkService.removeBookmark(hadithId);
+            setBookmarkedIds(prev => prev.filter(id => id !== hadithId));
+            return false;
+        } else {
+            await HadithBookmarkService.addBookmark(hadithId);
+            setBookmarkedIds(prev => [...prev, hadithId]);
+            return true;
+        }
+    }, [bookmarkedIds]);
+
+    const isBookmarked = useCallback((hadithId: string): boolean => {
+        return bookmarkedIds.includes(hadithId);
+    }, [bookmarkedIds]);
 
     useEffect(() => {
         loadDailyHadith();
@@ -145,7 +226,17 @@ export const HadithProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }, [loadDailyHadith]);
 
     return (
-        <HadithContext.Provider value={{ hadith, loading, refresh }}>
+        <HadithContext.Provider value={{
+            hadith,
+            loading,
+            refresh,
+            refreshCount,
+            canRefresh,
+            bookmarkedIds,
+            toggleBookmark,
+            isBookmarked,
+            setHadith,
+        }}>
             {children}
         </HadithContext.Provider>
     );

@@ -7,6 +7,7 @@ import { MoodProvider } from '../src/features/mood/infrastructure/MoodContext';
 import { AudioProvider } from '../src/features/audio-player/infrastructure/AudioContext';
 import { PrayerProvider } from '../src/features/prayer/infrastructure/PrayerContext';
 import { AdhkarProvider } from '../src/features/adhkar/infrastructure/AdhkarContext';
+import { HadithProvider } from '../src/features/hadith/infrastructure/HadithContext';
 import { AudioKhatmaBridge } from '../src/features/khatma/presentation/AudioKhatmaBridge';
 import { NotificationScheduler } from '../src/features/notifications/presentation/NotificationScheduler';
 import { OnboardingProvider, useOnboarding } from '../src/features/onboarding/infrastructure/OnboardingContext';
@@ -68,36 +69,42 @@ export default function RootLayout() {
                                                 <PrayerProvider>
                                                     <AdhkarProvider>
                                                         <NoteProvider>
-                                                            <FolderProvider>
-                                                                <SplashHider />
-                                                                <NotificationScheduler />
-                                                                <StatusBar style="dark" />
-                                                                <Stack
-                                                                    screenOptions={{
-                                                                        headerShown: false,
-                                                                        contentStyle: {
-                                                                            backgroundColor: PremiumTheme.colors.background,
-                                                                        },
-                                                                    }}>
-                                                                    <Stack.Screen name="index" />
-                                                                    <Stack.Screen name="welcome" options={{ headerShown: false }} />
-                                                                    <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-                                                                    <Stack.Screen name="search" />
-                                                                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                                                                    <Stack.Screen
-                                                                        name="note/edit"
-                                                                        options={{ presentation: 'modal' }}
-                                                                    />
-                                                                    <Stack.Screen
-                                                                        name="paywall"
-                                                                        options={{ presentation: 'modal', headerShown: false }}
-                                                                    />
-                                                                    <Stack.Screen
-                                                                        name="ramadan-paywall"
-                                                                        options={{ presentation: 'modal', headerShown: false }}
-                                                                    />
-                                                                </Stack>
-                                                            </FolderProvider>
+                                                            <HadithProvider>
+                                                                <FolderProvider>
+                                                                    <SplashHider />
+                                                                    <NotificationScheduler />
+                                                                    <StatusBar style="dark" />
+                                                                    <Stack
+                                                                        screenOptions={{
+                                                                            headerShown: false,
+                                                                            contentStyle: {
+                                                                                backgroundColor: PremiumTheme.colors.background,
+                                                                            },
+                                                                        }}>
+                                                                        <Stack.Screen name="index" />
+                                                                        <Stack.Screen name="welcome" options={{ headerShown: false }} />
+                                                                        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+                                                                        <Stack.Screen name="search" />
+                                                                        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                                                                        <Stack.Screen
+                                                                            name="note/edit"
+                                                                            options={{ presentation: 'modal' }}
+                                                                        />
+                                                                        <Stack.Screen
+                                                                            name="paywall"
+                                                                            options={{ presentation: 'modal', headerShown: false }}
+                                                                        />
+                                                                        <Stack.Screen
+                                                                            name="ramadan-paywall"
+                                                                            options={{ presentation: 'modal', headerShown: false }}
+                                                                        />
+                                                                        <Stack.Screen
+                                                                            name="hadith-library"
+                                                                            options={{ headerShown: false }}
+                                                                        />
+                                                                    </Stack>
+                                                                </FolderProvider>
+                                                            </HadithProvider>
                                                         </NoteProvider>
                                                     </AdhkarProvider>
                                                 </PrayerProvider>

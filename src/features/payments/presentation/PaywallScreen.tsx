@@ -21,6 +21,9 @@ const FEATURES = [
     { icon: 'fire', title: 'Streak Tracking', description: 'Stay consistent this Ramadan' },
     { icon: 'book-clock', title: 'Khatma Completion Tracker', description: '30-day Quran completion' },
     { icon: 'heart-pulse', title: 'Mood Tracking & Meditation', description: 'Daily mood-based verse guidance' },
+    { icon: 'book-open-page-variant', title: 'Hadith Library', description: 'Browse all topics & hadiths' },
+    { icon: 'refresh', title: 'Unlimited Hadith Refresh', description: 'Discover new hadiths anytime' },
+    { icon: 'bell-ring', title: 'Daily Hadith Notifications', description: 'Prophetic wisdom every morning' },
 ];
 
 const MONTHLY_PRICE = 4.99;
@@ -87,6 +90,30 @@ export default function PaywallScreen() {
                     title: 'Unlock Khatma Tracker',
                     subtitle: 'You\'ve completed your free Khatma preview. Upgrade to Pro to continue tracking your Quran completion journey.',
                     highlightIndex: 3
+                };
+            case 'hadith-refresh':
+                return {
+                    title: 'Unlimited Hadith Refresh',
+                    subtitle: 'You\'ve used your 3 free refreshes today. Upgrade to Pro for unlimited hadith discovery.',
+                    highlightIndex: 8
+                };
+            case 'hadith-bookmarks':
+                return {
+                    title: 'Save More Hadiths',
+                    subtitle: 'Free users can save up to 3 hadiths. Upgrade to Pro for unlimited favorites.',
+                    highlightIndex: 7
+                };
+            case 'hadith-library':
+                return {
+                    title: 'Unlock Hadith Library',
+                    subtitle: 'Browse all hadith topics and discover the Prophet\'s wisdom. Upgrade to Pro for full access.',
+                    highlightIndex: 7
+                };
+            case 'hadith-notifications':
+                return {
+                    title: 'Daily Hadith Notifications',
+                    subtitle: 'Get daily prophetic wisdom delivered to you every morning. Upgrade to Pro to enable.',
+                    highlightIndex: 9
                 };
             default:
                 return {

@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import * as Device from 'expo-device';
 
-export type NotificationType = 'daily' | 'streak' | 'khatma' | 'adhkar';
+export type NotificationType = 'daily' | 'streak' | 'khatma' | 'adhkar' | 'hadith';
 
 export class NotificationService {
     // ── Daily gentle nudges ──────────────────────────────────────────
@@ -119,6 +119,19 @@ export class NotificationService {
     private static ADHKAR_MORNING_ID = 'adhkar-morning';
     private static ADHKAR_EVENING_ID = 'adhkar-evening';
     private static ADHKAR_NIGHT_ID = 'adhkar-night';
+    private static HADITH_DAILY_ID = 'hadith-daily';
+
+    // ── Hadith notification messages ─────────────────────────────────
+    private static HADITH_REMINDERS: { title: string; body: string }[] = [
+        { title: 'Hadith of the Day', body: 'A new hadith is waiting for you. Start your day with the Prophet\'s wisdom.' },
+        { title: 'Daily Wisdom', body: 'The Prophet (\u1d61) left guidance for every situation. Read today\'s hadith.' },
+        { title: 'Prophetic Guidance', body: 'A beautiful hadith is ready for you. Take a moment to reflect.' },
+        { title: 'Words of the Prophet', body: 'Let the Sunnah guide your day. Your daily hadith awaits.' },
+        { title: 'Today\'s Hadith', body: 'Small daily doses of prophetic wisdom can transform your character.' },
+        { title: 'Learn from the Best', body: 'The Prophet\'s words are timeless. Discover today\'s hadith.' },
+        { title: 'Daily Sunnah', body: 'A hadith a day keeps the heart aligned. Check today\'s selection.' },
+        { title: 'Wisdom Awaits', body: 'Every hadith carries a lesson. See what today\'s hadith teaches you.' },
+    ];
 
     // ── Slot 1: Daily Reminder ───────────────────────────────────────
     static async scheduleDailyReminder(hour: number, minute: number): Promise<void> {
@@ -255,12 +268,41 @@ export class NotificationService {
         ]);
     }
 
+    // ── Slot 4: Daily Hadith Notification ─────────────────────────────
+    static async scheduleHadithReminder(hour: number, minute: number): Promise<void> {
+        try {
+            await this.cancelHadithReminder();
+            const msg = this.HADITH_REMINDERS[Math.floor(Math.random() * this.HADITH_REMINDERS.length)];
+
+            await Notifications.scheduleNotificationAsync({
+                content: {
+                    title: msg.title,
+                    body: msg.body,
+                    sound: true,
+                },
+                trigger: {
+                    type: Notifications.SchedulableTriggerInputTypes.DAILY,
+                    hour,
+                    minute,
+                },
+                identifier: this.HADITH_DAILY_ID,
+            });
+        } catch (err) {
+            if (__DEV__) console.warn('[NotificationService] scheduleHadithReminder failed:', err);
+        }
+    }
+
+    static async cancelHadithReminder(): Promise<void> {
+        await Notifications.cancelScheduledNotificationAsync(this.HADITH_DAILY_ID).catch(() => { });
+    }
+
     // ── Cancel All ───────────────────────────────────────────────────
     static async cancelAllReminders(): Promise<void> {
         await Promise.all([
             this.cancelDailyReminder(),
             this.cancelContextualNudge(),
             this.cancelAdhkarReminders(),
+            this.cancelHadithReminder(),
         ]);
     }
 

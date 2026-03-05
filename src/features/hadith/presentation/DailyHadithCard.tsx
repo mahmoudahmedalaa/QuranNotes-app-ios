@@ -1,12 +1,11 @@
 /**
  * DailyHadithCard — Compact, elegant card for the daily curated hadith.
- * Matches DailyVerseCard's design pattern: collapsed by default, expandable,
- * with refresh, share, and time-of-day gradients.
+ * Premium features: refresh limits (3/day free), bookmark, explore topics link.
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, AppState, AppStateStatus } from 'react-native';
 import { useTheme, IconButton } from 'react-native-paper';
-import { Feather } from '@expo/vector-icons';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Spacing, BorderRadius, Shadows, Typography } from '../../../core/theme/DesignSystem';
@@ -14,45 +13,74 @@ import * as Haptics from 'expo-haptics';
 import ViewShot from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { useHadith } from '../infrastructure/HadithContext';
+import { usePro } from '../../auth/infrastructure/ProContext';
+import { useRouter } from 'expo-router';
+
+const FREE_REFRESH_LIMIT = 3;
 
 /** Warm earth-tone gradients that complement the sky-themed DailyVerseCard */
 function getHadithGradient(hour: number): readonly [string, string, string] {
-    if (hour >= 4 && hour < 6) return ['#1A1A2E', '#16213E', '#0F3460'] as const;      // Fajr: Deep indigo
-    if (hour >= 6 && hour < 12) return ['#2D3436', '#636E72', '#B2BEC3'] as const;     // Morning: Warm stone
-    if (hour >= 12 && hour < 16) return ['#1B4332', '#2D6A4F', '#40916C'] as const;    // Dhuhr: Forest green
-    if (hour >= 16 && hour < 18) return ['#5C2D0E', '#8B4513', '#A0522D'] as const;    // Asr: Rich mahogany
-    if (hour >= 18 && hour < 20) return ['#3D0C11', '#6B1E2D', '#8B2252'] as const;    // Maghrib: Deep burgundy
-    return ['#1A1A2E', '#0D1B2A', '#1B263B'] as const;                                  // Isha: Midnight navy
+    if (hour >= 4 && hour < 6) return ['#1A1A2E', '#16213E', '#0F3460'] as const;
+    if (hour >= 6 && hour < 12) return ['#2D3436', '#636E72', '#B2BEC3'] as const;
+    if (hour >= 12 && hour < 16) return ['#1B4332', '#2D6A4F', '#40916C'] as const;
+    if (hour >= 16 && hour < 18) return ['#5C2D0E', '#8B4513', '#A0522D'] as const;
+    if (hour >= 18 && hour < 20) return ['#3D0C11', '#6B1E2D', '#8B2252'] as const;
+    return ['#1A1A2E', '#0D1B2A', '#1B263B'] as const;
 }
 
-// Fixed text colors for contrast against all gradients
 const TEXT_PRIMARY = '#FFFFFF';
 const TEXT_SECONDARY = 'rgba(255,255,255,0.85)';
 const TEXT_TERTIARY = 'rgba(255,255,255,0.6)';
+const BOOKMARK_ACTIVE = '#F59E0B';
 
 export const DailyHadithCard: React.FC = () => {
     const theme = useTheme();
-    const { hadith, loading, refresh } = useHadith();
-    const [expanded, setExpanded] = useState(false); // Collapsed by default
+    const router = useRouter();
+    const { isPro } = usePro();
+    const {
+        hadith, loading, refresh,
+        refreshCount, canRefresh,
+        toggleBookmark, isBookmarked, bookmarkedIds,
+    } = useHadith();
+    const [expanded, setExpanded] = useState(false);
     const [currentHour, setCurrentHour] = useState(new Date().getHours());
 
-    // For sharing
     const viewShotRef = React.useRef<ViewShot>(null);
     const [isCapturing, setIsCapturing] = useState(false);
 
     useEffect(() => {
         const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
-            if (nextAppState === 'active') {
-                setCurrentHour(new Date().getHours());
-            }
+            if (nextAppState === 'active') setCurrentHour(new Date().getHours());
         });
         return () => subscription.remove();
     }, []);
 
     const handleRefresh = useCallback(async () => {
+        if (!isPro && !canRefresh) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+            router.push('/paywall?reason=hadith-refresh' as any);
+            return;
+        }
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         await refresh();
-    }, [refresh]);
+    }, [refresh, isPro, canRefresh, router]);
+
+    const handleBookmark = useCallback(async () => {
+        if (!hadith) return;
+
+        // Check free bookmark limit
+        if (!isPro && !isBookmarked(hadith.id) && bookmarkedIds.length >= 3) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+            router.push('/paywall?reason=hadith-bookmarks' as any);
+            return;
+        }
+
+        const wasAdded = await toggleBookmark(hadith.id);
+        Haptics.impactAsync(wasAdded
+            ? Haptics.ImpactFeedbackStyle.Medium
+            : Haptics.ImpactFeedbackStyle.Light
+        );
+    }, [hadith, isPro, isBookmarked, bookmarkedIds, toggleBookmark, router]);
 
     const handleShare = useCallback(async () => {
         if (!viewShotRef.current) return;
@@ -83,9 +111,17 @@ export const DailyHadithCard: React.FC = () => {
         }, 150);
     }, [expanded]);
 
+    const handleExploreTopics = useCallback(() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        router.push('/hadith-library' as any);
+    }, [router]);
+
     if (loading || !hadith) return null;
 
     const gradientColors = getHadithGradient(currentHour);
+    const bookmarked = isBookmarked(hadith.id);
+    const showRefreshBadge = !isPro && refreshCount > 0;
+    const refreshExhausted = !isPro && !canRefresh;
 
     return (
         <MotiView
@@ -113,19 +149,44 @@ export const DailyHadithCard: React.FC = () => {
                             end={{ x: 1, y: 1 }}
                         />
 
-                        {/* Header — always visible */}
+                        {/* Header */}
                         <View style={styles.cardHeader}>
                             <View style={styles.labelRow}>
-                                <Text style={[styles.label, { color: 'rgba(255,255,255,0.95)' }]}>✦ Hadith of the Day</Text>
+                                <Text style={[styles.label, { color: 'rgba(255,255,255,0.95)' }]}>
+                                    Hadith of the Day
+                                </Text>
                             </View>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                                <IconButton
-                                    icon="refresh"
-                                    size={18}
-                                    onPress={handleRefresh}
-                                    iconColor={TEXT_SECONDARY}
-                                    style={styles.actionButton}
-                                />
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                                {/* Refresh button with limit indicator */}
+                                <View style={styles.refreshContainer}>
+                                    <IconButton
+                                        icon={refreshExhausted ? 'lock' : 'refresh'}
+                                        size={18}
+                                        onPress={handleRefresh}
+                                        iconColor={refreshExhausted ? BOOKMARK_ACTIVE : TEXT_SECONDARY}
+                                        style={styles.actionButton}
+                                    />
+                                    {showRefreshBadge && (
+                                        <View style={styles.refreshBadge}>
+                                            <Text style={styles.refreshBadgeText}>
+                                                {FREE_REFRESH_LIMIT - refreshCount}
+                                            </Text>
+                                        </View>
+                                    )}
+                                </View>
+
+                                {/* Bookmark */}
+                                {!isCapturing && (
+                                    <IconButton
+                                        icon={bookmarked ? 'heart' : 'heart-outline'}
+                                        size={18}
+                                        onPress={handleBookmark}
+                                        iconColor={bookmarked ? BOOKMARK_ACTIVE : TEXT_SECONDARY}
+                                        style={styles.actionButton}
+                                    />
+                                )}
+
+                                {/* Share */}
                                 <IconButton
                                     icon="share-variant"
                                     size={18}
@@ -133,6 +194,8 @@ export const DailyHadithCard: React.FC = () => {
                                     iconColor={TEXT_SECONDARY}
                                     style={styles.actionButton}
                                 />
+
+                                {/* Expand chevron */}
                                 {!isCapturing && (
                                     <Feather
                                         name={expanded ? 'chevron-up' : 'chevron-down'}
@@ -159,30 +222,35 @@ export const DailyHadithCard: React.FC = () => {
                         {/* Expanded: full content */}
                         {expanded && (
                             <>
-                                {/* Arabic text */}
                                 <Text style={[styles.arabicText, { color: TEXT_PRIMARY }]}>
                                     {hadith.arabicText}
                                 </Text>
 
-                                {/* English translation */}
                                 <Text style={[styles.translationText, { color: TEXT_SECONDARY }]}>
                                     {hadith.englishText}
                                 </Text>
 
-                                {/* Reflection — the practical takeaway */}
                                 <View style={styles.reflectionBox}>
                                     <Text style={styles.reflectionText}>
-                                        💡 {hadith.reflection}
+                                        {hadith.reflection}
                                     </Text>
                                 </View>
 
-                                {/* Source reference */}
                                 <View style={styles.sourceRow}>
                                     <Feather name="book-open" size={14} color={TEXT_TERTIARY} />
                                     <Text style={[styles.sourceText, { color: TEXT_SECONDARY }]}>
                                         {hadith.narrator} · {hadith.collection}, #{hadith.reference}
                                     </Text>
                                 </View>
+
+                                {/* Explore Topics link */}
+                                {!isCapturing && (
+                                    <Pressable onPress={handleExploreTopics} style={styles.exploreRow}>
+                                        <MaterialCommunityIcons name="book-open-variant" size={14} color={BOOKMARK_ACTIVE} />
+                                        <Text style={styles.exploreText}>Explore Topics</Text>
+                                        <Feather name="chevron-right" size={14} color={BOOKMARK_ACTIVE} />
+                                    </Pressable>
+                                )}
                             </>
                         )}
 
@@ -228,8 +296,26 @@ const styles = StyleSheet.create({
     actionButton: {
         margin: 0,
     },
+    refreshContainer: {
+        position: 'relative',
+    },
+    refreshBadge: {
+        position: 'absolute',
+        top: 2,
+        right: 2,
+        backgroundColor: BOOKMARK_ACTIVE,
+        borderRadius: 6,
+        width: 14,
+        height: 14,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    refreshBadgeText: {
+        fontSize: 9,
+        fontWeight: '800',
+        color: '#FFFFFF',
+    },
 
-    // Compact (collapsed) state
     compactRow: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -245,7 +331,6 @@ const styles = StyleSheet.create({
         fontStyle: 'italic',
     },
 
-    // Expanded state
     arabicText: {
         fontSize: 22,
         lineHeight: 44,
@@ -280,6 +365,21 @@ const styles = StyleSheet.create({
     sourceText: {
         fontSize: 12,
         fontWeight: '500',
+    },
+    exploreRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        marginTop: Spacing.md,
+        paddingTop: Spacing.sm,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: 'rgba(255,255,255,0.15)',
+    },
+    exploreText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: BOOKMARK_ACTIVE,
+        flex: 1,
     },
     watermarkContainer: {
         marginTop: Spacing.lg,

@@ -6,6 +6,7 @@
  *   Slot 1 (Morning):   Daily Quran reminder at user-chosen time
  *   Slot 2 (Afternoon): Contextual nudge — Khatma > Streak > Re-engagement
  *   Slot 3 (Evening):   Adhkar reminder at Maghrib-ish time
+ *   Slot 4 (Morning):   Daily Hadith reminder at user-chosen time (Pro only)
  */
 import { useEffect, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
@@ -46,6 +47,9 @@ export function NotificationScheduler() {
             settings.khatmaReminderEnabled,
             settings.streakReminderEnabled,
             settings.adhkarReminderEnabled,
+            settings.hadithNotificationsEnabled,
+            settings.hadithNotificationHour,
+            settings.hadithNotificationMinute,
             streak.currentStreak,
             completedJuz.length,
         ].join('|');
@@ -63,6 +67,9 @@ export function NotificationScheduler() {
         settings.khatmaReminderEnabled,
         settings.streakReminderEnabled,
         settings.adhkarReminderEnabled,
+        settings.hadithNotificationsEnabled,
+        settings.hadithNotificationHour,
+        settings.hadithNotificationMinute,
         streak.currentStreak,
         completedJuz.length,
         khatmaLoading,
@@ -125,6 +132,14 @@ export function NotificationScheduler() {
                     'night',
                     DEFAULT_NIGHT_HOUR,
                     DEFAULT_NIGHT_MINUTE,
+                );
+            }
+
+            // ── Slot 4: Daily Hadith Reminder ────────────────────────
+            if (settings.hadithNotificationsEnabled) {
+                await NotificationService.scheduleHadithReminder(
+                    settings.hadithNotificationHour,
+                    settings.hadithNotificationMinute,
                 );
             }
         } catch (error) {
