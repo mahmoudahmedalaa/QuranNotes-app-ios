@@ -5,7 +5,7 @@
  */
 import React, { useState, useCallback, useMemo } from 'react';
 import {
-    View, Text, StyleSheet, ScrollView, Pressable, FlatList,
+    View, Text, StyleSheet, ScrollView, Pressable, FlatList, Dimensions,
 } from 'react-native';
 import { useTheme, IconButton } from 'react-native-paper';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import {
-    Spacing, BorderRadius, Shadows, Typography,
+    Spacing, BorderRadius, Shadows, Typography, BrandTokens,
 } from '../../../core/theme/DesignSystem';
 import { HADITH_TOPICS, getAllCuratedHadiths } from '../domain/CuratedHadiths';
 import { CuratedHadith, HadithTopic } from '../domain/HadithTypes';
@@ -25,20 +25,25 @@ import { useSettings } from '../../settings/infrastructure/SettingsContext';
 
 const FREE_BOOKMARK_LIMIT = 3;
 
-/** Topic card accent colors */
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const GRID_PADDING = Spacing.md * 2; // left + right
+const GRID_GAP = Spacing.sm;
+const CARD_WIDTH = (SCREEN_WIDTH - GRID_PADDING - GRID_GAP) / 2;
+
+/** Topic card accent colors — brand-aligned palette */
 const TOPIC_COLORS: Record<string, string> = {
-    kindness: '#E8795A',
-    character: '#5B8CB5',
-    patience: '#7E6DA5',
-    prayer: '#4A9574',
-    knowledge: '#C5903A',
-    gratitude: '#6BA375',
-    actions: '#B56B5A',
-    family: '#D18A5A',
-    tongue: '#8B6E5A',
-    remembrance: '#5A7EB5',
-    brotherhood: '#6B8F7A',
-    forgiveness: '#7A8EB5',
+    kindness: '#6246EA',   // Primary purple
+    character: '#4B2FD4',  // Dark purple
+    patience: '#A78BFA',   // Soft violet
+    prayer: '#10B981',     // Emerald
+    knowledge: '#3B82F6',  // Blue
+    gratitude: '#10B981',  // Emerald
+    actions: '#6246EA',    // Primary purple
+    family: '#F59E0B',     // Amber
+    tongue: '#EF4444',     // Coral red
+    remembrance: '#3B82F6', // Blue
+    brotherhood: '#4B2FD4', // Dark purple
+    forgiveness: '#A78BFA', // Soft violet
 };
 
 /** Topic card icons */
@@ -70,6 +75,8 @@ export default function HadithLibraryScreen() {
 
     const [mode, setMode] = useState<ScreenMode>('topics');
     const [selectedTopic, setSelectedTopic] = useState<HadithTopic | null>(null);
+
+    const isDark = theme.dark;
 
     const allHadiths = useMemo(() => getAllCuratedHadiths(), []);
     const favoriteHadiths = useMemo(
@@ -127,7 +134,15 @@ export default function HadithLibraryScreen() {
                 animate={{ opacity: 1, translateX: 0 }}
                 transition={{ type: 'timing', duration: 250 }}
             >
-                <View style={[styles.hadithRow, { backgroundColor: theme.colors.surfaceVariant }]}>
+                <View style={[
+                    styles.hadithRow,
+                    {
+                        backgroundColor: theme.colors.surface,
+                        borderColor: theme.colors.outline,
+                        borderWidth: StyleSheet.hairlineWidth,
+                    },
+                    Shadows.sm,
+                ]}>
                     <View style={styles.hadithContent}>
                         <Text style={[styles.hadithArabic, { color: theme.colors.onSurface }]} numberOfLines={2}>
                             {hadith.arabicText}
@@ -135,12 +150,15 @@ export default function HadithLibraryScreen() {
                         <Text style={[styles.hadithEnglish, { color: theme.colors.onSurfaceVariant }]} numberOfLines={3}>
                             {hadith.englishText}
                         </Text>
-                        <View style={styles.hadithReflection}>
+                        <View style={[
+                            styles.hadithReflection,
+                            { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(98,70,234,0.06)' },
+                        ]}>
                             <Text style={[styles.hadithReflectionText, { color: theme.colors.primary }]} numberOfLines={2}>
                                 {hadith.reflection}
                             </Text>
                         </View>
-                        <Text style={[styles.hadithSource, { color: theme.colors.outline }]}>
+                        <Text style={[styles.hadithSource, { color: theme.colors.onSurfaceVariant }]}>
                             {hadith.narrator} · {hadith.collection}, #{hadith.reference}
                         </Text>
                     </View>
@@ -149,7 +167,7 @@ export default function HadithLibraryScreen() {
                             icon={bookmarked ? 'heart' : 'heart-outline'}
                             size={20}
                             onPress={() => handleBookmark(hadith.id)}
-                            iconColor={bookmarked ? '#F59E0B' : theme.colors.outline}
+                            iconColor={bookmarked ? '#F59E0B' : theme.colors.onSurfaceVariant}
                             style={styles.actionBtn}
                         />
                         <IconButton
@@ -163,11 +181,11 @@ export default function HadithLibraryScreen() {
                 </View>
             </MotiView>
         );
-    }, [isBookmarked, handleBookmark, handleSetAsToday, theme]);
+    }, [isBookmarked, handleBookmark, handleSetAsToday, theme, isDark]);
 
     // ── TOPIC DETAIL VIEW ──
     if (mode === 'detail' && selectedTopic) {
-        const accentColor = TOPIC_COLORS[selectedTopic.id] || '#5B8CB5';
+        const accentColor = TOPIC_COLORS[selectedTopic.id] || theme.colors.primary;
         return (
             <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
                 <View style={styles.detailHeader}>
@@ -178,7 +196,7 @@ export default function HadithLibraryScreen() {
                         <Text style={[styles.detailTitle, { color: theme.colors.onSurface }]}>
                             {selectedTopic.name}
                         </Text>
-                        <Text style={[styles.detailSubtitle, { color: theme.colors.outline }]}>
+                        <Text style={[styles.detailSubtitle, { color: theme.colors.onSurfaceVariant }]}>
                             {selectedTopic.hadiths.length} hadiths
                         </Text>
                     </View>
@@ -207,15 +225,15 @@ export default function HadithLibraryScreen() {
                         <Text style={[styles.detailTitle, { color: theme.colors.onSurface }]}>
                             Favorites
                         </Text>
-                        <Text style={[styles.detailSubtitle, { color: theme.colors.outline }]}>
+                        <Text style={[styles.detailSubtitle, { color: theme.colors.onSurfaceVariant }]}>
                             {favoriteHadiths.length} saved
                         </Text>
                     </View>
                 </View>
                 {favoriteHadiths.length === 0 ? (
                     <View style={styles.emptyState}>
-                        <MaterialCommunityIcons name="heart-outline" size={48} color={theme.colors.outline} />
-                        <Text style={[styles.emptyText, { color: theme.colors.outline }]}>
+                        <MaterialCommunityIcons name="heart-outline" size={48} color={theme.colors.onSurfaceVariant} />
+                        <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
                             No favorites yet. Bookmark hadiths to see them here.
                         </Text>
                     </View>
@@ -246,12 +264,11 @@ export default function HadithLibraryScreen() {
                     Hadith Library
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    {/* Notification bell */}
                     <IconButton
                         icon={notifEnabled ? 'bell-ring' : 'bell-outline'}
                         size={22}
                         onPress={handleNotificationToggle}
-                        iconColor={notifEnabled ? '#F59E0B' : theme.colors.outline}
+                        iconColor={notifEnabled ? '#F59E0B' : theme.colors.onSurfaceVariant}
                         style={styles.actionBtn}
                     />
                 </View>
@@ -269,7 +286,12 @@ export default function HadithLibraryScreen() {
                     }}
                     style={({ pressed }) => [
                         styles.favoritesRow,
-                        { backgroundColor: theme.colors.surfaceVariant },
+                        {
+                            backgroundColor: theme.colors.surface,
+                            borderColor: theme.colors.outline,
+                            borderWidth: StyleSheet.hairlineWidth,
+                        },
+                        Shadows.sm,
                         pressed && { opacity: 0.9 },
                     ]}
                 >
@@ -277,66 +299,81 @@ export default function HadithLibraryScreen() {
                     <Text style={[styles.favoritesText, { color: theme.colors.onSurface }]}>
                         Favorites
                     </Text>
-                    <Text style={[styles.favoritesCount, { color: theme.colors.outline }]}>
+                    <Text style={[styles.favoritesCount, { color: theme.colors.onSurfaceVariant }]}>
                         {favoriteHadiths.length}
                     </Text>
-                    <Feather name="chevron-right" size={18} color={theme.colors.outline} />
+                    <Feather name="chevron-right" size={18} color={theme.colors.onSurfaceVariant} />
                 </Pressable>
 
                 {/* Pro badge for free users */}
                 {!isPro && (
-                    <View style={styles.proBanner}>
+                    <Pressable
+                        onPress={() => router.push('/paywall?reason=hadith-library' as any)}
+                        style={({ pressed }) => [
+                            styles.proBanner,
+                            pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                        ]}
+                    >
                         <LinearGradient
-                            colors={['#1A1340', '#312E81']}
+                            colors={['#6246EA', '#4B2FD4']}
                             style={styles.proBannerGradient}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
                         >
-                            <MaterialCommunityIcons name="lock" size={18} color="#F59E0B" />
+                            <MaterialCommunityIcons name="lock" size={16} color="#F59E0B" />
                             <Text style={styles.proBannerText}>
                                 Unlock all topics with Pro
                             </Text>
-                            <Feather name="chevron-right" size={16} color="rgba(255,255,255,0.7)" />
+                            <Feather name="chevron-right" size={16} color="rgba(255,255,255,0.8)" />
                         </LinearGradient>
-                    </View>
+                    </Pressable>
                 )}
 
                 {/* Topic grid */}
                 <View style={styles.topicsGrid}>
                     {HADITH_TOPICS.map((topic, index) => {
-                        const accent = TOPIC_COLORS[topic.id] || '#5B8CB5';
+                        const accent = TOPIC_COLORS[topic.id] || theme.colors.primary;
                         const iconName = TOPIC_ICONS[topic.id] || 'book-open-variant';
                         return (
                             <MotiView
                                 key={topic.id}
-                                from={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ type: 'spring', damping: 16, delay: index * 50 }}
+                                from={{ opacity: 0, translateY: 12 }}
+                                animate={{ opacity: 1, translateY: 0 }}
+                                transition={{ type: 'spring', damping: 18, delay: index * 40 }}
+                                style={{ width: CARD_WIDTH }}
                             >
                                 <Pressable
                                     onPress={() => handleTopicPress(topic)}
                                     style={({ pressed }) => [
                                         styles.topicCard,
-                                        { backgroundColor: theme.colors.surfaceVariant },
+                                        {
+                                            backgroundColor: theme.colors.surface,
+                                            borderColor: theme.colors.outline,
+                                            borderWidth: StyleSheet.hairlineWidth,
+                                        },
+                                        Shadows.sm,
                                         pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                                     ]}
                                 >
-                                    <View style={[styles.topicIconContainer, { backgroundColor: accent + '20' }]}>
+                                    {/* Colored accent strip at top */}
+                                    <View style={[styles.topicAccentStrip, { backgroundColor: accent }]} />
+
+                                    <View style={[styles.topicIconContainer, { backgroundColor: accent + '15' }]}>
                                         <MaterialCommunityIcons
                                             name={iconName as any}
-                                            size={22}
+                                            size={24}
                                             color={accent}
                                         />
                                     </View>
                                     <Text style={[styles.topicName, { color: theme.colors.onSurface }]} numberOfLines={2}>
                                         {topic.name}
                                     </Text>
-                                    <Text style={[styles.topicCount, { color: theme.colors.outline }]}>
+                                    <Text style={[styles.topicCount, { color: theme.colors.onSurfaceVariant }]}>
                                         {topic.hadiths.length} hadiths
                                     </Text>
                                     {!isPro && (
-                                        <View style={styles.lockBadge}>
-                                            <Feather name="lock" size={10} color="#F59E0B" />
+                                        <View style={[styles.lockBadge, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)' }]}>
+                                            <Feather name="lock" size={10} color={theme.colors.onSurfaceVariant} />
                                         </View>
                                     )}
                                 </Pressable>
@@ -361,8 +398,7 @@ const styles = StyleSheet.create({
     },
     screenTitle: {
         flex: 1,
-        fontSize: 22,
-        fontWeight: '700',
+        ...Typography.titleLarge,
         marginLeft: Spacing.sm,
     },
     backBtn: {
@@ -382,17 +418,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: Spacing.sm,
         paddingHorizontal: Spacing.md,
-        paddingVertical: Spacing.md,
+        paddingVertical: 14,
         borderRadius: BorderRadius.md,
         marginBottom: Spacing.md,
     },
     favoritesText: {
         flex: 1,
-        fontSize: 15,
-        fontWeight: '600',
+        ...Typography.titleMedium,
     },
     favoritesCount: {
-        fontSize: 14,
+        ...Typography.bodyMedium,
         fontWeight: '500',
     },
 
@@ -400,56 +435,70 @@ const styles = StyleSheet.create({
     proBanner: {
         borderRadius: BorderRadius.md,
         overflow: 'hidden',
-        marginBottom: Spacing.md,
+        marginBottom: Spacing.lg,
     },
     proBannerGradient: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: Spacing.sm,
         paddingHorizontal: Spacing.md,
-        paddingVertical: Spacing.sm,
+        paddingVertical: 12,
     },
     proBannerText: {
         flex: 1,
-        fontSize: 13,
+        fontSize: 14,
         fontWeight: '600',
-        color: 'rgba(255,255,255,0.9)',
+        color: '#FFFFFF',
     },
 
-    // Topic grid
+    // Topic grid — exact 2-column layout
     topicsGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: Spacing.sm,
+        gap: GRID_GAP,
     },
     topicCard: {
-        width: '47%' as any,
-        minWidth: 150,
         padding: Spacing.md,
+        paddingTop: Spacing.lg,
         borderRadius: BorderRadius.lg,
         position: 'relative',
+        overflow: 'hidden',
+        height: 140,
+    },
+    topicAccentStrip: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 3,
+        borderTopLeftRadius: BorderRadius.lg,
+        borderTopRightRadius: BorderRadius.lg,
     },
     topicIconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+        width: 44,
+        height: 44,
+        borderRadius: BorderRadius.md,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: Spacing.sm,
     },
     topicName: {
+        ...Typography.titleMedium,
         fontSize: 14,
-        fontWeight: '600',
         marginBottom: 4,
     },
     topicCount: {
-        fontSize: 12,
-        fontWeight: '500',
+        ...Typography.caption,
     },
     lockBadge: {
         position: 'absolute',
-        top: Spacing.sm,
+        top: Spacing.sm + 3, // below accent strip
         right: Spacing.sm,
+        width: 22,
+        height: 22,
+        borderRadius: 11,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 
     // Detail header
@@ -464,12 +513,10 @@ const styles = StyleSheet.create({
         marginLeft: Spacing.sm,
     },
     detailTitle: {
-        fontSize: 20,
-        fontWeight: '700',
+        ...Typography.titleLarge,
     },
     detailSubtitle: {
-        fontSize: 13,
-        fontWeight: '500',
+        ...Typography.caption,
         marginTop: 2,
     },
     detailAccent: {
@@ -500,26 +547,22 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.xs,
     },
     hadithEnglish: {
-        fontSize: 13,
-        lineHeight: 20,
+        ...Typography.bodyMedium,
         fontStyle: 'italic',
         marginBottom: Spacing.xs,
     },
     hadithReflection: {
-        backgroundColor: 'rgba(0,0,0,0.04)',
         borderRadius: BorderRadius.sm,
         paddingHorizontal: Spacing.sm,
         paddingVertical: Spacing.xs,
         marginBottom: Spacing.xs,
     },
     hadithReflectionText: {
-        fontSize: 12,
+        ...Typography.labelMedium,
         lineHeight: 18,
-        fontWeight: '500',
     },
     hadithSource: {
-        fontSize: 11,
-        fontWeight: '500',
+        ...Typography.caption,
     },
     hadithActions: {
         justifyContent: 'center',
@@ -537,7 +580,7 @@ const styles = StyleSheet.create({
         gap: Spacing.md,
     },
     emptyText: {
-        fontSize: 14,
+        ...Typography.bodyMedium,
         textAlign: 'center',
         paddingHorizontal: Spacing.xl,
     },
