@@ -32,6 +32,14 @@ struct StreakData: Codable {
     let count: Int
 }
 
+struct DailyHadithData: Codable {
+    let arabicText: String
+    let englishText: String
+    let narrator: String
+    let collection: String
+    let reference: String
+}
+
 // ── UserDefaults helpers ───────────────────────────────────────────
 
 class WidgetDataStore {
@@ -66,5 +74,10 @@ class WidgetDataStore {
     func getStreak() -> StreakData? {
         guard let data = defaults?.data(forKey: "widgetData_streak") else { return nil }
         return try? JSONDecoder().decode(StreakData.self, from: data)
+    }
+    
+    func getDailyHadith() -> DailyHadithData? {
+        guard let data = defaults?.data(forKey: "widgetData_dailyHadith") else { return nil }
+        return try? JSONDecoder().decode(DailyHadithData.self, from: data)
     }
 }

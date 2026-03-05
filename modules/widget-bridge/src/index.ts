@@ -53,6 +53,14 @@ export interface StreakWidgetData {
     count: number;
 }
 
+export interface DailyHadithWidgetData {
+    arabicText: string;
+    englishText: string;
+    narrator: string;
+    collection: string;
+    reference: string;
+}
+
 /**
  * Set widget data and optionally reload widgets
  */
@@ -95,6 +103,11 @@ export const WidgetBridge = {
     /** Update the streak widget data */
     setStreak(data: StreakWidgetData): boolean {
         return setWidgetData('streak', data);
+    },
+
+    /** Update the Daily Hadith widget data */
+    setDailyHadith(data: DailyHadithWidgetData): boolean {
+        return setWidgetData('dailyHadith', data);
     },
 
     /** Force refresh all widgets */
