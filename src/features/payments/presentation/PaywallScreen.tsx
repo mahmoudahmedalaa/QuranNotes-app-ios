@@ -109,12 +109,6 @@ export default function PaywallScreen() {
                     subtitle: 'Browse all hadith topics and discover the Prophet\'s wisdom. Upgrade to Pro for full access.',
                     highlightIndex: 7
                 };
-            case 'hadith-notifications':
-                return {
-                    title: 'Daily Hadith Notifications',
-                    subtitle: 'Get daily prophetic wisdom delivered to you every morning. Upgrade to Pro to enable.',
-                    highlightIndex: 9
-                };
             default:
                 return {
                     title: 'QuranNotes Pro',
