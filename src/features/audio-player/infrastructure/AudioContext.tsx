@@ -7,13 +7,26 @@
  * lock screen controls, and gapless playback.
  */
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AudioPlayerService, PlaybackStatus } from './AudioPlayerService';
 import { Surah, Verse } from '../../../core/domain/entities/Quran';
 import { useSettings } from '../../settings/infrastructure/SettingsContext';
 import { getReciterById } from '../domain/Reciter';
+import { ReadingHistoryService } from '../../quran-reading/infrastructure/ReadingHistoryService';
 
 // Singleton player instance (shared across the app)
 const player = new AudioPlayerService();
+
+const LAST_SESSION_KEY = 'audio_last_session';
+
+/** Persisted audio session — survives stop/app restart */
+export interface AudioSession {
+    surahNum: number;
+    surahName: string;
+    verse: number;
+    timestamp: number;
+    completed: boolean; // true if queue finished naturally
+}
 
 /** Info about a completed playback session — used for batch Khatma tracking */
 export interface CompletedPlayback {
@@ -30,12 +43,16 @@ interface AudioContextType {
     playlist: Verse[];
     /** Populated when playback queue ends — Surah screen uses this to batch-record Khatma pages */
     lastCompletedPlayback: CompletedPlayback | null;
+    /** Persisted session — survives stop, lives until user explicitly dismisses */
+    lastSession: AudioSession | null;
     playVerse: (surahNum: number, verseNum: number, surah?: Surah) => Promise<void>;
     playSurah: (surah: Surah) => Promise<void>;
     playFromVerse: (surah: Surah, verseNum: number) => Promise<void>;
     pause: () => Promise<void>;
     resume: () => Promise<void>;
     stop: () => Promise<void>;
+    /** Clear the persisted session — user explicitly dismisses the mini player */
+    dismissSession: () => void;
 }
 
 const AudioContext = createContext<AudioContextType | null>(null);
@@ -52,6 +69,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentSurahName, setCurrentSurahName] = useState<string | null>(null);
     const [lastCompletedPlayback, setLastCompletedPlayback] = useState<CompletedPlayback | null>(null);
+    const [lastSession, setLastSession] = useState<AudioSession | null>(null);
 
     // Playlist State
     const [playlist, setPlaylist] = useState<Verse[]>([]);
@@ -76,9 +94,17 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return { cdnFolder: reciter.cdnFolder, name: reciter.name };
     }, [settings.reciterId]);
 
-    // Initialize player on mount
+    // Initialize player + restore last session on mount
     useEffect(() => {
         player.setup().catch(e => console.warn('[AudioContext] Setup failed:', e));
+        // Restore persisted session for cold-start resume
+        AsyncStorage.getItem(LAST_SESSION_KEY).then(raw => {
+            if (raw) {
+                try {
+                    setLastSession(JSON.parse(raw));
+                } catch { /* corrupt — ignore */ }
+            }
+        }).catch(() => { /* silent */ });
     }, []);
 
     // Live reciter switch — reload current playlist with new reciter
@@ -122,12 +148,31 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             if (status.didJustFinish) {
                 const finishedSurah = currentSurahNumRef.current;
                 const finishedPlaylist = playlistRef.current;
+                const finishedName = currentSurahNameRef.current;
                 if (finishedSurah && finishedPlaylist.length > 0) {
                     setLastCompletedPlayback({
                         surah: finishedSurah,
                         verses: [...finishedPlaylist],
                         timestamp: Date.now(),
                     });
+                    // Save session so mini player persists in "completed" state
+                    const session: AudioSession = {
+                        surahNum: finishedSurah,
+                        surahName: finishedName || `Surah ${finishedSurah}`,
+                        verse: finishedPlaylist[finishedPlaylist.length - 1].number,
+                        timestamp: Date.now(),
+                        completed: true,
+                    };
+                    setLastSession(session);
+                    AsyncStorage.setItem(LAST_SESSION_KEY, JSON.stringify(session)).catch(() => { });
+                    // Record in reading history
+                    ReadingHistoryService.addEntry({
+                        surah: finishedSurah,
+                        surahName: finishedName || `Surah ${finishedSurah}`,
+                        verse: finishedPlaylist[finishedPlaylist.length - 1].number,
+                        timestamp: Date.now(),
+                        source: 'audio',
+                    }).catch(() => { });
                 }
                 setPlayingVerse(null);
                 setPlaylist([]);
@@ -284,6 +329,29 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const stop = useCallback(async () => {
         try {
+            // Save session before clearing playback state
+            const sNum = currentSurahNumRef.current;
+            const sName = currentSurahNameRef.current;
+            const pv = playingVerse;
+            if (sNum && pv) {
+                const session: AudioSession = {
+                    surahNum: sNum,
+                    surahName: sName || `Surah ${sNum}`,
+                    verse: pv.verse,
+                    timestamp: Date.now(),
+                    completed: false,
+                };
+                setLastSession(session);
+                AsyncStorage.setItem(LAST_SESSION_KEY, JSON.stringify(session)).catch(() => { });
+                // Record in reading history
+                ReadingHistoryService.addEntry({
+                    surah: sNum,
+                    surahName: sName || `Surah ${sNum}`,
+                    verse: pv.verse,
+                    timestamp: Date.now(),
+                    source: 'audio',
+                }).catch(() => { });
+            }
             setIsPlaying(false);
             setPlayingVerse(null);
             await player.stop();
@@ -296,7 +364,19 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         } catch (e) {
             if (__DEV__) console.warn('[AudioContext] stop failed:', e);
         }
+    }, [playingVerse]);
+
+    const dismissSession = useCallback(() => {
+        setLastSession(null);
+        AsyncStorage.removeItem(LAST_SESSION_KEY).catch(() => { });
     }, []);
+
+    // Clear lastSession when new playback starts
+    useEffect(() => {
+        if (playingVerse) {
+            setLastSession(null);
+        }
+    }, [playingVerse]);
 
     const value: AudioContextType = {
         playingVerse,
@@ -305,12 +385,14 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         currentSurahName,
         playlist,
         lastCompletedPlayback,
+        lastSession,
         playVerse,
         playSurah,
         playFromVerse,
         pause,
         resume,
         stop,
+        dismissSession,
     };
 
     return <AudioContext.Provider value={value}>{children}</AudioContext.Provider>;

@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import ViewShot from 'react-native-view-shot';
 import { Spacing, BorderRadius } from '../../../core/theme/DesignSystem';
+import { getQuranFontFamily } from '../../../core/theme/QuranFonts';
+import { useSettings } from '../../settings/infrastructure/SettingsContext';
 import { ShareService } from '../infrastructure/ShareService';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -46,6 +48,8 @@ interface ShareCardGeneratorProps {
 export const ShareCardGenerator = forwardRef<ShareCardHandle, ShareCardGeneratorProps>(
     ({ type, verseData, khatmaData, streakData }, ref) => {
         const viewShotRef = useRef<ViewShot>(null);
+        const { settings } = useSettings();
+        const quranFontFamily = getQuranFontFamily(settings.quranFont) ?? 'System';
 
         const capture = useCallback(async () => {
             if (!viewShotRef.current) return;
@@ -68,7 +72,7 @@ export const ShareCardGenerator = forwardRef<ShareCardHandle, ShareCardGenerator
                     options={{ format: 'png', quality: 1 }}
                     style={styles.shotContainer}
                 >
-                    {type === 'verse' && verseData && <VerseCard data={verseData} />}
+                    {type === 'verse' && verseData && <VerseCard data={verseData} quranFontFamily={quranFontFamily} />}
                     {type === 'khatma' && khatmaData && <KhatmaCard data={khatmaData} />}
                     {type === 'streak' && streakData && <StreakCard data={streakData} />}
                 </ViewShot>
@@ -82,7 +86,7 @@ ShareCardGenerator.displayName = 'ShareCardGenerator';
 // ═══════════════════════════════════════════════════════════════════════
 // Verse Card
 // ═══════════════════════════════════════════════════════════════════════
-const VerseCard = ({ data }: { data: VerseShareData }) => (
+const VerseCard = ({ data, quranFontFamily }: { data: VerseShareData; quranFontFamily: string }) => (
     <LinearGradient
         colors={['#0F172A', '#1E293B', '#1A1340']}
         start={{ x: 0, y: 0 }}
@@ -105,7 +109,7 @@ const VerseCard = ({ data }: { data: VerseShareData }) => (
         <Text style={styles.ornament}>﷽</Text>
 
         {/* Surah name */}
-        <Text style={styles.surahArabic}>{data.surahNameArabic}</Text>
+        <Text style={[styles.surahArabic, { fontFamily: quranFontFamily }]}>{data.surahNameArabic}</Text>
         <Text style={styles.surahEnglish}>
             {data.surahName.toUpperCase()} · VERSE {data.verseNumber}
         </Text>
@@ -113,7 +117,7 @@ const VerseCard = ({ data }: { data: VerseShareData }) => (
         {/* Arabic verse — glassmorphic container */}
         <View style={styles.verseContainer}>
             <View style={styles.verseInnerBorder}>
-                <Text style={styles.arabicVerse}>{data.arabicText}</Text>
+                <Text style={[styles.arabicVerse, { fontFamily: quranFontFamily }]}>{data.arabicText}</Text>
             </View>
         </View>
 
@@ -368,11 +372,7 @@ const styles = StyleSheet.create({
         marginHorizontal: Spacing.sm,
         opacity: 0.6,
     },
-    achievementEmoji: {
-        fontSize: 56,
-        marginTop: Spacing.lg,
-        marginBottom: Spacing.md,
-    },
+
     achievementTitle: {
         fontSize: 28,
         color: '#FFFFFF',

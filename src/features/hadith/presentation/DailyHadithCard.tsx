@@ -31,7 +31,6 @@ function getHadithGradient(hour: number): readonly [string, string, string] {
 const TEXT_PRIMARY = '#FFFFFF';
 const TEXT_SECONDARY = 'rgba(255,255,255,0.85)';
 const TEXT_TERTIARY = 'rgba(255,255,255,0.6)';
-const BOOKMARK_ACTIVE = '#F59E0B';
 
 export const DailyHadithCard: React.FC = () => {
     const theme = useTheme();
@@ -163,7 +162,7 @@ export const DailyHadithCard: React.FC = () => {
                                         icon={refreshExhausted ? 'lock' : 'refresh'}
                                         size={18}
                                         onPress={handleRefresh}
-                                        iconColor={refreshExhausted ? BOOKMARK_ACTIVE : TEXT_SECONDARY}
+                                        iconColor={refreshExhausted ? TEXT_TERTIARY : TEXT_SECONDARY}
                                         style={styles.actionButton}
                                     />
                                     {showRefreshBadge && (
@@ -181,7 +180,7 @@ export const DailyHadithCard: React.FC = () => {
                                         icon={bookmarked ? 'heart' : 'heart-outline'}
                                         size={18}
                                         onPress={handleBookmark}
-                                        iconColor={bookmarked ? BOOKMARK_ACTIVE : TEXT_SECONDARY}
+                                        iconColor={bookmarked ? TEXT_PRIMARY : TEXT_SECONDARY}
                                         style={styles.actionButton}
                                     />
                                 )}
@@ -246,9 +245,9 @@ export const DailyHadithCard: React.FC = () => {
                                 {/* Explore Topics link */}
                                 {!isCapturing && (
                                     <Pressable onPress={handleExploreTopics} style={styles.exploreRow}>
-                                        <MaterialCommunityIcons name="book-open-variant" size={18} color={BOOKMARK_ACTIVE} />
+                                        <MaterialCommunityIcons name="book-open-variant" size={18} color={TEXT_PRIMARY} />
                                         <Text style={styles.exploreText}>Explore Hadith Library</Text>
-                                        <Feather name="chevron-right" size={16} color={BOOKMARK_ACTIVE} />
+                                        <Feather name="chevron-right" size={16} color={TEXT_SECONDARY} />
                                     </Pressable>
                                 )}
                             </>
@@ -303,7 +302,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 2,
         right: 2,
-        backgroundColor: BOOKMARK_ACTIVE,
+        backgroundColor: 'rgba(255,255,255,0.3)',
         borderRadius: 6,
         width: 14,
         height: 14,
@@ -373,13 +372,13 @@ const styles = StyleSheet.create({
         marginTop: Spacing.md,
         paddingVertical: 10,
         paddingHorizontal: Spacing.md,
-        backgroundColor: 'rgba(245,158,11,0.15)',
+        backgroundColor: 'rgba(255,255,255,0.15)',
         borderRadius: BorderRadius.md,
     },
     exploreText: {
         fontSize: 15,
         fontWeight: '700',
-        color: BOOKMARK_ACTIVE,
+        color: TEXT_PRIMARY,
         flex: 1,
     },
     watermarkContainer: {

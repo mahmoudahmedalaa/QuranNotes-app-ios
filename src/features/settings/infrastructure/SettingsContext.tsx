@@ -4,6 +4,7 @@ import { MD3LightTheme, MD3DarkTheme, Provider as PaperProvider } from 'react-na
 import { View, Text, Button } from 'react-native';
 
 import { DEFAULT_RECITER } from '../../audio-player/domain/Reciter';
+import type { QuranFontId } from '../../../core/theme/QuranFonts';
 
 interface AppSettings {
     fontSize: number;
@@ -25,6 +26,7 @@ interface AppSettings {
     hadithNotificationsEnabled: boolean;
     hadithNotificationHour: number;
     hadithNotificationMinute: number;
+    quranFont: QuranFontId;
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -46,6 +48,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     hadithNotificationsEnabled: false,
     hadithNotificationHour: 8,
     hadithNotificationMinute: 0,
+    quranFont: 'kfgqpc' as QuranFontId,
 };
 
 const STORAGE_KEY = 'app_settings';
@@ -151,6 +154,7 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
                     hadithNotificationsEnabled: parsed.hadithNotificationsEnabled ?? DEFAULT_SETTINGS.hadithNotificationsEnabled,
                     hadithNotificationHour: parsed.hadithNotificationHour ?? DEFAULT_SETTINGS.hadithNotificationHour,
                     hadithNotificationMinute: parsed.hadithNotificationMinute ?? DEFAULT_SETTINGS.hadithNotificationMinute,
+                    quranFont: parsed.quranFont ?? DEFAULT_SETTINGS.quranFont,
                 };
 
                 setSettings({ ...DEFAULT_SETTINGS, ...loaded });

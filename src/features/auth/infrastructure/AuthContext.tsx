@@ -3,6 +3,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '../domain/User';
 import { RemoteAuthRepository } from '../data/RemoteAuthRepository';
 import { ReadingPositionService } from '../../quran-reading/infrastructure/ReadingPositionService';
+import { ReadingHistoryService } from '../../quran-reading/infrastructure/ReadingHistoryService';
+import { HadithBookmarkService } from '../../hadith/infrastructure/HadithBookmarkService';
+import { clearAllHadithData } from '../../hadith/infrastructure/HadithContext';
 
 interface AuthContextType {
     user: User | null;
@@ -56,6 +59,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(true);
         try {
             await ReadingPositionService.clearAll();
+            await ReadingHistoryService.clearHistory();
+            await clearAllHadithData();
+            await HadithBookmarkService.clearAll();
             const authUser = await authRepo.signInAnonymously();
             setUser(authUser);
         } catch (e) {
@@ -70,6 +76,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(true);
         try {
             await ReadingPositionService.clearAll();
+            await ReadingHistoryService.clearHistory();
+            await clearAllHadithData();
+            await HadithBookmarkService.clearAll();
             const authUser = await authRepo.signInWithEmail(email, pass);
             setUser(authUser);
         } catch (e) {
@@ -84,6 +93,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(true);
         try {
             await ReadingPositionService.clearAll();
+            await ReadingHistoryService.clearHistory();
+            await clearAllHadithData();
+            await HadithBookmarkService.clearAll();
             // Force sign out first to ensure clean state
             await authRepo.signOut();
             const authUser = await authRepo.signInWithGoogle();
@@ -100,6 +112,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(true);
         try {
             await ReadingPositionService.clearAll();
+            await ReadingHistoryService.clearHistory();
+            await clearAllHadithData();
+            await HadithBookmarkService.clearAll();
             // Force sign out first to ensure clean state
             await authRepo.signOut();
             const authUser = await authRepo.signInWithApple();
@@ -116,6 +131,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(true);
         try {
             await ReadingPositionService.clearAll();
+            await ReadingHistoryService.clearHistory();
+            await clearAllHadithData();
+            await HadithBookmarkService.clearAll();
             await authRepo.signUpWithEmail(email, pass);
         } catch (e) {
             console.error('[AuthContext] registerWithEmail error:', e);
@@ -138,6 +156,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(true);
         try {
             await ReadingPositionService.clearAll();
+            await ReadingHistoryService.clearHistory();
+            await clearAllHadithData();
+            await HadithBookmarkService.clearAll();
             await authRepo.signOut();
             setUser(null);
 

@@ -3,20 +3,22 @@
  * Free users see topic list but can't view details → paywall.
  * Pro users browse freely, bookmark, and set any hadith as today's.
  */
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
-    View, Text, StyleSheet, ScrollView, Pressable, FlatList, Dimensions,
+    View, Text, StyleSheet, ScrollView, Pressable, FlatList, Dimensions, Modal, Share,
 } from 'react-native';
-import { useTheme, IconButton } from 'react-native-paper';
+import { useTheme } from 'react-native-paper';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import {
     Spacing, BorderRadius, Shadows, Typography, BrandTokens,
 } from '../../../core/theme/DesignSystem';
+import { WaveBackground } from '../../../core/components/animated/WaveBackground';
 import { HADITH_TOPICS, getAllCuratedHadiths } from '../domain/CuratedHadiths';
 import { CuratedHadith, HadithTopic } from '../domain/HadithTypes';
 import { useHadith } from '../infrastructure/HadithContext';
@@ -30,19 +32,20 @@ const GRID_GAP = Spacing.sm;
 const CARD_WIDTH = (SCREEN_WIDTH - GRID_PADDING - GRID_GAP) / 2;
 
 /** Topic card accent colors — brand-aligned palette */
+/** Semantic color mapping — each topic gets a unique, meaningful color */
 const TOPIC_COLORS: Record<string, string> = {
-    kindness: '#6246EA',   // Primary purple
-    character: '#4B2FD4',  // Dark purple
-    patience: '#A78BFA',   // Soft violet
-    prayer: '#10B981',     // Emerald
-    knowledge: '#3B82F6',  // Blue
-    gratitude: '#10B981',  // Emerald
-    actions: '#6246EA',    // Primary purple
-    family: '#F59E0B',     // Amber
-    tongue: '#EF4444',     // Coral red
-    remembrance: '#3B82F6', // Blue
-    brotherhood: '#4B2FD4', // Dark purple
-    forgiveness: '#A78BFA', // Soft violet
+    kindness: '#6246EA',   // Purple — acts of kindness (brand anchor)
+    character: '#92400E',  // Chocolate brown — noble character
+    patience: '#059669',   // Emerald — endurance & strength
+    prayer: '#1D4ED8',     // Deep blue — spiritual connection
+    knowledge: '#0891B2',  // Teal — wisdom & learning
+    gratitude: '#B7791F',  // Warm gold — thankfulness
+    actions: '#DC2626',    // Ruby red — deeds & accountability
+    family: '#EA580C',     // Burnt orange — warmth of home
+    tongue: '#BE185D',     // Rose-magenta — speech & expression
+    remembrance: '#475569', // Steel blue — spiritual reflection
+    brotherhood: '#0284C7', // Sky blue — community bonds
+    forgiveness: '#16A34A', // Green — mercy & renewal
 };
 
 /** Topic card icons */
@@ -66,6 +69,7 @@ type ScreenMode = 'topics' | 'detail' | 'favorites';
 export default function HadithLibraryScreen() {
     const theme = useTheme();
     const router = useRouter();
+    const navigation = useNavigation();
     const { isPro } = usePro();
     const {
         bookmarkedIds, toggleBookmark, isBookmarked, setHadith,
@@ -74,6 +78,26 @@ export default function HadithLibraryScreen() {
     const [mode, setMode] = useState<ScreenMode>('topics');
     const [selectedTopic, setSelectedTopic] = useState<HadithTopic | null>(null);
     const [favTopicFilter, setFavTopicFilter] = useState<string>('all');
+    const [filterSheetVisible, setFilterSheetVisible] = useState(false);
+
+    // ── Intercept back-swipe in detail/favorites mode ──
+    // Redirect to topics grid instead of popping the entire route
+    useEffect(() => {
+        if (mode === 'topics') return; // No interception needed on topics screen
+
+        const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
+            e.preventDefault();
+            if (mode === 'favorites') {
+                setMode('topics');
+                setFavTopicFilter('all');
+            } else if (mode === 'detail') {
+                setMode('topics');
+                setSelectedTopic(null);
+            }
+        });
+
+        return unsubscribe;
+    }, [mode, navigation]);
 
     const isDark = theme.dark;
 
@@ -126,298 +150,453 @@ export default function HadithLibraryScreen() {
         router.back();
     }, [setHadith, router]);
 
+    const handleShareHadith = useCallback(async (hadith: CuratedHadith) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        try {
+            await Share.share({
+                message: `"${hadith.englishText}"\n\n${hadith.arabicText}\n\n— ${hadith.narrator} · ${hadith.collection}, #${hadith.reference}\n\nShared via QuranNotes`,
+            });
+        } catch { }
+    }, []);
 
+    /** Get the display label for a topic ID */
+    const getTopicLabel = useCallback((topicId: string): string => {
+        const topic = HADITH_TOPICS.find(t => t.id === topicId);
+        return topic ? topic.name : topicId.charAt(0).toUpperCase() + topicId.slice(1);
+    }, []);
 
-    const renderHadithRow = useCallback(({ item: hadith }: { item: CuratedHadith }) => {
+    const renderHadithCard = useCallback(({ item: hadith }: { item: CuratedHadith }) => {
         const bookmarked = isBookmarked(hadith.id);
+        const showTopicPill = mode === 'favorites';
+        const topicColor = TOPIC_COLORS[hadith.topic] || theme.colors.primary;
+
         return (
             <MotiView
-                from={{ opacity: 0, translateX: -10 }}
-                animate={{ opacity: 1, translateX: 0 }}
-                transition={{ type: 'timing', duration: 250 }}
+                from={{ opacity: 0, translateY: 8 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ type: 'spring', damping: 18, stiffness: 120 }}
             >
                 <View style={[
-                    styles.hadithRow,
+                    styles.hadithCard,
                     {
-                        backgroundColor: theme.colors.surface,
-                        borderColor: theme.colors.outline,
-                        borderWidth: StyleSheet.hairlineWidth,
+                        backgroundColor: isDark ? theme.colors.surface : '#FDFBFF',
                     },
-                    Shadows.sm,
+                    Shadows.md,
                 ]}>
-                    <View style={styles.hadithContent}>
-                        <Text style={[styles.hadithArabic, { color: theme.colors.onSurface }]} numberOfLines={2}>
-                            {hadith.arabicText}
-                        </Text>
-                        <Text style={[styles.hadithEnglish, { color: theme.colors.onSurfaceVariant }]} numberOfLines={3}>
-                            {hadith.englishText}
-                        </Text>
-                        <View style={[
-                            styles.hadithReflection,
-                            { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(98,70,234,0.06)' },
-                        ]}>
-                            <Text style={[styles.hadithReflectionText, { color: theme.colors.primary }]} numberOfLines={2}>
-                                {hadith.reflection}
-                            </Text>
-                        </View>
-                        <Text style={[styles.hadithSource, { color: theme.colors.onSurfaceVariant }]}>
-                            {hadith.narrator} · {hadith.collection}, #{hadith.reference}
+
+                    {/* Arabic text */}
+                    <Text style={[styles.hadithArabic, { color: theme.colors.onSurface }]}>
+                        {hadith.arabicText}
+                    </Text>
+
+                    {/* English translation */}
+                    <Text style={[styles.hadithEnglish, { color: theme.colors.onSurfaceVariant }]}>
+                        {hadith.englishText}
+                    </Text>
+
+                    {/* Reflection box */}
+                    <View style={[
+                        styles.hadithReflection,
+                        { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(98,70,234,0.05)' },
+                    ]}>
+                        <Text style={[styles.hadithReflectionText, { color: theme.colors.primary }]}>
+                            {hadith.reflection}
                         </Text>
                     </View>
-                    <View style={styles.hadithActions}>
-                        <IconButton
-                            icon={bookmarked ? 'heart' : 'heart-outline'}
-                            size={20}
+
+                    {/* Source */}
+                    <Text style={[styles.hadithSource, { color: theme.colors.onSurfaceVariant }]}>
+                        {hadith.narrator} · {hadith.collection}, #{hadith.reference}
+                    </Text>
+
+                    {/* Bottom action bar */}
+                    <View style={[styles.actionBar, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)' }]}>
+                        <Pressable
                             onPress={() => handleBookmark(hadith.id)}
-                            iconColor={bookmarked ? '#F59E0B' : theme.colors.onSurfaceVariant}
-                            style={styles.actionBtn}
-                        />
+                            hitSlop={8}
+                            style={({ pressed }) => [
+                                styles.actionButton,
+                                pressed && { opacity: 0.7 },
+                            ]}
+                        >
+                            <MaterialCommunityIcons
+                                name={bookmarked ? 'heart' : 'heart-outline'}
+                                size={18}
+                                color={bookmarked ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                            />
+                            <Text style={[
+                                styles.actionLabel,
+                                { color: bookmarked ? theme.colors.primary : theme.colors.onSurfaceVariant },
+                            ]}>
+                                {bookmarked ? 'Saved' : 'Save'}
+                            </Text>
+                        </Pressable>
+
                         <Pressable
                             onPress={() => handleSetAsToday(hadith)}
-                            style={[styles.setTodayBtn, { borderColor: theme.colors.primary }]}
+                            hitSlop={8}
+                            style={({ pressed }) => [
+                                styles.actionButton,
+                                pressed && { opacity: 0.7 },
+                            ]}
                         >
-                            <Text style={[styles.setTodayText, { color: theme.colors.primary }]}>Set as Today</Text>
+                            <MaterialCommunityIcons name="calendar-check" size={18} color={theme.colors.primary} />
+                            <Text style={[styles.actionLabel, { color: theme.colors.primary }]}>
+                                Use for Today
+                            </Text>
+                        </Pressable>
+
+                        <Pressable
+                            onPress={() => handleShareHadith(hadith)}
+                            hitSlop={8}
+                            style={({ pressed }) => [
+                                styles.actionButton,
+                                pressed && { opacity: 0.7 },
+                            ]}
+                        >
+                            <Feather name="share" size={16} color={theme.colors.onSurfaceVariant} />
+                            <Text style={[styles.actionLabel, { color: theme.colors.onSurfaceVariant }]}>
+                                Share
+                            </Text>
                         </Pressable>
                     </View>
-                </View>
-            </MotiView>
+                </View >
+            </MotiView >
         );
-    }, [isBookmarked, handleBookmark, handleSetAsToday, theme, isDark]);
+    }, [isBookmarked, handleBookmark, handleSetAsToday, handleShareHadith, theme, isDark, mode, getTopicLabel]);
 
     // ── TOPIC DETAIL VIEW ──
     if (mode === 'detail' && selectedTopic) {
         const accentColor = TOPIC_COLORS[selectedTopic.id] || theme.colors.primary;
         return (
-            <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-                <View style={styles.detailHeader}>
-                    <Pressable onPress={() => { setMode('topics'); setSelectedTopic(null); }} style={styles.backBtn}>
-                        <Feather name="arrow-left" size={22} color={theme.colors.onSurface} />
-                    </Pressable>
-                    <View style={styles.detailHeaderContent}>
-                        <Text style={[styles.detailTitle, { color: theme.colors.onSurface }]}>
-                            {selectedTopic.name}
-                        </Text>
-                        <Text style={[styles.detailSubtitle, { color: theme.colors.onSurfaceVariant }]}>
-                            {selectedTopic.hadiths.length} hadiths
-                        </Text>
+            <WaveBackground variant="serene" intensity="subtle">
+                <SafeAreaView style={[styles.container, { backgroundColor: 'transparent' }]}>
+                    <View style={styles.detailHeader}>
+                        <Pressable onPress={() => { setMode('topics'); setSelectedTopic(null); }} style={styles.backBtn}>
+                            <Feather name="arrow-left" size={22} color={theme.colors.onSurface} />
+                        </Pressable>
+                        <View style={styles.detailHeaderContent}>
+                            <Text style={[styles.detailTitle, { color: theme.colors.onSurface }]} numberOfLines={1}>
+                                {selectedTopic.name}
+                            </Text>
+                            <Text style={[styles.detailSubtitle, { color: theme.colors.onSurfaceVariant }]}>
+                                {selectedTopic.hadiths.length} hadiths
+                            </Text>
+                        </View>
                     </View>
-                    <View style={[styles.detailAccent, { backgroundColor: accentColor }]} />
-                </View>
-                <FlatList
-                    data={selectedTopic.hadiths}
-                    keyExtractor={h => h.id}
-                    renderItem={renderHadithRow}
-                    contentContainerStyle={styles.listContent}
-                    showsVerticalScrollIndicator={false}
-                />
-            </SafeAreaView>
+                    <FlatList
+                        data={selectedTopic.hadiths}
+                        keyExtractor={h => h.id}
+                        renderItem={renderHadithCard}
+                        contentContainerStyle={styles.listContent}
+                        showsVerticalScrollIndicator={true}
+                    />
+                </SafeAreaView>
+            </WaveBackground>
         );
     }
 
     // ── FAVORITES VIEW ──
     if (mode === 'favorites') {
-        return (
-            <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-                <View style={styles.detailHeader}>
-                    <Pressable onPress={() => { setMode('topics'); setFavTopicFilter('all'); }} style={styles.backBtn}>
-                        <Feather name="arrow-left" size={22} color={theme.colors.onSurface} />
-                    </Pressable>
-                    <View style={styles.detailHeaderContent}>
-                        <Text style={[styles.detailTitle, { color: theme.colors.onSurface }]}>
-                            Favorites
-                        </Text>
-                        <Text style={[styles.detailSubtitle, { color: theme.colors.onSurfaceVariant }]}>
-                            {filteredFavorites.length} of {favoriteHadiths.length} saved
-                        </Text>
-                    </View>
-                </View>
+        const activeFilterLabel = favTopicFilter === 'all'
+            ? 'All Topics'
+            : getTopicLabel(favTopicFilter);
 
-                {/* Topic filter chips */}
-                {favoriteHadiths.length > 0 && favoriteTopics.length > 1 && (
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={styles.filterChips}
-                    >
-                        <Pressable
-                            onPress={() => setFavTopicFilter('all')}
-                            style={[
-                                styles.filterChip,
-                                favTopicFilter === 'all'
-                                    ? { backgroundColor: theme.colors.primary }
-                                    : { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline, borderWidth: StyleSheet.hairlineWidth },
-                            ]}
-                        >
-                            <Text style={[
-                                styles.filterChipText,
-                                { color: favTopicFilter === 'all' ? '#FFFFFF' : theme.colors.onSurfaceVariant },
-                            ]}>All</Text>
+        return (
+            <WaveBackground variant="serene" intensity="subtle">
+                <SafeAreaView style={[styles.container, { backgroundColor: 'transparent' }]}>
+                    <View style={styles.detailHeader}>
+                        <Pressable onPress={() => { setMode('topics'); setFavTopicFilter('all'); }} style={styles.backBtn}>
+                            <Feather name="arrow-left" size={22} color={theme.colors.onSurface} />
                         </Pressable>
-                        {favoriteTopics.map(topic => (
+                        <View style={styles.detailHeaderContent}>
+                            <Text style={[styles.detailTitle, { color: theme.colors.onSurface }]}>
+                                Favorites
+                            </Text>
+                            <Text style={[styles.detailSubtitle, { color: theme.colors.onSurfaceVariant }]}>
+                                {filteredFavorites.length} of {favoriteHadiths.length} saved
+                            </Text>
+                        </View>
+
+                        {/* Filter dropdown button */}
+                        {favoriteHadiths.length > 0 && favoriteTopics.length > 1 && (
                             <Pressable
-                                key={topic}
                                 onPress={() => {
                                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                    setFavTopicFilter(prev => prev === topic ? 'all' : topic);
+                                    setFilterSheetVisible(true);
                                 }}
-                                style={[
-                                    styles.filterChip,
-                                    favTopicFilter === topic
-                                        ? { backgroundColor: theme.colors.primary }
-                                        : { backgroundColor: theme.colors.surface, borderColor: theme.colors.outline, borderWidth: StyleSheet.hairlineWidth },
+                                style={({ pressed }) => [
+                                    styles.filterButton,
+                                    {
+                                        backgroundColor: favTopicFilter === 'all'
+                                            ? (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)')
+                                            : theme.colors.primary + '14',
+                                    },
+                                    pressed && { opacity: 0.7 },
                                 ]}
                             >
+                                <Feather
+                                    name="filter"
+                                    size={14}
+                                    color={favTopicFilter === 'all' ? theme.colors.onSurfaceVariant : theme.colors.primary}
+                                />
                                 <Text style={[
-                                    styles.filterChipText,
-                                    { color: favTopicFilter === topic ? '#FFFFFF' : theme.colors.onSurfaceVariant },
-                                ]}>{topic.charAt(0).toUpperCase() + topic.slice(1)}</Text>
+                                    styles.filterButtonText,
+                                    { color: favTopicFilter === 'all' ? theme.colors.onSurfaceVariant : theme.colors.primary },
+                                ]} numberOfLines={1}>
+                                    {activeFilterLabel}
+                                </Text>
+                                <Feather
+                                    name="chevron-down"
+                                    size={14}
+                                    color={favTopicFilter === 'all' ? theme.colors.onSurfaceVariant : theme.colors.primary}
+                                />
                             </Pressable>
-                        ))}
-                    </ScrollView>
-                )}
-
-                {favoriteHadiths.length === 0 ? (
-                    <View style={styles.emptyState}>
-                        <MaterialCommunityIcons name="heart-outline" size={48} color={theme.colors.onSurfaceVariant} />
-                        <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
-                            No favorites yet. Bookmark hadiths to see them here.
-                        </Text>
+                        )}
                     </View>
-                ) : (
-                    <FlatList
-                        data={filteredFavorites}
-                        keyExtractor={h => h.id}
-                        renderItem={renderHadithRow}
-                        contentContainerStyle={styles.listContent}
-                        showsVerticalScrollIndicator={false}
-                    />
-                )}
-            </SafeAreaView>
+
+                    {/* Filter bottom sheet modal */}
+                    <Modal
+                        visible={filterSheetVisible}
+                        transparent
+                        animationType="slide"
+                        onRequestClose={() => setFilterSheetVisible(false)}
+                    >
+                        <Pressable
+                            style={styles.modalOverlay}
+                            onPress={() => setFilterSheetVisible(false)}
+                        >
+                            <Pressable
+                                style={[styles.modalSheet, { backgroundColor: theme.colors.surface }]}
+                                onPress={(e) => e.stopPropagation()}
+                            >
+                                {/* Handle bar */}
+                                <View style={styles.modalHandle}>
+                                    <View style={[styles.modalHandleBar, { backgroundColor: theme.colors.outline }]} />
+                                </View>
+
+                                <Text style={[styles.modalTitle, { color: theme.colors.onSurface }]}>
+                                    Filter by Topic
+                                </Text>
+
+                                {/* All option */}
+                                <Pressable
+                                    onPress={() => {
+                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                        setFavTopicFilter('all');
+                                        setFilterSheetVisible(false);
+                                    }}
+                                    style={({ pressed }) => [
+                                        styles.modalOption,
+                                        { borderBottomColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' },
+                                        pressed && { opacity: 0.7 },
+                                    ]}
+                                >
+                                    <Text style={[styles.modalOptionText, { color: theme.colors.onSurface }]}>
+                                        All Topics
+                                    </Text>
+                                    <Text style={[styles.modalOptionCount, { color: theme.colors.onSurfaceVariant }]}>
+                                        {favoriteHadiths.length}
+                                    </Text>
+                                    {favTopicFilter === 'all' && (
+                                        <MaterialCommunityIcons name="check" size={20} color={theme.colors.primary} />
+                                    )}
+                                </Pressable>
+
+                                {/* Topic options */}
+                                <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 400 }}>
+                                    {favoriteTopics.map(topic => {
+                                        const topicColor = TOPIC_COLORS[topic] || theme.colors.primary;
+                                        const count = favoriteHadiths.filter(h => h.topic === topic).length;
+                                        return (
+                                            <Pressable
+                                                key={topic}
+                                                onPress={() => {
+                                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                                    setFavTopicFilter(topic);
+                                                    setFilterSheetVisible(false);
+                                                }}
+                                                style={({ pressed }) => [
+                                                    styles.modalOption,
+                                                    { borderBottomColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' },
+                                                    pressed && { opacity: 0.7 },
+                                                ]}
+                                            >
+                                                <View style={[styles.modalOptionIcon, { backgroundColor: topicColor + '14' }]}>
+                                                    <MaterialCommunityIcons
+                                                        name={(TOPIC_ICONS[topic] || 'book-open-variant') as any}
+                                                        size={16}
+                                                        color={topicColor}
+                                                    />
+                                                </View>
+                                                <Text style={[styles.modalOptionText, { color: theme.colors.onSurface, flex: 1 }]}>
+                                                    {getTopicLabel(topic)}
+                                                </Text>
+                                                <Text style={[styles.modalOptionCount, { color: theme.colors.onSurfaceVariant }]}>
+                                                    {count}
+                                                </Text>
+                                                {favTopicFilter === topic && (
+                                                    <MaterialCommunityIcons name="check" size={20} color={theme.colors.primary} />
+                                                )}
+                                            </Pressable>
+                                        );
+                                    })}
+                                </ScrollView>
+                            </Pressable>
+                        </Pressable>
+                    </Modal>
+
+                    {favoriteHadiths.length === 0 ? (
+                        <View style={styles.emptyState}>
+                            <MotiView
+                                from={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ type: 'timing', duration: 400 }}
+                            >
+                                <MaterialCommunityIcons name="heart-outline" size={48} color={theme.colors.onSurfaceVariant} />
+                            </MotiView>
+                            <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
+                                No favorites yet. Bookmark hadiths to see them here.
+                            </Text>
+                        </View>
+                    ) : (
+                        <FlatList
+                            data={filteredFavorites}
+                            keyExtractor={h => h.id}
+                            renderItem={renderHadithCard}
+                            contentContainerStyle={styles.listContent}
+                            showsVerticalScrollIndicator={true}
+                        />
+                    )}
+                </SafeAreaView>
+            </WaveBackground>
         );
     }
 
     // ── TOPICS GRID ──
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            {/* Header */}
-            <View style={styles.topHeader}>
-                <Pressable onPress={() => router.back()} style={styles.backBtn}>
-                    <Feather name="arrow-left" size={22} color={theme.colors.onSurface} />
-                </Pressable>
-                <Text style={[styles.screenTitle, { color: theme.colors.onSurface }]}>
-                    Hadith Library
-                </Text>
-            </View>
+        <WaveBackground variant="serene" intensity="medium">
+            <SafeAreaView style={[styles.container, { backgroundColor: 'transparent' }]}>
+                {/* Header */}
+                <View style={styles.topHeader}>
+                    <Pressable onPress={() => router.back()} style={styles.backBtn}>
+                        <Feather name="arrow-left" size={22} color={theme.colors.onSurface} />
+                    </Pressable>
+                    <Text style={[styles.screenTitle, { color: theme.colors.onSurface }]}>
+                        Hadith Library
+                    </Text>
+                </View>
 
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.scrollContent}
-            >
-                {/* Favorites row */}
-                <Pressable
-                    onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        setMode('favorites');
-                    }}
-                    style={({ pressed }) => [
-                        styles.favoritesRow,
-                        {
-                            backgroundColor: theme.colors.surface,
-                            borderColor: theme.colors.outline,
-                            borderWidth: StyleSheet.hairlineWidth,
-                        },
-                        Shadows.sm,
-                        pressed && { opacity: 0.9 },
-                    ]}
+                <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={styles.scrollContent}
                 >
-                    <MaterialCommunityIcons name="heart" size={20} color="#F59E0B" />
-                    <Text style={[styles.favoritesText, { color: theme.colors.onSurface }]}>
-                        Favorites
-                    </Text>
-                    <Text style={[styles.favoritesCount, { color: theme.colors.onSurfaceVariant }]}>
-                        {favoriteHadiths.length}
-                    </Text>
-                    <Feather name="chevron-right" size={18} color={theme.colors.onSurfaceVariant} />
-                </Pressable>
-
-                {/* Pro badge for free users */}
-                {!isPro && (
+                    {/* Favorites row */}
                     <Pressable
-                        onPress={() => router.push('/paywall?reason=hadith-library' as any)}
+                        onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            setMode('favorites');
+                        }}
                         style={({ pressed }) => [
-                            styles.proBanner,
-                            pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                            styles.favoritesRow,
+                            {
+                                backgroundColor: isDark ? theme.colors.surface : '#FDFBFF',
+                                borderColor: isDark ? theme.colors.outline : 'rgba(98,70,234,0.08)',
+                                borderWidth: StyleSheet.hairlineWidth,
+                            },
+                            Shadows.sm,
+                            pressed && { opacity: 0.9 },
                         ]}
                     >
-                        <LinearGradient
-                            colors={['#6246EA', '#4B2FD4']}
-                            style={styles.proBannerGradient}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                        >
-                            <MaterialCommunityIcons name="lock" size={16} color="#F59E0B" />
-                            <Text style={styles.proBannerText}>
-                                Unlock all topics with Pro
-                            </Text>
-                            <Feather name="chevron-right" size={16} color="rgba(255,255,255,0.8)" />
-                        </LinearGradient>
+                        <MaterialCommunityIcons name="heart" size={20} color={theme.colors.primary} />
+                        <Text style={[styles.favoritesText, { color: theme.colors.onSurface }]}>
+                            Favorites
+                        </Text>
+                        <Text style={[styles.favoritesCount, { color: theme.colors.onSurfaceVariant }]}>
+                            {favoriteHadiths.length}
+                        </Text>
+                        <Feather name="chevron-right" size={18} color={theme.colors.onSurfaceVariant} />
                     </Pressable>
-                )}
 
-                {/* Topic grid */}
-                <View style={styles.topicsGrid}>
-                    {HADITH_TOPICS.map((topic, index) => {
-                        const accent = TOPIC_COLORS[topic.id] || theme.colors.primary;
-                        const iconName = TOPIC_ICONS[topic.id] || 'book-open-variant';
-                        return (
-                            <MotiView
-                                key={topic.id}
-                                from={{ opacity: 0, translateY: 12 }}
-                                animate={{ opacity: 1, translateY: 0 }}
-                                transition={{ type: 'spring', damping: 18, delay: index * 40 }}
-                                style={{ width: CARD_WIDTH }}
+                    {/* Pro badge for free users */}
+                    {!isPro && (
+                        <Pressable
+                            onPress={() => router.push('/paywall?reason=hadith-library' as any)}
+                            style={({ pressed }) => [
+                                styles.proBanner,
+                                pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+                            ]}
+                        >
+                            <LinearGradient
+                                colors={['#6246EA', '#4B2FD4']}
+                                style={styles.proBannerGradient}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
                             >
-                                <Pressable
-                                    onPress={() => handleTopicPress(topic)}
-                                    style={({ pressed }) => [
-                                        styles.topicCard,
-                                        {
-                                            backgroundColor: theme.colors.surface,
-                                            borderColor: theme.colors.outline,
-                                            borderWidth: StyleSheet.hairlineWidth,
-                                        },
-                                        Shadows.sm,
-                                        pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
-                                    ]}
-                                >
-                                    {/* Colored accent strip at top */}
-                                    <View style={[styles.topicAccentStrip, { backgroundColor: accent }]} />
+                                <MaterialCommunityIcons name="lock" size={16} color="#F59E0B" />
+                                <Text style={styles.proBannerText}>
+                                    Unlock all topics with Pro
+                                </Text>
+                                <Feather name="chevron-right" size={16} color="rgba(255,255,255,0.8)" />
+                            </LinearGradient>
+                        </Pressable>
+                    )}
 
-                                    <View style={[styles.topicIconContainer, { backgroundColor: accent + '15' }]}>
-                                        <MaterialCommunityIcons
-                                            name={iconName as any}
-                                            size={24}
-                                            color={accent}
-                                        />
-                                    </View>
-                                    <Text style={[styles.topicName, { color: theme.colors.onSurface }]} numberOfLines={2}>
-                                        {topic.name}
-                                    </Text>
-                                    <Text style={[styles.topicCount, { color: theme.colors.onSurfaceVariant }]}>
-                                        {topic.hadiths.length} hadiths
-                                    </Text>
-                                    {!isPro && (
-                                        <View style={[styles.lockBadge, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)' }]}>
-                                            <Feather name="lock" size={10} color={theme.colors.onSurfaceVariant} />
+                    {/* Topic grid */}
+                    <View style={styles.topicsGrid}>
+                        {HADITH_TOPICS.map((topic, index) => {
+                            const accent = TOPIC_COLORS[topic.id] || theme.colors.primary;
+                            const iconName = TOPIC_ICONS[topic.id] || 'book-open-variant';
+                            return (
+                                <MotiView
+                                    key={topic.id}
+                                    from={{ opacity: 0, translateY: 12 }}
+                                    animate={{ opacity: 1, translateY: 0 }}
+                                    transition={{ type: 'spring', damping: 18, delay: index * 40 }}
+                                    style={{ width: CARD_WIDTH }}
+                                >
+                                    <Pressable
+                                        onPress={() => handleTopicPress(topic)}
+                                        style={({ pressed }) => [
+                                            styles.topicCard,
+                                            {
+                                                backgroundColor: isDark ? theme.colors.surface : '#FDFBFF',
+                                                borderColor: isDark ? theme.colors.outline : 'rgba(98,70,234,0.08)',
+                                                borderWidth: StyleSheet.hairlineWidth,
+                                            },
+                                            Shadows.sm,
+                                            pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
+                                        ]}
+                                    >
+                                        {/* Colored accent strip at top */}
+                                        <View style={[styles.topicAccentStrip, { backgroundColor: accent }]} />
+
+                                        <View style={[styles.topicIconContainer, { backgroundColor: accent + '15' }]}>
+                                            <MaterialCommunityIcons
+                                                name={iconName as any}
+                                                size={24}
+                                                color={accent}
+                                            />
                                         </View>
-                                    )}
-                                </Pressable>
-                            </MotiView>
-                        );
-                    })}
-                </View>
-            </ScrollView>
-        </SafeAreaView>
+                                        <Text style={[styles.topicName, { color: theme.colors.onSurface }]} numberOfLines={1}>
+                                            {topic.name}
+                                        </Text>
+                                        <Text style={[styles.topicCount, { color: theme.colors.onSurfaceVariant }]}>
+                                            {topic.hadiths.length} hadiths
+                                        </Text>
+                                        {!isPro && (
+                                            <View style={[styles.lockBadge, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)' }]}>
+                                                <Feather name="lock" size={10} color={theme.colors.onSurfaceVariant} />
+                                            </View>
+                                        )}
+                                    </Pressable>
+                                </MotiView>
+                            );
+                        })}
+                    </View>
+                </ScrollView>
+            </SafeAreaView>
+        </WaveBackground>
     );
 }
 
@@ -438,9 +617,6 @@ const styles = StyleSheet.create({
     },
     backBtn: {
         padding: Spacing.xs,
-    },
-    actionBtn: {
-        margin: 0,
     },
     scrollContent: {
         paddingHorizontal: Spacing.md,
@@ -498,7 +674,7 @@ const styles = StyleSheet.create({
         borderRadius: BorderRadius.lg,
         position: 'relative',
         overflow: 'hidden',
-        height: 140,
+        height: 150,
     },
     topicAccentStrip: {
         position: 'absolute',
@@ -519,11 +695,12 @@ const styles = StyleSheet.create({
     },
     topicName: {
         ...Typography.titleMedium,
-        fontSize: 14,
+        fontSize: 16,
         marginBottom: 4,
     },
     topicCount: {
         ...Typography.caption,
+        fontSize: 13,
     },
     lockBadge: {
         position: 'absolute',
@@ -554,43 +731,51 @@ const styles = StyleSheet.create({
         ...Typography.caption,
         marginTop: 2,
     },
-    detailAccent: {
-        width: 4,
-        height: 36,
-        borderRadius: 2,
-    },
-
-    // Hadith row
+    // Hadith card (vertical full-width layout)
     listContent: {
         paddingHorizontal: Spacing.md,
         paddingBottom: Spacing.xxl,
-        gap: Spacing.sm,
+        gap: Spacing.md,
     },
-    hadithRow: {
+    hadithCard: {
+        borderRadius: BorderRadius.lg,
+        padding: Spacing.lg,
+        paddingBottom: 0,
+        overflow: 'hidden',
+    },
+    topicPill: {
         flexDirection: 'row',
-        borderRadius: BorderRadius.md,
-        padding: Spacing.md,
+        alignItems: 'center',
+        alignSelf: 'flex-start',
+        gap: 4,
+        paddingHorizontal: Spacing.sm,
+        paddingVertical: 3,
+        borderRadius: BorderRadius.full,
+        marginBottom: Spacing.sm,
     },
-    hadithContent: {
-        flex: 1,
+    topicPillText: {
+        fontSize: 11,
+        fontWeight: '600',
+        letterSpacing: 0.3,
     },
     hadithArabic: {
-        fontSize: 18,
-        lineHeight: 36,
+        fontSize: 20,
+        lineHeight: 38,
         textAlign: 'right',
         fontWeight: '400',
-        marginBottom: Spacing.xs,
+        marginBottom: Spacing.sm,
     },
     hadithEnglish: {
         ...Typography.bodyMedium,
         fontStyle: 'italic',
-        marginBottom: Spacing.xs,
+        lineHeight: 22,
+        marginBottom: Spacing.sm,
     },
     hadithReflection: {
-        borderRadius: BorderRadius.sm,
-        paddingHorizontal: Spacing.sm,
-        paddingVertical: Spacing.xs,
-        marginBottom: Spacing.xs,
+        borderRadius: BorderRadius.md,
+        paddingHorizontal: Spacing.md,
+        paddingVertical: Spacing.sm,
+        marginBottom: Spacing.sm,
     },
     hadithReflectionText: {
         ...Typography.labelMedium,
@@ -598,39 +783,90 @@ const styles = StyleSheet.create({
     },
     hadithSource: {
         ...Typography.caption,
+        marginBottom: Spacing.md,
     },
-    hadithActions: {
+
+    // Bottom action bar
+    actionBar: {
+        flexDirection: 'row',
+        marginTop: Spacing.xs,
+        paddingVertical: Spacing.sm + 2,
+        borderRadius: BorderRadius.sm,
+    },
+    actionButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        flex: 1,
         justifyContent: 'center',
+    },
+    actionLabel: {
+        fontSize: 13,
+        fontWeight: '500',
+    },
+
+    // Filter dropdown button (in header)
+    filterButton: {
+        flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
-        marginLeft: Spacing.xs,
+        paddingHorizontal: Spacing.sm + 2,
+        paddingVertical: 6,
+        borderRadius: BorderRadius.full,
+        maxWidth: 160,
     },
-    setTodayBtn: {
-        borderWidth: 1,
-        borderRadius: BorderRadius.sm,
-        paddingHorizontal: Spacing.sm,
-        paddingVertical: 4,
-    },
-    setTodayText: {
-        ...Typography.caption,
+    filterButtonText: {
+        fontSize: 12,
         fontWeight: '600',
     },
 
-    // Filter chips
-    filterChips: {
+    // Filter bottom sheet modal
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        justifyContent: 'flex-end',
+    },
+    modalSheet: {
+        borderTopLeftRadius: BorderRadius.xl,
+        borderTopRightRadius: BorderRadius.xl,
+        paddingBottom: Spacing.xxl,
+    },
+    modalHandle: {
+        alignItems: 'center',
+        paddingVertical: Spacing.sm + 2,
+    },
+    modalHandleBar: {
+        width: 36,
+        height: 4,
+        borderRadius: 2,
+    },
+    modalTitle: {
+        ...Typography.titleMedium,
+        paddingHorizontal: Spacing.lg,
+        marginBottom: Spacing.md,
+    },
+    modalOption: {
         flexDirection: 'row',
-        gap: Spacing.xs,
-        paddingHorizontal: Spacing.md,
-        paddingBottom: Spacing.md,
+        alignItems: 'center',
+        gap: Spacing.sm,
+        paddingHorizontal: Spacing.lg,
+        paddingVertical: 14,
+        borderBottomWidth: StyleSheet.hairlineWidth,
     },
-    filterChip: {
-        paddingHorizontal: Spacing.md,
-        paddingVertical: 6,
-        borderRadius: BorderRadius.full,
+    modalOptionIcon: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    filterChipText: {
-        ...Typography.labelMedium,
-        fontWeight: '600',
+    modalOptionText: {
+        ...Typography.bodyLarge,
+        flex: 1,
+    },
+    modalOptionCount: {
+        ...Typography.caption,
+        marginRight: Spacing.xs,
     },
 
     // Empty state

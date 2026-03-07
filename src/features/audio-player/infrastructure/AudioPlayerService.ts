@@ -27,6 +27,8 @@ export class AudioPlayerService {
     private listeners: ((status: PlaybackStatus) => void)[] = [];
     private isSetup = false;
     private setupPromise: Promise<void> | null = null;
+    /** Debounce timer for PlaybackState — suppresses transient Loading/Buffering flicker */
+    private playbackStateTimer: ReturnType<typeof setTimeout> | null = null;
 
     /** Build CDN URL for a verse */
     private buildUrl(surah: number, verse: number, cdnFolder: string): string {
@@ -47,6 +49,8 @@ export class AudioPlayerService {
                     minBuffer: 30,
                     maxBuffer: 60,
                     backBuffer: 10,
+                    // Start playback as soon as 0.5s is buffered — reduces inter-track gap
+                    playBuffer: 0.5,
                 });
 
                 await TrackPlayer.updateOptions({
@@ -99,29 +103,67 @@ export class AudioPlayerService {
         });
 
         // Playback state changed (playing, paused, buffering, etc.)
+        // Debounced: during track transitions RNTP fires rapid
+        // Playing → Loading → Buffering → Playing. We suppress the
+        // intermediate non-playing states to prevent UI flicker.
         TrackPlayer.addEventListener(Event.PlaybackState, async (event) => {
             const state = event.state;
             const isPlaying = state === State.Playing;
             const isBuffering = state === State.Buffering || state === State.Loading;
 
-            try {
-                const progress = await TrackPlayer.getProgress();
-                this.notifyListeners({
-                    isPlaying,
-                    isBuffering,
-                    positionMillis: Math.round((progress.position || 0) * 1000),
-                    durationMillis: Math.round((progress.duration || 0) * 1000),
-                    didJustFinish: false,
-                });
-            } catch {
-                this.notifyListeners({
-                    isPlaying,
-                    isBuffering,
-                    positionMillis: 0,
-                    durationMillis: 0,
-                    didJustFinish: false,
-                });
+            // If transitioning TO playing, fire immediately (cancel any pending "paused" notification)
+            if (isPlaying) {
+                if (this.playbackStateTimer) {
+                    clearTimeout(this.playbackStateTimer);
+                    this.playbackStateTimer = null;
+                }
+                try {
+                    const progress = await TrackPlayer.getProgress();
+                    this.notifyListeners({
+                        isPlaying: true,
+                        isBuffering: false,
+                        positionMillis: Math.round((progress.position || 0) * 1000),
+                        durationMillis: Math.round((progress.duration || 0) * 1000),
+                        didJustFinish: false,
+                    });
+                } catch {
+                    this.notifyListeners({
+                        isPlaying: true,
+                        isBuffering: false,
+                        positionMillis: 0,
+                        durationMillis: 0,
+                        didJustFinish: false,
+                    });
+                }
+                return;
             }
+
+            // For non-playing states (Loading, Buffering, Paused, Stopped),
+            // delay notification by 250ms so transient track-change states are swallowed
+            if (this.playbackStateTimer) {
+                clearTimeout(this.playbackStateTimer);
+            }
+            this.playbackStateTimer = setTimeout(async () => {
+                this.playbackStateTimer = null;
+                try {
+                    const progress = await TrackPlayer.getProgress();
+                    this.notifyListeners({
+                        isPlaying: false,
+                        isBuffering,
+                        positionMillis: Math.round((progress.position || 0) * 1000),
+                        durationMillis: Math.round((progress.duration || 0) * 1000),
+                        didJustFinish: false,
+                    });
+                } catch {
+                    this.notifyListeners({
+                        isPlaying: false,
+                        isBuffering,
+                        positionMillis: 0,
+                        durationMillis: 0,
+                        didJustFinish: false,
+                    });
+                }
+            }, 250);
         });
 
         // Queue ended — all tracks finished playing

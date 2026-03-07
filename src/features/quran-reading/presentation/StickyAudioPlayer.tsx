@@ -44,7 +44,7 @@ export const StickyAudioPlayer = ({
             transition={{ type: 'spring', damping: 15 }}
             style={[
                 styles.wrapper,
-                { bottom: Math.max(Spacing.xl, insets.bottom + Spacing.sm) }
+                { bottom: insets.bottom + 8 }
             ]}
         >
             <BlurView

@@ -1770,6 +1770,28 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - react-native-webview (13.16.1):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - React-NativeModulesApple (0.81.5):
     - hermes-engine
     - React-callinvoker
@@ -2462,6 +2484,28 @@ PODS:
     - libwebp (~> 1.0)
     - SDWebImage/Core (~> 5.17)
   - SwiftAudioEx (1.1.0)
+  - tentap (1.0.1):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - WidgetBridge (1.0.0):
     - ExpoModulesCore
   - Yoga (0.0.0)
@@ -2539,6 +2583,7 @@ DEPENDENCIES:
   - "react-native-slider (from `../node_modules/@react-native-community/slider`)"
   - react-native-track-player (from `../node_modules/react-native-track-player`)
   - react-native-view-shot (from `../node_modules/react-native-view-shot`)
+  - react-native-webview (from `../node_modules/react-native-webview`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-oscompat (from `../node_modules/react-native/ReactCommon/oscompat`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
@@ -2579,6 +2624,7 @@ DEPENDENCIES:
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNSVG (from `../node_modules/react-native-svg`)
   - RNWorklets (from `../node_modules/react-native-worklets`)
+  - "tentap (from `../node_modules/@10play/tentap-editor`)"
   - WidgetBridge (from `../modules/widget-bridge/ios`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
@@ -2746,6 +2792,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-track-player"
   react-native-view-shot:
     :path: "../node_modules/react-native-view-shot"
+  react-native-webview:
+    :path: "../node_modules/react-native-webview"
   React-NativeModulesApple:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios"
   React-oscompat:
@@ -2826,6 +2874,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-svg"
   RNWorklets:
     :path: "../node_modules/react-native-worklets"
+  tentap:
+    :path: "../node_modules/@10play/tentap-editor"
   WidgetBridge:
     :path: "../modules/widget-bridge/ios"
   Yoga:
@@ -2914,6 +2964,7 @@ SPEC CHECKSUMS:
   react-native-slider: 8c562583722c396a3682f451f0b6e68e351ec3b9
   react-native-track-player: dd56f9948e03756a217c75e0a61aa04aab65b5a1
   react-native-view-shot: fb3c0774edb448f42705491802a455beac1502a2
+  react-native-webview: 0ed52ddb2eafc64a502871218440b8b4d37961c3
   React-NativeModulesApple: 8969913947d5b576de4ed371a939455a8daf28aa
   React-oscompat: ce47230ed20185e91de62d8c6d139ae61763d09c
   React-perflogger: 02b010e665772c7dcb859d85d44c1bfc5ac7c0e4
@@ -2960,6 +3011,7 @@ SPEC CHECKSUMS:
   SDWebImageSVGCoder: 15a300a97ec1c8ac958f009c02220ac0402e936c
   SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
   SwiftAudioEx: f6aa653770f3a0d3851edaf8d834a30aee4a7646
+  tentap: 60c7b42c6b4c3e91ebccb9917a0217a8009b8112
   WidgetBridge: 12dad4acffcd237bcc8ca1dbcb890af40b80ae48
   Yoga: 5934998fbeaef7845dbf698f698518695ab4cd1a
 

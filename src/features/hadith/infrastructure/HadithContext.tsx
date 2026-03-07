@@ -15,6 +15,15 @@ const HISTORY_KEY = 'daily_hadith_history';
 const REFRESH_COUNT_KEY = 'daily_hadith_refresh_count';
 const FREE_REFRESH_LIMIT = 3;
 
+/** Clear all hadith data (used on logout/login to prevent leaking between accounts) */
+export async function clearAllHadithData(): Promise<void> {
+    try {
+        await AsyncStorage.multiRemove([STORAGE_KEY, HISTORY_KEY, REFRESH_COUNT_KEY]);
+    } catch (e) {
+        if (__DEV__) console.warn('[HadithContext] clearAllHadithData failed:', e);
+    }
+}
+
 interface HadithContextType {
     hadith: CuratedHadith | null;
     loading: boolean;

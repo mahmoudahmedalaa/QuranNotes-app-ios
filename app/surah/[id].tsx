@@ -76,6 +76,8 @@ export default function SurahDetail() {
 
     // ── Reading position state ──
     const lastVisibleVerseRef = useRef<number>(1);
+    // Track the currently playing verse so we save audio position, not scroll position
+    const playingVerseNumRef = useRef<number | null>(null);
     const autoScrollEnabledRef = useRef(true);
     const [savedPosition, setSavedPosition] = useState<ReadingPosition | null>(null);
     const [showResumeBanner, setShowResumeBanner] = useState(false);
@@ -95,6 +97,15 @@ export default function SurahDetail() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id, settings.translationEdition, settings.showTransliteration]);
 
+    // ── Keep playingVerseNumRef in sync so save logic uses audio position ──
+    useEffect(() => {
+        if (playingVerse && playingVerse.surah === Number(id)) {
+            playingVerseNumRef.current = playingVerse.verse;
+        } else {
+            playingVerseNumRef.current = null;
+        }
+    }, [playingVerse, id]);
+
     // ── Compute whether we need boosted rendering for a high verse target ──
     const hasHighVerseTarget = useMemo(() => {
         if (!surah?.verses) return false;
@@ -102,6 +113,13 @@ export default function SurahDetail() {
         if (pageParam && !verseParam) return !!Number(pageParam);
         return false;
     }, [pageParam, verseParam, surah]);
+
+    // ── Compute initial scroll index so FlatList starts at the right verse ──
+    const initialScrollIndex = useMemo(() => {
+        if (!verseParam || !surah?.verses) return undefined;
+        const idx = surah.verses.findIndex((v: Verse) => v.number === Number(verseParam));
+        return idx >= 0 ? idx : undefined;
+    }, [verseParam, surah]);
 
     // ── Load saved reading position on mount ──
     // Skip when navigating to a specific verse/page (e.g. from Khatma)
@@ -128,14 +146,16 @@ export default function SurahDetail() {
 
     // ── Auto-save reading position on exit ──
     useEffect(() => {
-        const surahRef = surah;
+        const surahRefLocal = surah;
         return () => {
             // Save position when unmounting (leaving screen)
-            if (surahRef && lastVisibleVerseRef.current > 1) {
+            // Prefer the playing verse over scroll position
+            const verseToSave = playingVerseNumRef.current ?? lastVisibleVerseRef.current;
+            if (surahRefLocal && verseToSave > 1) {
                 ReadingPositionService.save(
-                    surahRef.number,
-                    lastVisibleVerseRef.current,
-                    surahRef.englishName
+                    surahRefLocal.number,
+                    verseToSave,
+                    surahRefLocal.englishName
                 );
             }
         };
@@ -145,10 +165,12 @@ export default function SurahDetail() {
     useEffect(() => {
         const subscription = AppState.addEventListener('change', (nextState) => {
             if (nextState === 'background' || nextState === 'inactive') {
-                if (surah && lastVisibleVerseRef.current > 1) {
+                // Prefer the playing verse over scroll position
+                const verseToSave = playingVerseNumRef.current ?? lastVisibleVerseRef.current;
+                if (surah && verseToSave > 1) {
                     ReadingPositionService.save(
                         surah.number,
-                        lastVisibleVerseRef.current,
+                        verseToSave,
                         surah.englishName
                     );
                 }
@@ -191,21 +213,40 @@ export default function SurahDetail() {
     }, [savedPosition, surah, playFromVerse, stop, scrollToVerse]);
 
     // ── Scroll-to-bookmark: verse param from Khatma / Continue Reading ──
+    // initialScrollIndex handles positioning immediately.
+    // This effect ONLY handles autoplay and a delayed fine-tune scroll.
+    // We skip the immediate scroll when initialScrollIndex already did the work.
     useEffect(() => {
         if (verseParam && surah?.verses) {
             const verseNum = Number(verseParam);
-            const tryScroll = () => {
+            const tryAction = () => {
                 if (layoutReadyRef.current) {
-                    scrollToVerse(verseNum);
+                    // Fine-tune scroll ONLY after a delay — initialScrollIndex
+                    // already positioned us, so this just adjusts viewPosition.
+                    // Using a delay prevents the visible "jump" from competing scrolls.
+                    setTimeout(() => {
+                        if (flatListRef.current && surah?.verses) {
+                            const index = surah.verses.findIndex((v: Verse) => v.number === verseNum);
+                            if (index >= 0) {
+                                flatListRef.current.scrollToIndex({
+                                    index,
+                                    animated: true,
+                                    viewPosition: 0.3,
+                                });
+                            }
+                        }
+                    }, 500);
+
+                    // Fire autoplay after layout is ready
                     if (autoplay === 'true' && !autoplayTriggeredRef.current) {
                         autoplayTriggeredRef.current = true;
-                        setTimeout(() => playFromVerse(surah, verseNum), 700);
+                        setTimeout(() => playFromVerse(surah, verseNum), 300);
                     }
                 } else {
-                    setTimeout(tryScroll, 200);
+                    setTimeout(tryAction, 100);
                 }
             };
-            setTimeout(tryScroll, 300);
+            tryAction();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [verseParam, surah]);
@@ -525,7 +566,8 @@ export default function SurahDetail() {
                 showsVerticalScrollIndicator={false}
                 windowSize={10}
                 maxToRenderPerBatch={hasHighVerseTarget ? 20 : 8}
-                initialNumToRender={hasHighVerseTarget ? 50 : 15}
+                initialNumToRender={initialScrollIndex !== undefined ? Math.min(Math.max(initialScrollIndex + 10, 30), 100) : (hasHighVerseTarget ? 50 : 15)}
+                {...(initialScrollIndex !== undefined ? { initialScrollIndex } : {})}
                 removeClippedSubviews={true}
                 viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
                 renderItem={({ item, index }: { item: any; index: number }) => (
@@ -555,7 +597,7 @@ export default function SurahDetail() {
                         showTransliteration={settings.showTransliteration}
                     />
                 )}
-                contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 20 }]}
+                contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + (playingVerse ? 200 : 20) }]}
                 ListHeaderComponent={() => {
                     const headerHeight = scrollY.interpolate({
                         inputRange: [-100, 0, 250],
@@ -906,7 +948,7 @@ export default function SurahDetail() {
                         transition={{ type: 'spring', damping: 18 }}
                         style={[
                             styles.returnToAudioContainer,
-                            { bottom: insets.bottom + 80 },
+                            { bottom: insets.bottom + 160 },
                         ]}
                     >
                         <Pressable

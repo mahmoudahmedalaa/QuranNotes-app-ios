@@ -9,6 +9,8 @@ import { useSettings } from '../../src/features/settings/infrastructure/Settings
 import { ReciterPicker } from '../../src/core/components/common/ReciterPicker';
 import { getReciterById } from '../../src/features/audio-player/domain/Reciter';
 import { getEditionById, getAvailableLanguages } from '../../src/core/domain/entities/TranslationEdition';
+import { QURAN_FONT_OPTIONS, getQuranFontOption } from '../../src/core/theme/QuranFonts';
+import type { QuranFontId } from '../../src/core/theme/QuranFonts';
 import {
     Spacing,
     BorderRadius,
@@ -46,6 +48,7 @@ export default function SettingsScreen() {
     const { user, logout, deleteAccount, deleteAccountWithPassword } = useAuth();
     const [reciterPickerVisible, setReciterPickerVisible] = useState(false);
     const [translationPickerExpanded, setTranslationPickerExpanded] = useState(false);
+    const [fontPickerExpanded, setFontPickerExpanded] = useState(false);
 
     // Derived translation data
     const currentEdition = getEditionById(settings.translationEdition);
@@ -519,6 +522,101 @@ export default function SettingsScreen() {
                                             })}
                                         </View>
                                     ))}
+                                </View>
+                            )}
+                        </View>
+
+                        {/* Arabic Font Picker — expandable */}
+                        <View
+                            style={[
+                                styles.expandableCard,
+                                { backgroundColor: theme.colors.surface, marginBottom: Spacing.sm },
+                                Shadows.sm,
+                            ]}>
+                            <Pressable
+                                style={styles.expandableHeader}
+                                onPress={() => {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                                    setFontPickerExpanded(!fontPickerExpanded);
+                                }}>
+                                <View
+                                    style={[
+                                        styles.iconContainer,
+                                        { backgroundColor: theme.colors.tertiaryContainer },
+                                    ]}>
+                                    <Ionicons
+                                        name="text-outline"
+                                        size={18}
+                                        color={theme.colors.tertiary}
+                                    />
+                                </View>
+                                <View style={styles.cardContent}>
+                                    <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
+                                        Arabic Font
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            styles.cardSubtitle,
+                                            { color: theme.colors.onSurfaceVariant },
+                                        ]}>
+                                        {getQuranFontOption(settings.quranFont).name} · {getQuranFontOption(settings.quranFont).description}
+                                    </Text>
+                                </View>
+                                <Ionicons
+                                    name={fontPickerExpanded ? 'chevron-up' : 'chevron-down'}
+                                    size={20}
+                                    color={theme.colors.onSurfaceVariant}
+                                />
+                            </Pressable>
+
+                            {fontPickerExpanded && (
+                                <View style={styles.expandedContent}>
+                                    <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant }]} />
+                                    {QURAN_FONT_OPTIONS.map((font) => {
+                                        const isActive = settings.quranFont === font.id;
+                                        return (
+                                            <Pressable
+                                                key={font.id}
+                                                style={({ pressed }) => [
+                                                    styles.prayerRow,
+                                                    isActive && { backgroundColor: theme.colors.primaryContainer },
+                                                    pressed && { opacity: 0.7 },
+                                                ]}
+                                                onPress={() => {
+                                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                                    updateSettings({ quranFont: font.id as QuranFontId });
+                                                    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                                                    setFontPickerExpanded(false);
+                                                }}>
+                                                <View style={{ flex: 1 }}>
+                                                    <Text style={[styles.prayerLabel, { color: theme.colors.onSurface }]}>
+                                                        {font.name}
+                                                    </Text>
+                                                    <Text style={{ fontSize: 11, color: theme.colors.onSurfaceVariant }}>
+                                                        {font.description}
+                                                    </Text>
+                                                </View>
+                                                <Text
+                                                    style={{
+                                                        fontFamily: font.fontFamily,
+                                                        fontSize: 18,
+                                                        color: theme.colors.onSurface,
+                                                        writingDirection: 'rtl',
+                                                    }}>
+                                                    بِسْمِ ٱللَّهِ
+                                                </Text>
+                                                {isActive && (
+                                                    <Ionicons
+                                                        name="checkmark-circle"
+                                                        size={20}
+                                                        color={theme.colors.primary}
+                                                        style={{ marginLeft: Spacing.xs }}
+                                                    />
+                                                )}
+                                            </Pressable>
+                                        );
+                                    })}
                                 </View>
                             )}
                         </View>

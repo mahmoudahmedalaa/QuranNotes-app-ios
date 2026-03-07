@@ -36,6 +36,8 @@ import { MoodType, MoodVerse, MOOD_CONFIGS } from '../../../core/domain/entities
 import { useAudio } from '../../audio-player/infrastructure/AudioContext';
 import { useQuran } from '../../../core/hooks/useQuran';
 import { Spacing, BorderRadius, Shadows, Typography, Springs } from '../../../core/theme/DesignSystem';
+import { getQuranFontFamily } from '../../../core/theme/QuranFonts';
+import { useSettings } from '../../settings/infrastructure/SettingsContext';
 
 // ── Layout constants (avoids magic numbers throughout) ──────────────────
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -131,6 +133,8 @@ export default function VerseRecommendationSheet({
     const theme = useTheme();
     const insets = useSafeAreaInsets();
     const router = useRouter();
+    const { settings } = useSettings();
+    const quranFontFamily = getQuranFontFamily(settings.quranFont);
     const { playVerse, pause, isPlaying, playingVerse, stop } = useAudio();
     const { loadSurah } = useQuran();
     const [loadingVerse, setLoadingVerse] = useState<string | null>(null);
@@ -406,7 +410,7 @@ export default function VerseRecommendationSheet({
                                                 Shadows.sm,
                                             ]}>
                                                 {/* Arabic text */}
-                                                <Text style={[styles.arabicText, { color: theme.colors.onSurface }]}>
+                                                <Text style={[styles.arabicText, { color: theme.colors.onSurface, fontFamily: quranFontFamily }]}>
                                                     {displayArabic}
                                                 </Text>
 
@@ -592,7 +596,6 @@ const styles = StyleSheet.create({
         fontSize: ARABIC_FONT_SIZE,
         lineHeight: ARABIC_LINE_HEIGHT,
         textAlign: 'right',
-        fontFamily: 'System',
         marginBottom: Spacing.md,
     },
     dividerRow: {

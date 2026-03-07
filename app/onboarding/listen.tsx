@@ -151,7 +151,7 @@ export default function OnboardingListenExplore() {
     const handleContinue = async () => {
         await stopSound();
         goToStep(STEP + 1);
-        router.push('/onboarding/record');
+        router.push('/onboarding/quran-font');
     };
 
     const handleSkip = async () => {

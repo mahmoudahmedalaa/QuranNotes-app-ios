@@ -4,6 +4,8 @@ import { IconButton, useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
 import { Verse } from '../../../core/domain/entities/Quran';
 import { Spacing, BorderRadius, Shadows } from '../../../core/theme/DesignSystem';
+import { getQuranFontFamily } from '../../../core/theme/QuranFonts';
+import { useSettings } from '../../settings/infrastructure/SettingsContext';
 import * as Haptics from 'expo-haptics';
 
 const ACCENT = {
@@ -47,6 +49,8 @@ export const VerseItem = ({
     showTransliteration,
 }: VerseItemProps) => {
     const theme = useTheme();
+    const { settings } = useSettings();
+    const quranFontFamily = getQuranFontFamily(settings.quranFont);
     const [isPeeking, setIsPeeking] = React.useState(false);
     const showTranslit = showTransliteration && verse.transliteration;
 
@@ -202,7 +206,7 @@ export const VerseItem = ({
                             scale: isStudyMode && !isPeeking ? 0.98 : 1,
                         }}
                         transition={{ type: 'timing', duration: 300 }}>
-                        <Text style={[styles.arabicText, { color: theme.colors.onSurface }]}>
+                        <Text style={[styles.arabicText, { color: theme.colors.onSurface, fontFamily: quranFontFamily }]}>
                             {verse.text}
                         </Text>
                     </MotiView>

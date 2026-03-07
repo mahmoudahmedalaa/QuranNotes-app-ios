@@ -23,26 +23,30 @@ import { toastConfig } from '../src/core/components/feedback/toastConfig';
 import { initRamadanDates } from '../src/core/utils/ramadanUtils';
 import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
+import { useFonts } from 'expo-font';
+import { QURAN_FONTS } from '../src/core/theme/QuranFonts';
 
 // Keep native splash visible until providers are ready — prevents the
 // blank lavender + spinner flash between native splash and React UI.
 SplashScreen.preventAutoHideAsync();
 
 /** Hides the native splash once auth + onboarding data are resolved. */
-function SplashHider() {
+function SplashHider({ fontsLoaded }: { fontsLoaded: boolean }) {
     const { loading: authLoading } = useAuth();
     const { loading: onboardingLoading } = useOnboarding();
 
     useEffect(() => {
-        if (!authLoading && !onboardingLoading) {
+        if (!authLoading && !onboardingLoading && fontsLoaded) {
             SplashScreen.hideAsync();
         }
-    }, [authLoading, onboardingLoading]);
+    }, [authLoading, onboardingLoading, fontsLoaded]);
 
     return null;
 }
 
 export default function RootLayout() {
+    const [fontsLoaded] = useFonts(QURAN_FONTS);
+
     // Fetch + listen for Ramadan dates from Firestore (real-time)
     useEffect(() => {
         let unsubscribe: (() => void) | undefined;
@@ -71,7 +75,7 @@ export default function RootLayout() {
                                                         <NoteProvider>
                                                             <HadithProvider>
                                                                 <FolderProvider>
-                                                                    <SplashHider />
+                                                                    <SplashHider fontsLoaded={fontsLoaded} />
                                                                     <NotificationScheduler />
                                                                     <StatusBar style="dark" />
                                                                     <Stack

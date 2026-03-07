@@ -12,6 +12,8 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QURAN_TOPICS, TopicVerse } from '../domain/QuranTopics';
 import { Spacing, BorderRadius, Shadows, Typography } from '../../../core/theme/DesignSystem';
+import { getQuranFontFamily } from '../../../core/theme/QuranFonts';
+import { useSettings } from '../../settings/infrastructure/SettingsContext';
 import * as Haptics from 'expo-haptics';
 import { WidgetBridge } from '../../../../modules/widget-bridge/src';
 import ViewShot from 'react-native-view-shot';
@@ -89,6 +91,8 @@ function todayKey(): string {
 export const DailyVerseCard: React.FC = () => {
     const theme = useTheme();
     const router = useRouter();
+    const { settings } = useSettings();
+    const quranFontFamily = getQuranFontFamily(settings.quranFont);
     const [verse, setVerse] = useState<TopicVerse | null>(null);
     const [loading, setLoading] = useState(true);
     const [expanded, setExpanded] = useState(true);
@@ -239,7 +243,7 @@ export const DailyVerseCard: React.FC = () => {
                         {/* Header — always visible */}
                         <View style={styles.cardHeader}>
                             <View style={styles.labelRow}>
-                                <Text style={[styles.label, { color: '#D4A853' }]}>✦ Verse of the Day</Text>
+                                <Text style={[styles.label, { color: textColorPrimary }]}>✦ Verse of the Day</Text>
                             </View>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                                 <IconButton
@@ -286,7 +290,7 @@ export const DailyVerseCard: React.FC = () => {
                         {/* Expanded: Arabic + translation + reference */}
                         {expanded && (
                             <>
-                                <Text style={[styles.arabicText, { color: textColorPrimary }]}>
+                                <Text style={[styles.arabicText, { color: textColorPrimary, fontFamily: quranFontFamily }]}>
                                     {verse.arabicSnippet}
                                 </Text>
                                 <Text style={[styles.translationText, { color: textColorSecondary }]}>
@@ -358,7 +362,6 @@ const styles = StyleSheet.create({
         fontSize: 22,
         lineHeight: 44,
         textAlign: 'right',
-        fontWeight: '400',
         marginBottom: Spacing.md,
     },
     translationText: {

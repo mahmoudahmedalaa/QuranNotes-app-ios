@@ -109,13 +109,53 @@ class RevenueCatService {
     }
 
     async getCustomerInfo(): Promise<CustomerInfo> {
+        if (!this.isInitialized) {
+            console.warn('[RevenueCat] Not initialized, attempting to initialize before getCustomerInfo...');
+            await this.initialize();
+        }
         return await Purchases.getCustomerInfo();
     }
 
+    /**
+     * Sync RevenueCat user identity with app auth state.
+     * Must be called on every login/signup so entitlements are user-scoped.
+     */
+    async loginUser(appUserId: string): Promise<CustomerInfo | null> {
+        if (!this.isInitialized) {
+            await this.initialize();
+        }
+        try {
+            const { customerInfo } = await Purchases.logIn(appUserId);
+            if (__DEV__) console.log('[RevenueCat] logIn success for:', appUserId, 'isPro:', this.isPro(customerInfo));
+            return customerInfo;
+        } catch (e) {
+            console.warn('[RevenueCat] logIn error:', e);
+            return null;
+        }
+    }
+
+    /**
+     * Reset RevenueCat to anonymous user. Must be called on sign-out
+     * to prevent entitlement leaking to the next account.
+     */
+    async logoutUser(): Promise<void> {
+        if (!this.isInitialized) return;
+        try {
+            const customerInfo = await Purchases.logOut();
+            if (__DEV__) console.log('[RevenueCat] logOut success, isPro:', this.isPro(customerInfo));
+        } catch (e) {
+            console.warn('[RevenueCat] logOut error:', e);
+        }
+    }
+
     isPro(customerInfo: CustomerInfo): boolean {
-        // Replace 'pro_access' with your actual entitlement identifier from RevenueCat dashboard
         const entitlement = customerInfo.entitlements.active['pro_access'];
-        return !!entitlement;
+        const result = !!entitlement;
+        if (__DEV__) {
+            console.log('[RevenueCat] isPro check:', result,
+                'activeEntitlements:', Object.keys(customerInfo.entitlements.active));
+        }
+        return result;
     }
 }
 

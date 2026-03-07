@@ -12,6 +12,7 @@
     "postinstall": "patch-package"
   },
   "dependencies": {
+    "@10play/tentap-editor": "^1.0.1",
     "@bacons/apple-targets": "^4.0.3",
     "@expo/vector-icons": "^15.0.3",
     "@jamsch/expo-speech-recognition": "^0.2.15",
@@ -40,6 +41,7 @@
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
     "firebase": "^9.23.0",
+    "kfgqpc-uthmanic-script-hafs-regular": "^1.0.0",
     "moti": "^0.29.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -47,9 +49,11 @@
     "react-native-gesture-handler": "~2.28.0",
     "react-native-gifted-charts": "^1.4.73",
     "react-native-paper": "^5.12.3",
+    "react-native-pell-rich-editor": "^1.10.0",
     "react-native-purchases": "^9.7.5",
     "react-native-reanimated": "~4.1.1",
     "react-native-reanimated-carousel": "^4.0.3",
+    "react-native-render-html": "^6.3.4",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
     "react-native-svg": "15.12.1",
@@ -58,6 +62,7 @@
     "react-native-track-player": "^4.1.2",
     "react-native-view-shot": "4.0.3",
     "react-native-web": "^0.21.0",
+    "react-native-webview": "^13.16.1",
     "react-native-worklets": "0.5.1"
   },
   "devDependencies": {

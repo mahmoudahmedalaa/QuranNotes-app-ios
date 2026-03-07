@@ -44,4 +44,13 @@ export class HadithBookmarkService {
         const bookmarks = await this.getBookmarks();
         return bookmarks.length;
     }
+
+    /** Clear all bookmarks (used on logout/login to prevent leaking between accounts) */
+    static async clearAll(): Promise<void> {
+        try {
+            await AsyncStorage.removeItem(BOOKMARKS_KEY);
+        } catch (e) {
+            if (__DEV__) console.warn('[HadithBookmarkService] clearAll failed:', e);
+        }
+    }
 }
