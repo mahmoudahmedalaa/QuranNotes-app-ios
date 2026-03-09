@@ -63,15 +63,14 @@ export default function DashboardScreen() {
     const adhkarPeriod = getAdhkarPeriod();
     const adhkarPct = getCompletionPercentage(adhkarPeriod as any);
 
-    // Adhkar tile gradient & text — sunrise / sunset / night sky
+    // Adhkar tile gradient & text — atmospheric, time-of-day tones (no purple)
     const adhkarGradient: readonly [string, string, ...string[]] = adhkarPeriod === 'morning'
-        ? ['#FEF3C7', '#FDE68A', '#FBC95C', '#F59E0B']      // golden sunrise — warm peach → rich gold
+        ? ['#F0F9FF', '#E0F2FE', '#BAE6FD']      // soft sky blue — calm dawn
         : adhkarPeriod === 'evening'
-            ? ['#FDDCB5', '#F4A983', '#E07B6D', '#C66A8A']   // sunset — peach → coral → rose → dusky mauve
-            : ['#0F172A', '#1E293B', '#1A2540', '#0D1B2A'];  // deep navy → dark slate
-    const adhkarTextColor = adhkarPeriod === 'morning' ? '#92400E'
-        : adhkarPeriod === 'evening' ? '#9A3412'
-            : '#E2E8F0';
+            ? ['#0F172A', '#1E293B', '#334155']   // deep slate navy — restful dusk
+            : ['#020617', '#0F172A', '#1E293B'];  // near-black navy — still night
+    const adhkarTextColor = adhkarPeriod === 'morning' ? '#0C4A6E'  // deep sky on light bg
+        : '#CBD5E1';  // soft slate on dark bg (both evening & night)
 
     // Khatma progress
     const completedCount = completedJuz?.length || 0;

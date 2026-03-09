@@ -7,7 +7,6 @@ import { View, Text, StyleSheet, Pressable, AppState, AppStateStatus } from 'rea
 import { useTheme, IconButton } from 'react-native-paper';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Spacing, BorderRadius, Shadows, Typography } from '../../../core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 import { useHadith } from '../infrastructure/HadithContext';
@@ -18,19 +17,8 @@ import { ShareCardData } from '../../sharing/domain/ShareTemplateTypes';
 
 const FREE_REFRESH_LIMIT = 3;
 
-/** Warm complementary gradients that pair with the sky-themed DailyVerseCard */
-function getHadithGradient(hour: number): readonly [string, string, string] {
-    if (hour >= 4 && hour < 6) return ['#4A1942', '#6B2D5B', '#893168'] as const;   // Fajr: Deep rose plum
-    if (hour >= 6 && hour < 12) return ['#0D5C63', '#14919B', '#45B5AA'] as const;  // Morning: Rich teal/emerald
-    if (hour >= 12 && hour < 16) return ['#7B4B2A', '#B8860B', '#DAA520'] as const; // Dhuhr: Warm gold
-    if (hour >= 16 && hour < 18) return ['#8B4513', '#CD6600', '#E8820C'] as const; // Asr: Deep amber/orange
-    if (hour >= 18 && hour < 20) return ['#4A1259', '#6B2C91', '#8B45A6'] as const; // Maghrib: Rich purple
-    return ['#1A1A3E', '#252566', '#2D2D7B'] as const;                              // Isha: Deep indigo
-}
-
-const TEXT_PRIMARY = '#FFFFFF';
-const TEXT_SECONDARY = 'rgba(255,255,255,0.85)';
-const TEXT_TERTIARY = 'rgba(255,255,255,0.6)';
+/** Warm amber accent — prophetic warmth / sunnah identity */
+const HADITH_ACCENT = '#D97706';
 
 export const DailyHadithCard: React.FC = () => {
     const theme = useTheme();
@@ -42,15 +30,7 @@ export const DailyHadithCard: React.FC = () => {
         toggleBookmark, isBookmarked, bookmarkedIds,
     } = useHadith();
     const [expanded, setExpanded] = useState(false);
-    const [currentHour, setCurrentHour] = useState(new Date().getHours());
     const [showShareSheet, setShowShareSheet] = useState(false);
-
-    useEffect(() => {
-        const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
-            if (nextAppState === 'active') setCurrentHour(new Date().getHours());
-        });
-        return () => subscription.remove();
-    }, []);
 
     const handleRefresh = useCallback(async () => {
         if (!isPro && !canRefresh) {
@@ -100,10 +80,14 @@ export const DailyHadithCard: React.FC = () => {
 
     if (loading || !hadith) return null;
 
-    const gradientColors = getHadithGradient(currentHour);
     const bookmarked = isBookmarked(hadith.id);
     const showRefreshBadge = !isPro && refreshCount > 0;
     const refreshExhausted = !isPro && !canRefresh;
+
+    // Surface-based card: theme-aware text colors
+    const TEXT_PRIMARY = theme.colors.onSurface;
+    const TEXT_SECONDARY = theme.dark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)';
+    const TEXT_TERTIARY = theme.dark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.4)';
 
     return (
         <MotiView
@@ -121,112 +105,110 @@ export const DailyHadithCard: React.FC = () => {
                     pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
                 ]}
             >
-                <View style={[styles.card, Shadows.md]}>
-                    <LinearGradient
-                        colors={gradientColors}
-                        style={[styles.gradientOverlay, { borderRadius: BorderRadius.lg }]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                    />
+                <View style={[styles.card, Shadows.md, { backgroundColor: theme.colors.surface }]}>
+                    {/* Left accent bar — amber for prophetic / sunnah identity */}
+                    <View style={styles.accentBar} />
+                    <View style={styles.cardContent}>
 
-                    {/* Header */}
-                    <View style={styles.cardHeader}>
-                        <View style={styles.labelRow}>
-                            <Text style={[styles.label, { color: 'rgba(255,255,255,0.95)' }]}>
-                                Hadith of the Day
-                            </Text>
-                        </View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-                            {/* Refresh button with limit indicator */}
-                            <View style={styles.refreshContainer}>
+                        {/* Header */}
+                        <View style={styles.cardHeader}>
+                            <View style={styles.labelRow}>
+                                <Text style={[styles.label, { color: HADITH_ACCENT }]}>
+                                    Hadith of the Day
+                                </Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                                {/* Refresh button with limit indicator */}
+                                <View style={styles.refreshContainer}>
+                                    <IconButton
+                                        icon={refreshExhausted ? 'lock' : 'refresh'}
+                                        size={18}
+                                        onPress={handleRefresh}
+                                        iconColor={refreshExhausted ? TEXT_TERTIARY : TEXT_SECONDARY}
+                                        style={styles.actionButton}
+                                    />
+                                    {showRefreshBadge && (
+                                        <View style={styles.refreshBadge}>
+                                            <Text style={styles.refreshBadgeText}>
+                                                {FREE_REFRESH_LIMIT - refreshCount}
+                                            </Text>
+                                        </View>
+                                    )}
+                                </View>
+
+                                {/* Bookmark */}
                                 <IconButton
-                                    icon={refreshExhausted ? 'lock' : 'refresh'}
+                                    icon={bookmarked ? 'heart' : 'heart-outline'}
                                     size={18}
-                                    onPress={handleRefresh}
-                                    iconColor={refreshExhausted ? TEXT_TERTIARY : TEXT_SECONDARY}
+                                    onPress={handleBookmark}
+                                    iconColor={bookmarked ? HADITH_ACCENT : TEXT_SECONDARY}
                                     style={styles.actionButton}
                                 />
-                                {showRefreshBadge && (
-                                    <View style={styles.refreshBadge}>
-                                        <Text style={styles.refreshBadgeText}>
-                                            {FREE_REFRESH_LIMIT - refreshCount}
-                                        </Text>
-                                    </View>
-                                )}
+
+                                {/* Share */}
+                                <IconButton
+                                    icon="share-variant"
+                                    size={18}
+                                    onPress={handleShare}
+                                    iconColor={TEXT_SECONDARY}
+                                    style={styles.actionButton}
+                                />
+
+                                {/* Expand chevron */}
+                                <Feather
+                                    name={expanded ? 'chevron-up' : 'chevron-down'}
+                                    size={20}
+                                    color={TEXT_SECONDARY}
+                                />
                             </View>
-
-                            {/* Bookmark */}
-                            <IconButton
-                                icon={bookmarked ? 'heart' : 'heart-outline'}
-                                size={18}
-                                onPress={handleBookmark}
-                                iconColor={bookmarked ? TEXT_PRIMARY : TEXT_SECONDARY}
-                                style={styles.actionButton}
-                            />
-
-                            {/* Share */}
-                            <IconButton
-                                icon="share-variant"
-                                size={18}
-                                onPress={handleShare}
-                                iconColor={TEXT_SECONDARY}
-                                style={styles.actionButton}
-                            />
-
-                            {/* Expand chevron */}
-                            <Feather
-                                name={expanded ? 'chevron-up' : 'chevron-down'}
-                                size={20}
-                                color={TEXT_SECONDARY}
-                            />
                         </View>
+
+                        {/* Compact: one-line preview */}
+                        {!expanded && (
+                            <View style={styles.compactRow}>
+                                <Feather name="chevron-right" size={16} color={TEXT_TERTIARY} />
+                                <Text style={[styles.compactNarrator, { color: TEXT_SECONDARY }]} numberOfLines={1}>
+                                    {hadith.narrator}
+                                </Text>
+                                <Text style={[styles.compactPreview, { color: TEXT_PRIMARY }]} numberOfLines={1}>
+                                    {hadith.englishText}
+                                </Text>
+                            </View>
+                        )}
+
+                        {/* Expanded: full content */}
+                        {expanded && (
+                            <>
+                                <Text style={[styles.arabicText, { color: TEXT_PRIMARY }]}>
+                                    {hadith.arabicText}
+                                </Text>
+
+                                <Text style={[styles.translationText, { color: TEXT_SECONDARY }]}>
+                                    {hadith.englishText}
+                                </Text>
+
+                                <View style={[styles.reflectionBox, { backgroundColor: theme.dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }]}>
+                                    <Text style={[styles.reflectionText, { color: TEXT_SECONDARY }]}>
+                                        {hadith.reflection}
+                                    </Text>
+                                </View>
+
+                                <View style={styles.sourceRow}>
+                                    <Feather name="book-open" size={14} color={TEXT_TERTIARY} />
+                                    <Text style={[styles.sourceText, { color: TEXT_SECONDARY }]}>
+                                        {hadith.narrator} · {hadith.collection}, #{hadith.reference}
+                                    </Text>
+                                </View>
+
+                                {/* Explore Topics link */}
+                                <Pressable onPress={handleExploreTopics} style={[styles.exploreRow, { backgroundColor: theme.dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)' }]}>
+                                    <MaterialCommunityIcons name="book-open-variant" size={18} color={HADITH_ACCENT} />
+                                    <Text style={[styles.exploreText, { color: TEXT_PRIMARY }]}>Explore Hadith Library</Text>
+                                    <Feather name="chevron-right" size={16} color={TEXT_SECONDARY} />
+                                </Pressable>
+                            </>
+                        )}
                     </View>
-
-                    {/* Compact: one-line preview */}
-                    {!expanded && (
-                        <View style={styles.compactRow}>
-                            <Feather name="chevron-right" size={16} color={TEXT_TERTIARY} />
-                            <Text style={[styles.compactNarrator, { color: TEXT_SECONDARY }]} numberOfLines={1}>
-                                {hadith.narrator}
-                            </Text>
-                            <Text style={[styles.compactPreview, { color: TEXT_PRIMARY }]} numberOfLines={1}>
-                                {hadith.englishText}
-                            </Text>
-                        </View>
-                    )}
-
-                    {/* Expanded: full content */}
-                    {expanded && (
-                        <>
-                            <Text style={[styles.arabicText, { color: TEXT_PRIMARY }]}>
-                                {hadith.arabicText}
-                            </Text>
-
-                            <Text style={[styles.translationText, { color: TEXT_SECONDARY }]}>
-                                {hadith.englishText}
-                            </Text>
-
-                            <View style={styles.reflectionBox}>
-                                <Text style={styles.reflectionText}>
-                                    {hadith.reflection}
-                                </Text>
-                            </View>
-
-                            <View style={styles.sourceRow}>
-                                <Feather name="book-open" size={14} color={TEXT_TERTIARY} />
-                                <Text style={[styles.sourceText, { color: TEXT_SECONDARY }]}>
-                                    {hadith.narrator} · {hadith.collection}, #{hadith.reference}
-                                </Text>
-                            </View>
-
-                            {/* Explore Topics link */}
-                            <Pressable onPress={handleExploreTopics} style={styles.exploreRow}>
-                                <MaterialCommunityIcons name="book-open-variant" size={18} color={TEXT_PRIMARY} />
-                                <Text style={styles.exploreText}>Explore Hadith Library</Text>
-                                <Feather name="chevron-right" size={16} color={TEXT_SECONDARY} />
-                            </Pressable>
-                        </>
-                    )}
                 </View>
             </Pressable>
 
@@ -245,12 +227,19 @@ export const DailyHadithCard: React.FC = () => {
 const styles = StyleSheet.create({
     card: {
         borderRadius: BorderRadius.lg,
-        padding: Spacing.lg,
         overflow: 'hidden',
+        flexDirection: 'row',
     },
-    gradientOverlay: {
-        ...StyleSheet.absoluteFillObject,
-        borderRadius: BorderRadius.lg,
+    accentBar: {
+        width: 4,
+        backgroundColor: HADITH_ACCENT,
+        borderTopLeftRadius: BorderRadius.lg,
+        borderBottomLeftRadius: BorderRadius.lg,
+        marginRight: Spacing.md,
+    },
+    cardContent: {
+        flex: 1,
+        padding: Spacing.lg,
     },
     cardHeader: {
         flexDirection: 'row',
@@ -278,7 +267,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 2,
         right: 2,
-        backgroundColor: 'rgba(255,255,255,0.3)',
+        backgroundColor: HADITH_ACCENT,
         borderRadius: 6,
         width: 14,
         height: 14,
@@ -288,7 +277,7 @@ const styles = StyleSheet.create({
     refreshBadgeText: {
         fontSize: 9,
         fontWeight: '800',
-        color: '#FFFFFF',
+        color: '#000000',
     },
 
     compactRow: {
@@ -320,7 +309,6 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.sm,
     },
     reflectionBox: {
-        backgroundColor: 'rgba(255,255,255,0.12)',
         borderRadius: BorderRadius.md,
         paddingHorizontal: Spacing.md,
         paddingVertical: Spacing.sm,
@@ -329,7 +317,6 @@ const styles = StyleSheet.create({
     reflectionText: {
         fontSize: 13,
         lineHeight: 20,
-        color: 'rgba(255,255,255,0.9)',
         fontWeight: '500',
     },
     sourceRow: {
@@ -348,26 +335,11 @@ const styles = StyleSheet.create({
         marginTop: Spacing.md,
         paddingVertical: 10,
         paddingHorizontal: Spacing.md,
-        backgroundColor: 'rgba(255,255,255,0.15)',
         borderRadius: BorderRadius.md,
     },
     exploreText: {
         fontSize: 15,
         fontWeight: '700',
-        color: TEXT_PRIMARY,
         flex: 1,
-    },
-    watermarkContainer: {
-        marginTop: Spacing.lg,
-        alignItems: 'center',
-        paddingTop: Spacing.md,
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(255,255,255,0.15)',
-    },
-    watermarkText: {
-        ...Typography.labelMedium,
-        color: 'rgba(255,255,255,0.7)',
-        letterSpacing: 2,
-        textTransform: 'uppercase',
     },
 });
