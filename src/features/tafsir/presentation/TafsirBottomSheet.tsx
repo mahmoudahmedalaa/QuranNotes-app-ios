@@ -229,8 +229,6 @@ export const TafsirBottomSheet: React.FC<TafsirBottomSheetProps> = ({
         [data, rawCommentary, source, isPro, router],
     );
 
-    if (!data) return null;
-
     // Truncated scholar text
     const scholarText = rawCommentary || '';
     const scholarTruncated =
@@ -238,280 +236,285 @@ export const TafsirBottomSheet: React.FC<TafsirBottomSheetProps> = ({
             ? scholarText.slice(0, SCHOLAR_TRUNCATE).replace(/\s+\S*$/, '') + '…'
             : scholarText;
 
+    // CRITICAL: Always render the Modal so React Native can properly
+    // dismiss it at the native level. If we return null before the Modal,
+    // the native overlay stays active and blocks all touches.
     return (
         <Modal visible={visible} transparent animationType="none" onRequestClose={onDismiss}>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                style={styles.keyboardView}
-            >
-                <View style={styles.backdrop}>
-                    <Pressable style={styles.backdropPress} onPress={onDismiss} />
+            {!data ? null : (
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                    style={styles.keyboardView}
+                >
+                    <View style={styles.backdrop}>
+                        <Pressable style={styles.backdropPress} onPress={onDismiss} />
 
-                    <MotiView
-                        from={{ translateY: 500 }}
-                        animate={{ translateY: 0 }}
-                        transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-                        style={[
-                            styles.sheet,
-                            { backgroundColor: theme.colors.surface },
-                            Shadows.lg,
-                        ]}
-                    >
-                        {/* Handle */}
-                        <View style={[styles.handle, { backgroundColor: theme.colors.outlineVariant }]} />
-
-                        {/* Header */}
-                        <View style={styles.header}>
-                            <MaterialCommunityIcons name="book-open-variant" size={22} color={GOLD} />
-                            <Text style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
-                                Tafsir
-                            </Text>
-                            <IconButton
-                                icon="close"
-                                size={20}
-                                onPress={onDismiss}
-                                iconColor={theme.colors.onSurfaceVariant}
-                            />
-                        </View>
-
-                        {/* Verse pill */}
-                        <View style={[styles.verseRef, { backgroundColor: `${GOLD}15` }]}>
-                            <Text style={[styles.verseRefText, { color: GOLD }]}>
-                                {data.surahName} · Verse {data.verseNumber}
-                            </Text>
-                        </View>
-
-                        {/* Source picker */}
-                        <SourcePicker selected={source} onSelect={handleSourceChange} />
-
-                        {/* ── Scrollable content ── */}
-                        <ScrollView
-                            style={styles.content}
-                            contentContainerStyle={styles.contentContainer}
-                            showsVerticalScrollIndicator={false}
-                            keyboardShouldPersistTaps="handled"
+                        <MotiView
+                            from={{ translateY: 500 }}
+                            animate={{ translateY: 0 }}
+                            transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+                            style={[
+                                styles.sheet,
+                                { backgroundColor: theme.colors.surface },
+                                Shadows.lg,
+                            ]}
                         >
+                            {/* Handle */}
+                            <View style={[styles.handle, { backgroundColor: theme.colors.outlineVariant }]} />
 
-
-                            {/* ═══ SECTION 1: AI Explanation (PRIMARY) ═══ */}
-                            <View style={[styles.sectionDivider, { borderTopColor: theme.colors.outlineVariant }]}>
-                                <MaterialCommunityIcons
-                                    name="auto-fix"
-                                    size={14}
-                                    color={GOLD}
-                                    style={{ marginRight: 4 }}
+                            {/* Header */}
+                            <View style={styles.header}>
+                                <MaterialCommunityIcons name="book-open-variant" size={22} color={GOLD} />
+                                <Text style={[styles.headerTitle, { color: theme.colors.onSurface }]}>
+                                    Tafsir
+                                </Text>
+                                <IconButton
+                                    icon="close"
+                                    size={20}
+                                    onPress={onDismiss}
+                                    iconColor={theme.colors.onSurfaceVariant}
                                 />
-                                <Text style={[styles.sectionLabel, { color: GOLD }]}>
-                                    Explanation
+                            </View>
+
+                            {/* Verse pill */}
+                            <View style={[styles.verseRef, { backgroundColor: `${GOLD}15` }]}>
+                                <Text style={[styles.verseRefText, { color: GOLD }]}>
+                                    {data.surahName} · Verse {data.verseNumber}
                                 </Text>
                             </View>
 
-                            {aiGated ? (
-                                /* Free-tier limit reached — show paywall prompt */
-                                <View style={styles.gatedContainer}>
+                            {/* Source picker */}
+                            <SourcePicker selected={source} onSelect={handleSourceChange} />
+
+                            {/* ── Scrollable content ── */}
+                            <ScrollView
+                                style={styles.content}
+                                contentContainerStyle={styles.contentContainer}
+                                showsVerticalScrollIndicator={false}
+                                keyboardShouldPersistTaps="handled"
+                            >
+
+
+                                {/* ═══ SECTION 1: AI Explanation (PRIMARY) ═══ */}
+                                <View style={[styles.sectionDivider, { borderTopColor: theme.colors.outlineVariant }]}>
                                     <MaterialCommunityIcons
-                                        name="lock-outline"
-                                        size={28}
+                                        name="auto-fix"
+                                        size={14}
                                         color={GOLD}
+                                        style={{ marginRight: 4 }}
                                     />
-                                    <Text style={[styles.gatedTitle, { color: theme.colors.onSurface }]}>
-                                        You{"'"}ve used all 3 free AI explanations today
-                                    </Text>
-                                    <Text style={[styles.gatedSubtitle, { color: theme.colors.onSurfaceVariant }]}>
-                                        Upgrade to Pro for unlimited AI-powered verse insights
-                                    </Text>
-                                    <Pressable
-                                        onPress={() => router.push('/paywall?reason=ai-tafsir' as any)}
-                                        style={[styles.unlockButton, { backgroundColor: GOLD }]}
-                                    >
-                                        <MaterialCommunityIcons name="auto-fix" size={16} color="#FFFFFF" />
-                                        <Text style={styles.unlockButtonText}>Unlock Unlimited AI</Text>
-                                    </Pressable>
-                                    <Text style={[styles.gatedReset, { color: theme.colors.onSurfaceVariant }]}>
-                                        Resets tomorrow
+                                    <Text style={[styles.sectionLabel, { color: GOLD }]}>
+                                        Explanation
                                     </Text>
                                 </View>
-                            ) : aiLoading ? (
-                                /* Shimmer skeleton while loading */
-                                <View style={styles.skeletonContainer}>
-                                    {[1, 2, 3, 4].map((i) => (
-                                        <MotiView
-                                            key={i}
-                                            from={{ opacity: 0.3 }}
-                                            animate={{ opacity: 0.7 }}
-                                            transition={{
-                                                type: 'timing',
-                                                duration: 800,
-                                                loop: true,
-                                            }}
-                                            style={[
-                                                styles.skeletonLine,
-                                                {
-                                                    backgroundColor: theme.colors.outlineVariant,
-                                                    width: i === 4 ? '60%' : '100%',
-                                                },
-                                            ]}
-                                        />
-                                    ))}
-                                    <Text style={[styles.shimmerLabel, { color: theme.colors.onSurfaceVariant }]}>
-                                        Understanding this verse…
-                                    </Text>
-                                </View>
-                            ) : aiExplanation ? (
-                                /* AI explanation loaded */
-                                <MotiView
-                                    from={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ type: 'timing', duration: 400 }}
-                                >
-                                    <Text style={[styles.explanationText, { color: theme.colors.onSurface }]}>
-                                        {aiExplanation}
-                                    </Text>
-                                    {!isPro && (
-                                        <Text style={[styles.remainingText, { color: theme.colors.onSurfaceVariant }]}>
-                                            {remainingExplanations > 0
-                                                ? `${remainingExplanations} free explanation${remainingExplanations !== 1 ? 's' : ''} remaining today`
-                                                : 'No free explanations remaining today'
-                                            }
-                                        </Text>
-                                    )}
-                                </MotiView>
-                            ) : rawCommentary ? (
-                                /* AI failed — show cleaned raw text as fallback */
-                                <MotiView
-                                    from={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ type: 'timing', duration: 400 }}
-                                >
-                                    {aiFailed && (
-                                        <View style={[styles.fallbackBanner, { backgroundColor: `${GOLD}12` }]}>
-                                            <MaterialCommunityIcons
-                                                name="wifi-off"
-                                                size={14}
-                                                color={theme.colors.onSurfaceVariant}
-                                            />
-                                            <Text style={[styles.fallbackText, { color: theme.colors.onSurfaceVariant }]}>
-                                                AI unavailable — showing scholar{"'"}s commentary
-                                            </Text>
-                                        </View>
-                                    )}
-                                    <Text style={[styles.explanationText, { color: theme.colors.onSurface }]}>
-                                        {rawCommentary.length > SCHOLAR_TRUNCATE
-                                            ? rawCommentary.slice(0, SCHOLAR_TRUNCATE).replace(/\s+\S*$/, '') + '…'
-                                            : rawCommentary}
-                                    </Text>
-                                </MotiView>
-                            ) : (
-                                /* No commentary available at all */
-                                <View style={styles.emptyState}>
-                                    <MaterialCommunityIcons
-                                        name="book-open-page-variant-outline"
-                                        size={28}
-                                        color={theme.colors.onSurfaceVariant}
-                                    />
-                                    <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
-                                        Explanation is not yet available for this verse.
-                                        {'\n'}You can still ask AI about it below.
-                                    </Text>
-                                </View>
-                            )}
 
-                            {/* ═══ SECTION 2: Scholar's Notes (COLLAPSED ACCORDION) ═══ */}
-                            {rawCommentary && aiExplanation && (
-                                <>
-                                    <Pressable
-                                        onPress={() => setScholarOpen(prev => !prev)}
-                                        style={[
-                                            styles.accordionHeader,
-                                            { borderTopColor: theme.colors.outlineVariant },
-                                        ]}
-                                        hitSlop={4}
-                                    >
+                                {aiGated ? (
+                                    /* Free-tier limit reached — show paywall prompt */
+                                    <View style={styles.gatedContainer}>
                                         <MaterialCommunityIcons
-                                            name="book-open-page-variant-outline"
-                                            size={14}
-                                            color={theme.colors.onSurfaceVariant}
-                                            style={{ marginRight: 4 }}
-                                        />
-                                        <Text style={[styles.sectionLabel, { color: theme.colors.onSurfaceVariant, flex: 1 }]}>
-                                            Scholar{"'"}s Notes
-                                        </Text>
-                                        <MaterialCommunityIcons
-                                            name={scholarOpen ? 'chevron-up' : 'chevron-down'}
-                                            size={18}
-                                            color={theme.colors.onSurfaceVariant}
-                                        />
-                                    </Pressable>
-
-                                    {scholarOpen && (
-                                        <MotiView
-                                            from={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            transition={{ type: 'timing', duration: 300 }}
-                                        >
-                                            <Text style={[styles.scholarText, { color: theme.colors.onSurfaceVariant }]}>
-                                                {scholarTruncated}
-                                            </Text>
-                                            {scholarText.length > SCHOLAR_TRUNCATE && (
-                                                <Pressable
-                                                    onPress={() => setScholarExpanded(prev => !prev)}
-                                                    style={styles.readMoreBtn}
-                                                    hitSlop={8}
-                                                >
-                                                    <Text style={[styles.readMoreText, { color: GOLD }]}>
-                                                        {scholarExpanded ? 'Show less' : 'Read more'}
-                                                    </Text>
-                                                </Pressable>
-                                            )}
-                                        </MotiView>
-                                    )}
-                                </>
-                            )}
-
-                            {/* ═══ SECTION 3: AI Q&A Answer ═══ */}
-                            {aiAnswer && (
-                                <>
-                                    <View style={[styles.sectionDivider, { borderTopColor: theme.colors.outlineVariant }]}>
-                                        <MaterialCommunityIcons
-                                            name="chat-processing-outline"
-                                            size={14}
+                                            name="lock-outline"
+                                            size={28}
                                             color={GOLD}
-                                            style={{ marginRight: 4 }}
                                         />
-                                        <Text style={[styles.sectionLabel, { color: GOLD }]}>
-                                            Answer
+                                        <Text style={[styles.gatedTitle, { color: theme.colors.onSurface }]}>
+                                            You{"'"}ve used all 3 free AI explanations today
+                                        </Text>
+                                        <Text style={[styles.gatedSubtitle, { color: theme.colors.onSurfaceVariant }]}>
+                                            Upgrade to Pro for unlimited AI-powered verse insights
+                                        </Text>
+                                        <Pressable
+                                            onPress={() => router.push('/paywall?reason=ai-tafsir' as any)}
+                                            style={[styles.unlockButton, { backgroundColor: GOLD }]}
+                                        >
+                                            <MaterialCommunityIcons name="auto-fix" size={16} color="#FFFFFF" />
+                                            <Text style={styles.unlockButtonText}>Unlock Unlimited AI</Text>
+                                        </Pressable>
+                                        <Text style={[styles.gatedReset, { color: theme.colors.onSurfaceVariant }]}>
+                                            Resets tomorrow
                                         </Text>
                                     </View>
+                                ) : aiLoading ? (
+                                    /* Shimmer skeleton while loading */
+                                    <View style={styles.skeletonContainer}>
+                                        {[1, 2, 3, 4].map((i) => (
+                                            <MotiView
+                                                key={i}
+                                                from={{ opacity: 0.3 }}
+                                                animate={{ opacity: 0.7 }}
+                                                transition={{
+                                                    type: 'timing',
+                                                    duration: 800,
+                                                    loop: true,
+                                                }}
+                                                style={[
+                                                    styles.skeletonLine,
+                                                    {
+                                                        backgroundColor: theme.colors.outlineVariant,
+                                                        width: i === 4 ? '60%' : '100%',
+                                                    },
+                                                ]}
+                                            />
+                                        ))}
+                                        <Text style={[styles.shimmerLabel, { color: theme.colors.onSurfaceVariant }]}>
+                                            Understanding this verse…
+                                        </Text>
+                                    </View>
+                                ) : aiExplanation ? (
+                                    /* AI explanation loaded */
                                     <MotiView
-                                        from={{ opacity: 0, translateY: 10 }}
-                                        animate={{ opacity: 1, translateY: 0 }}
-                                        transition={{ type: 'spring', damping: 20 }}
+                                        from={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ type: 'timing', duration: 400 }}
                                     >
                                         <Text style={[styles.explanationText, { color: theme.colors.onSurface }]}>
-                                            {aiAnswer}
+                                            {aiExplanation}
+                                        </Text>
+                                        {!isPro && (
+                                            <Text style={[styles.remainingText, { color: theme.colors.onSurfaceVariant }]}>
+                                                {remainingExplanations > 0
+                                                    ? `${remainingExplanations} free explanation${remainingExplanations !== 1 ? 's' : ''} remaining today`
+                                                    : 'No free explanations remaining today'
+                                                }
+                                            </Text>
+                                        )}
+                                    </MotiView>
+                                ) : rawCommentary ? (
+                                    /* AI failed — show cleaned raw text as fallback */
+                                    <MotiView
+                                        from={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ type: 'timing', duration: 400 }}
+                                    >
+                                        {aiFailed && (
+                                            <View style={[styles.fallbackBanner, { backgroundColor: `${GOLD}12` }]}>
+                                                <MaterialCommunityIcons
+                                                    name="wifi-off"
+                                                    size={14}
+                                                    color={theme.colors.onSurfaceVariant}
+                                                />
+                                                <Text style={[styles.fallbackText, { color: theme.colors.onSurfaceVariant }]}>
+                                                    AI unavailable — showing scholar{"'"}s commentary
+                                                </Text>
+                                            </View>
+                                        )}
+                                        <Text style={[styles.explanationText, { color: theme.colors.onSurface }]}>
+                                            {rawCommentary.length > SCHOLAR_TRUNCATE
+                                                ? rawCommentary.slice(0, SCHOLAR_TRUNCATE).replace(/\s+\S*$/, '') + '…'
+                                                : rawCommentary}
                                         </Text>
                                     </MotiView>
-                                </>
-                            )}
-                        </ScrollView>
+                                ) : (
+                                    /* No commentary available at all */
+                                    <View style={styles.emptyState}>
+                                        <MaterialCommunityIcons
+                                            name="book-open-page-variant-outline"
+                                            size={28}
+                                            color={theme.colors.onSurfaceVariant}
+                                        />
+                                        <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
+                                            Explanation is not yet available for this verse.
+                                            {'\n'}You can still ask AI about it below.
+                                        </Text>
+                                    </View>
+                                )}
 
-                        {/* AI query input */}
-                        <AiQueryInput onSubmit={handleAskQuestion} loading={answerLoading} />
+                                {/* ═══ SECTION 2: Scholar's Notes (COLLAPSED ACCORDION) ═══ */}
+                                {rawCommentary && aiExplanation && (
+                                    <>
+                                        <Pressable
+                                            onPress={() => setScholarOpen(prev => !prev)}
+                                            style={[
+                                                styles.accordionHeader,
+                                                { borderTopColor: theme.colors.outlineVariant },
+                                            ]}
+                                            hitSlop={4}
+                                        >
+                                            <MaterialCommunityIcons
+                                                name="book-open-page-variant-outline"
+                                                size={14}
+                                                color={theme.colors.onSurfaceVariant}
+                                                style={{ marginRight: 4 }}
+                                            />
+                                            <Text style={[styles.sectionLabel, { color: theme.colors.onSurfaceVariant, flex: 1 }]}>
+                                                Scholar{"'"}s Notes
+                                            </Text>
+                                            <MaterialCommunityIcons
+                                                name={scholarOpen ? 'chevron-up' : 'chevron-down'}
+                                                size={18}
+                                                color={theme.colors.onSurfaceVariant}
+                                            />
+                                        </Pressable>
 
-                        {/* Disclaimer */}
-                        <View style={[styles.disclaimer, { borderTopColor: theme.colors.outlineVariant }]}>
-                            <MaterialCommunityIcons
-                                name="information-outline"
-                                size={14}
-                                color={theme.colors.onSurfaceVariant}
-                            />
-                            <Text style={[styles.disclaimerText, { color: theme.colors.onSurfaceVariant }]}>
-                                AI-generated from verified tafsir. Consult a scholar for personal guidance.
-                            </Text>
-                        </View>
-                    </MotiView>
-                </View>
-            </KeyboardAvoidingView>
+                                        {scholarOpen && (
+                                            <MotiView
+                                                from={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                transition={{ type: 'timing', duration: 300 }}
+                                            >
+                                                <Text style={[styles.scholarText, { color: theme.colors.onSurfaceVariant }]}>
+                                                    {scholarTruncated}
+                                                </Text>
+                                                {scholarText.length > SCHOLAR_TRUNCATE && (
+                                                    <Pressable
+                                                        onPress={() => setScholarExpanded(prev => !prev)}
+                                                        style={styles.readMoreBtn}
+                                                        hitSlop={8}
+                                                    >
+                                                        <Text style={[styles.readMoreText, { color: GOLD }]}>
+                                                            {scholarExpanded ? 'Show less' : 'Read more'}
+                                                        </Text>
+                                                    </Pressable>
+                                                )}
+                                            </MotiView>
+                                        )}
+                                    </>
+                                )}
+
+                                {/* ═══ SECTION 3: AI Q&A Answer ═══ */}
+                                {aiAnswer && (
+                                    <>
+                                        <View style={[styles.sectionDivider, { borderTopColor: theme.colors.outlineVariant }]}>
+                                            <MaterialCommunityIcons
+                                                name="chat-processing-outline"
+                                                size={14}
+                                                color={GOLD}
+                                                style={{ marginRight: 4 }}
+                                            />
+                                            <Text style={[styles.sectionLabel, { color: GOLD }]}>
+                                                Answer
+                                            </Text>
+                                        </View>
+                                        <MotiView
+                                            from={{ opacity: 0, translateY: 10 }}
+                                            animate={{ opacity: 1, translateY: 0 }}
+                                            transition={{ type: 'spring', damping: 20 }}
+                                        >
+                                            <Text style={[styles.explanationText, { color: theme.colors.onSurface }]}>
+                                                {aiAnswer}
+                                            </Text>
+                                        </MotiView>
+                                    </>
+                                )}
+                            </ScrollView>
+
+                            {/* AI query input */}
+                            <AiQueryInput onSubmit={handleAskQuestion} loading={answerLoading} />
+
+                            {/* Disclaimer */}
+                            <View style={[styles.disclaimer, { borderTopColor: theme.colors.outlineVariant }]}>
+                                <MaterialCommunityIcons
+                                    name="information-outline"
+                                    size={14}
+                                    color={theme.colors.onSurfaceVariant}
+                                />
+                                <Text style={[styles.disclaimerText, { color: theme.colors.onSurfaceVariant }]}>
+                                    AI-generated from verified tafsir. Consult a scholar for personal guidance.
+                                </Text>
+                            </View>
+                        </MotiView>
+                    </View>
+                </KeyboardAvoidingView>
+            )}
         </Modal>
     );
 };
