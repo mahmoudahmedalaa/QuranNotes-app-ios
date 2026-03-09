@@ -5,6 +5,15 @@ import * as Device from 'expo-device';
 export type NotificationType = 'daily' | 'streak' | 'khatma' | 'adhkar' | 'hadith';
 
 export class NotificationService {
+    // ── Date-seeded message picker (ensures a different message each day) ──
+    private static pickMessage<T>(pool: T[]): T {
+        const today = new Date();
+        const seed = today.getFullYear() * 10000
+            + (today.getMonth() + 1) * 100
+            + today.getDate();
+        return pool[seed % pool.length];
+    }
+
     // ── Daily gentle nudges ──────────────────────────────────────────
     private static DAILY_REMINDERS: { title: string; body: string }[] = [
         // Warm, natural nudges (no Quran verses, no em-dashes)
@@ -119,7 +128,7 @@ export class NotificationService {
     private static ADHKAR_MORNING_ID = 'adhkar-morning';
     private static ADHKAR_EVENING_ID = 'adhkar-evening';
     private static ADHKAR_NIGHT_ID = 'adhkar-night';
-    private static HADITH_DAILY_ID = 'hadith-daily';
+
 
     // ── Hadith notification messages ─────────────────────────────────
     private static HADITH_REMINDERS: { title: string; body: string }[] = [
@@ -138,7 +147,7 @@ export class NotificationService {
         try {
             await this.cancelDailyReminder();
 
-            const reminder = this.DAILY_REMINDERS[Math.floor(Math.random() * this.DAILY_REMINDERS.length)];
+            const reminder = this.pickMessage(this.DAILY_REMINDERS);
 
             await Notifications.scheduleNotificationAsync({
                 content: {
@@ -177,13 +186,14 @@ export class NotificationService {
             streak: number;
             khatmaEnabled: boolean;
             streakEnabled: boolean;
+            hadithEnabled: boolean;
             hour?: number;
             minute?: number;
         },
     ): Promise<void> {
         await this.cancelContextualNudge();
 
-        const { juzRemaining, streak, khatmaEnabled, streakEnabled } = options;
+        const { juzRemaining, streak, khatmaEnabled, streakEnabled, hadithEnabled } = options;
         const hour = options.hour ?? 14;
         const minute = options.minute ?? 0;
 
@@ -191,17 +201,21 @@ export class NotificationService {
 
         // Priority 1: Khatma nudge
         if (khatmaEnabled && juzRemaining > 0 && juzRemaining < 30) {
-            const msg = this.KHATMA_MESSAGES[Math.floor(Math.random() * this.KHATMA_MESSAGES.length)];
+            const msg = this.pickMessage(this.KHATMA_MESSAGES);
             content = { title: msg.title, body: msg.body(juzRemaining) };
         }
         // Priority 2: Streak reminder
         else if (streakEnabled && streak >= 2) {
-            const msg = this.STREAK_MESSAGES[Math.floor(Math.random() * this.STREAK_MESSAGES.length)];
+            const msg = this.pickMessage(this.STREAK_MESSAGES);
             content = { title: msg.title, body: msg.body(streak) };
         }
-        // Priority 3: Re-engagement
+        // Priority 3: Hadith wisdom
+        else if (hadithEnabled) {
+            content = this.pickMessage(this.HADITH_REMINDERS);
+        }
+        // Priority 4: Re-engagement
         else {
-            content = this.RE_ENGAGEMENT_REMINDERS[Math.floor(Math.random() * this.RE_ENGAGEMENT_REMINDERS.length)];
+            content = this.pickMessage(this.RE_ENGAGEMENT_REMINDERS);
         }
 
         await Notifications.scheduleNotificationAsync({
@@ -243,7 +257,7 @@ export class NotificationService {
             : period === 'evening'
                 ? this.ADHKAR_EVENING
                 : this.ADHKAR_NIGHT;
-        const msg = pool[Math.floor(Math.random() * pool.length)];
+        const msg = this.pickMessage(pool);
 
         await Notifications.scheduleNotificationAsync({
             content: {
@@ -268,33 +282,7 @@ export class NotificationService {
         ]);
     }
 
-    // ── Slot 4: Daily Hadith Notification ─────────────────────────────
-    static async scheduleHadithReminder(hour: number, minute: number): Promise<void> {
-        try {
-            await this.cancelHadithReminder();
-            const msg = this.HADITH_REMINDERS[Math.floor(Math.random() * this.HADITH_REMINDERS.length)];
 
-            await Notifications.scheduleNotificationAsync({
-                content: {
-                    title: msg.title,
-                    body: msg.body,
-                    sound: true,
-                },
-                trigger: {
-                    type: Notifications.SchedulableTriggerInputTypes.DAILY,
-                    hour,
-                    minute,
-                },
-                identifier: this.HADITH_DAILY_ID,
-            });
-        } catch (err) {
-            if (__DEV__) console.warn('[NotificationService] scheduleHadithReminder failed:', err);
-        }
-    }
-
-    static async cancelHadithReminder(): Promise<void> {
-        await Notifications.cancelScheduledNotificationAsync(this.HADITH_DAILY_ID).catch(() => { });
-    }
 
     // ── Cancel All ───────────────────────────────────────────────────
     static async cancelAllReminders(): Promise<void> {
@@ -302,7 +290,6 @@ export class NotificationService {
             this.cancelDailyReminder(),
             this.cancelContextualNudge(),
             this.cancelAdhkarReminders(),
-            this.cancelHadithReminder(),
         ]);
     }
 

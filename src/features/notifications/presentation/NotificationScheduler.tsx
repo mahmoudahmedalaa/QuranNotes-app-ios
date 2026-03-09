@@ -3,10 +3,9 @@
  * and reactively schedules all push notifications based on user settings and context.
  *
  * 3-Slot Strategy (max 3 notifications/day):
- *   Slot 1 (Morning):   Daily Quran reminder at user-chosen time
- *   Slot 2 (Afternoon): Contextual nudge — Khatma > Streak > Re-engagement
- *   Slot 3 (Evening):   Adhkar reminder at Maghrib-ish time
- *   Slot 4 (Morning):   Daily Hadith reminder at user-chosen time (Pro only)
+ *   Slot 1 (Daily):     Daily Quran reminder at user-chosen time
+ *   Slot 2 (Afternoon): Contextual nudge — Khatma > Streak > Hadith > Re-engagement
+ *   Slot 3 (Adhkar):    Morning/Evening/Night adhkar reminders
  */
 import { useEffect, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
@@ -16,8 +15,8 @@ import { useKhatma } from '../../khatma/infrastructure/KhatmaContext';
 import { NotificationService } from '../infrastructure/NotificationService';
 
 /** Default adhkar times (used when prayer times aren't available) */
-const DEFAULT_MORNING_HOUR = 6;
-const DEFAULT_MORNING_MINUTE = 0;
+const DEFAULT_MORNING_HOUR = 10;
+const DEFAULT_MORNING_MINUTE = 30;
 const DEFAULT_EVENING_HOUR = 18;
 const DEFAULT_EVENING_MINUTE = 15;
 const DEFAULT_NIGHT_HOUR = 21;
@@ -48,8 +47,6 @@ export function NotificationScheduler() {
             settings.streakReminderEnabled,
             settings.adhkarReminderEnabled,
             settings.hadithNotificationsEnabled,
-            settings.hadithNotificationHour,
-            settings.hadithNotificationMinute,
             streak.currentStreak,
             completedJuz.length,
         ].join('|');
@@ -68,8 +65,6 @@ export function NotificationScheduler() {
         settings.streakReminderEnabled,
         settings.adhkarReminderEnabled,
         settings.hadithNotificationsEnabled,
-        settings.hadithNotificationHour,
-        settings.hadithNotificationMinute,
         streak.currentStreak,
         completedJuz.length,
         khatmaLoading,
@@ -102,15 +97,18 @@ export function NotificationScheduler() {
             }
 
             // ── Slot 2: Contextual Nudge ─────────────────────────────
-            // Only schedule if at least one contextual category is enabled
-            const hasContextual = settings.khatmaReminderEnabled || settings.streakReminderEnabled;
-            if (settings.dailyReminderEnabled && hasContextual) {
+            // Schedule if at least one contextual category is enabled
+            const hasContextual = settings.khatmaReminderEnabled
+                || settings.streakReminderEnabled
+                || settings.hadithNotificationsEnabled;
+            if (hasContextual) {
                 const juzRemaining = 30 - completedJuz.length;
                 await NotificationService.scheduleContextualNudge({
                     juzRemaining,
                     streak: streak.currentStreak,
                     khatmaEnabled: settings.khatmaReminderEnabled,
                     streakEnabled: settings.streakReminderEnabled,
+                    hadithEnabled: settings.hadithNotificationsEnabled,
                     hour: CONTEXTUAL_HOUR,
                     minute: CONTEXTUAL_MINUTE,
                 });
@@ -135,13 +133,7 @@ export function NotificationScheduler() {
                 );
             }
 
-            // ── Slot 4: Daily Hadith Reminder ────────────────────────
-            if (settings.hadithNotificationsEnabled) {
-                await NotificationService.scheduleHadithReminder(
-                    settings.hadithNotificationHour,
-                    settings.hadithNotificationMinute,
-                );
-            }
+
         } catch (error) {
             if (__DEV__) console.warn('NotificationScheduler: failed to schedule', error);
         } finally {

@@ -21,12 +21,9 @@ interface AppSettings {
     streakReminderEnabled: boolean;
     khatmaReminderEnabled: boolean;
     prayerMethod?: number;    // undefined = auto-detect from location
-    prayerNotifications: boolean;
     prayerLocation: string;
     adhkarReminderEnabled: boolean;
     hadithNotificationsEnabled: boolean;
-    hadithNotificationHour: number;
-    hadithNotificationMinute: number;
     quranFont: QuranFontId;
 }
 
@@ -43,12 +40,9 @@ const DEFAULT_SETTINGS: AppSettings = {
     streakReminderEnabled: true,
     khatmaReminderEnabled: true,
     prayerMethod: undefined,  // auto-detect from location
-    prayerNotifications: false,
     prayerLocation: '',
     adhkarReminderEnabled: true,
     hadithNotificationsEnabled: false,
-    hadithNotificationHour: 8,
-    hadithNotificationMinute: 0,
     quranFont: 'kfgqpc' as QuranFontId,
 };
 
@@ -154,12 +148,9 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
                     // Migrate: old default was 4 (Umm Al-Qura). Treat as undefined (auto-detect)
                     // unless the user explicitly chose a different method.
                     prayerMethod: parsed.prayerMethod === 4 ? undefined : parsed.prayerMethod,
-                    prayerNotifications: parsed.prayerNotifications ?? DEFAULT_SETTINGS.prayerNotifications,
                     prayerLocation: parsed.prayerLocation ?? DEFAULT_SETTINGS.prayerLocation,
                     adhkarReminderEnabled: parsed.adhkarReminderEnabled ?? DEFAULT_SETTINGS.adhkarReminderEnabled,
                     hadithNotificationsEnabled: parsed.hadithNotificationsEnabled ?? DEFAULT_SETTINGS.hadithNotificationsEnabled,
-                    hadithNotificationHour: parsed.hadithNotificationHour ?? DEFAULT_SETTINGS.hadithNotificationHour,
-                    hadithNotificationMinute: parsed.hadithNotificationMinute ?? DEFAULT_SETTINGS.hadithNotificationMinute,
                     quranFont: parsed.quranFont ?? DEFAULT_SETTINGS.quranFont,
                 };
 
