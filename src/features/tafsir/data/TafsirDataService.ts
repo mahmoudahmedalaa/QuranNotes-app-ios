@@ -71,7 +71,7 @@ function loadSurahData(source: TafsirSource, surahNumber: number): Record<string
             }
         }
     } catch (e) {
-        console.warn(`[TafsirData] Failed to load ${source} surah ${surahNumber}:`, e);
+        if (__DEV__) console.warn(`[TafsirData] Failed to load ${source} surah ${surahNumber}:`, e);
     }
 
     return null;

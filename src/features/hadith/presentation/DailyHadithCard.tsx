@@ -18,14 +18,14 @@ import { ShareCardData } from '../../sharing/domain/ShareTemplateTypes';
 
 const FREE_REFRESH_LIMIT = 3;
 
-/** Warm earth-tone gradients that complement the sky-themed DailyVerseCard */
+/** Warm complementary gradients that pair with the sky-themed DailyVerseCard */
 function getHadithGradient(hour: number): readonly [string, string, string] {
-    if (hour >= 4 && hour < 6) return ['#1A1A2E', '#16213E', '#0F3460'] as const;
-    if (hour >= 6 && hour < 12) return ['#2D3436', '#636E72', '#B2BEC3'] as const;
-    if (hour >= 12 && hour < 16) return ['#1B4332', '#2D6A4F', '#40916C'] as const;
-    if (hour >= 16 && hour < 18) return ['#5C2D0E', '#8B4513', '#A0522D'] as const;
-    if (hour >= 18 && hour < 20) return ['#3D0C11', '#6B1E2D', '#8B2252'] as const;
-    return ['#1A1A2E', '#0D1B2A', '#1B263B'] as const;
+    if (hour >= 4 && hour < 6) return ['#4A1942', '#6B2D5B', '#893168'] as const;   // Fajr: Deep rose plum
+    if (hour >= 6 && hour < 12) return ['#0D5C63', '#14919B', '#45B5AA'] as const;  // Morning: Rich teal/emerald
+    if (hour >= 12 && hour < 16) return ['#7B4B2A', '#B8860B', '#DAA520'] as const; // Dhuhr: Warm gold
+    if (hour >= 16 && hour < 18) return ['#8B4513', '#CD6600', '#E8820C'] as const; // Asr: Deep amber/orange
+    if (hour >= 18 && hour < 20) return ['#4A1259', '#6B2C91', '#8B45A6'] as const; // Maghrib: Rich purple
+    return ['#1A1A3E', '#252566', '#2D2D7B'] as const;                              // Isha: Deep indigo
 }
 
 const TEXT_PRIMARY = '#FFFFFF';

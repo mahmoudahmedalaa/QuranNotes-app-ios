@@ -75,7 +75,7 @@ function extractText(result: any): string {
 
         return '';
     } catch (e) {
-        console.warn('[TafsirService] Text extraction failed:', e);
+        if (__DEV__) console.warn('[TafsirService] Text extraction failed:', e);
         return '';
     }
 }
@@ -99,7 +99,7 @@ async function generateWithRetry(
 
             if (is429 && attempt < maxRetries) {
                 const delay = Math.pow(2, attempt + 1) * 1000; // 2s, 4s, 8s
-                console.warn(`[TafsirService] Rate limited, retrying in ${delay / 1000}s (attempt ${attempt + 1}/${maxRetries})`);
+                if (__DEV__) console.warn(`[TafsirService] Rate limited, retrying in ${delay / 1000}s (attempt ${attempt + 1}/${maxRetries})`);
                 await new Promise(r => setTimeout(r, delay));
                 continue;
             }
@@ -122,13 +122,13 @@ function getModel(): ReturnType<typeof getGenerativeModel> | null {
 
     try {
         const app = getApp();
-        console.log('[TafsirService] Firebase app:', app.name, 'project:', app.options.projectId);
+        if (__DEV__) console.log('[TafsirService] Firebase app:', app.name, 'project:', app.options.projectId);
         const ai = getAI(app, { backend: new GoogleAIBackend() });
         _model = getGenerativeModel(ai, { model: 'gemini-2.5-flash' });
-        console.log('[TafsirService] ✅ AI model ready');
+        if (__DEV__) console.log('[TafsirService] ✅ AI model ready');
         return _model;
     } catch (e: any) {
-        console.error('[TafsirService] ❌ AI init failed:', e?.message || e);
+        if (__DEV__) console.error('[TafsirService] ❌ AI init failed:', e?.message || e);
         return null;
     }
 }
@@ -229,7 +229,7 @@ Explain what this verse means in 4-5 simple sentences. End with "Source: ${sourc
 
         return { answer: text || 'Unable to generate summary.', cached: false };
     } catch (e: any) {
-        console.warn('[TafsirService] AI summary error:', e?.message || e);
+        if (__DEV__) console.warn('[TafsirService] AI summary error:', e?.message || e);
 
         if (e?.message?.includes('429') || e?.message?.includes('quota') || e?.message?.includes('rate')) {
             return {
@@ -310,7 +310,7 @@ Answer in English only. Keep your answer to 3-5 sentences. Be clear and concise.
 
         return { answer: text || 'Unable to generate an answer.', cached: false };
     } catch (e: any) {
-        console.warn('[TafsirService] AI question error:', e?.message || e);
+        if (__DEV__) console.warn('[TafsirService] AI question error:', e?.message || e);
 
         if (e?.message?.includes('429') || e?.message?.includes('quota') || e?.message?.includes('rate')) {
             return {

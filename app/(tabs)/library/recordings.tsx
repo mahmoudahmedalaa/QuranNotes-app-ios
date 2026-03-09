@@ -61,7 +61,7 @@ export default function RecordingsScreen() {
             const sessions = await repository.getAllSessions();
             setFollowAlongSessions(sessions);
         } catch (error) {
-            console.error('Failed to load follow along sessions:', error);
+            if (__DEV__) console.error('Failed to load follow along sessions:', error);
         }
     };
 
@@ -346,7 +346,7 @@ export default function RecordingsScreen() {
                         setFollowAlongSessions(prev => prev.filter(s => s.id !== sessionId));
                         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                     } catch (error) {
-                        console.error('Failed to delete session:', error);
+                        if (__DEV__) console.error('Failed to delete session:', error);
                     }
                 },
             },

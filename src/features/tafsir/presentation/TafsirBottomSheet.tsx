@@ -315,7 +315,7 @@ export const TafsirBottomSheet: React.FC<TafsirBottomSheetProps> = ({
                                         color={GOLD}
                                     />
                                     <Text style={[styles.gatedTitle, { color: theme.colors.onSurface }]}>
-                                        You've used all 3 free AI explanations today
+                                        You{"'"}ve used all 3 free AI explanations today
                                     </Text>
                                     <Text style={[styles.gatedSubtitle, { color: theme.colors.onSurfaceVariant }]}>
                                         Upgrade to Pro for unlimited AI-powered verse insights
@@ -391,7 +391,7 @@ export const TafsirBottomSheet: React.FC<TafsirBottomSheetProps> = ({
                                                 color={theme.colors.onSurfaceVariant}
                                             />
                                             <Text style={[styles.fallbackText, { color: theme.colors.onSurfaceVariant }]}>
-                                                AI unavailable — showing scholar's commentary
+                                                AI unavailable — showing scholar{"'"}s commentary
                                             </Text>
                                         </View>
                                     )}
@@ -434,7 +434,7 @@ export const TafsirBottomSheet: React.FC<TafsirBottomSheetProps> = ({
                                             style={{ marginRight: 4 }}
                                         />
                                         <Text style={[styles.sectionLabel, { color: theme.colors.onSurfaceVariant, flex: 1 }]}>
-                                            Scholar's Notes
+                                            Scholar{"'"}s Notes
                                         </Text>
                                         <MaterialCommunityIcons
                                             name={scholarOpen ? 'chevron-up' : 'chevron-down'}

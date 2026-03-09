@@ -194,7 +194,7 @@ export default function OnboardingAiTafseer() {
                             </Text>
                         </View>
                         <Text style={[styles.demoText, { color: theme.dark ? '#C9C2DB' : '#4B3B73' }]}>
-                            The Basmalah opens every chapter. "In the Name of Allah" teaches that every action,
+                            The Basmalah opens every chapter. {'"'}In the Name of Allah{'"'} teaches that every action,
                             every reading, begins by invoking divine blessing...
                         </Text>
 
@@ -204,7 +204,7 @@ export default function OnboardingAiTafseer() {
                                 <Text style={styles.pillTextActive}>Ibn Kathir</Text>
                             </View>
                             <View style={[styles.pill, { backgroundColor: theme.dark ? 'rgba(167,139,250,0.15)' : 'rgba(124,58,237,0.1)' }]}>
-                                <Text style={[styles.pillText, { color: theme.dark ? '#A78BFA' : '#7C3AED' }]}>Al-Sa'di</Text>
+                                <Text style={[styles.pillText, { color: theme.dark ? '#A78BFA' : '#7C3AED' }]}>Al-Sa{"'"}di</Text>
                             </View>
                         </View>
                     </LinearGradient>
