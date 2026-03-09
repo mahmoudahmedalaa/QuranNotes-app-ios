@@ -26,6 +26,7 @@ docs/logs/
 .env.*
 *.p8
 secrets/
+GoogleService-Info.plist
 
 # macOS
 .DS_Store
@@ -46,3 +47,9 @@ coverage/
 # Build output
 dist/
 android/.gradle/
+
+# Firebase Cloud Functions
+functions/lib/
+functions/node_modules/
+.firebase/
+

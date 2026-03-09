@@ -2,8 +2,17 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { IconButton, useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
+import { Ionicons } from '@expo/vector-icons';
 import { Verse } from '../../../core/domain/entities/Quran';
 import { Spacing, BorderRadius, Shadows } from '../../../core/theme/DesignSystem';
+import { HIGHLIGHT_COLORS } from '../../notes/infrastructure/HighlightContext';
+
+// Dark-mode background lookup: maps light color → darkBg
+const DARK_BG_MAP = Object.fromEntries(
+    HIGHLIGHT_COLORS.map(c => [c.color, c.darkBg]),
+);
+// Softer border/icon colors for dark mode (the light color at 80% opacity)
+const getDarkBorderColor = (color: string) => color + 'CC';
 import { getQuranFontFamily } from '../../../core/theme/QuranFonts';
 import { useSettings } from '../../settings/infrastructure/SettingsContext';
 import * as Haptics from 'expo-haptics';
@@ -24,11 +33,12 @@ interface VerseItemProps {
     onRecord?: () => void;
     onShare?: () => void;
     onExplain?: () => void;
-    onLongPress?: () => void;
+    onHighlight?: () => void;
     isPlaying?: boolean;
     hasNote?: boolean;
     isStudyMode?: boolean;
     isHighlighted?: boolean; // For Follow Along feature
+    highlightColor?: string; // Persistent verse highlight color
     showTransliteration?: boolean; // Show Latin script pronunciation
 }
 
@@ -41,11 +51,12 @@ export const VerseItem = ({
     onRecord,
     onShare,
     onExplain,
-    onLongPress,
+    onHighlight,
     isPlaying,
     hasNote,
     isStudyMode,
     isHighlighted,
+    highlightColor,
     showTransliteration,
 }: VerseItemProps) => {
     const theme = useTheme();
@@ -56,7 +67,7 @@ export const VerseItem = ({
 
     const handleLongPress = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        onLongPress?.();
+        onHighlight?.();
     };
 
     const handlePlay = () => {
@@ -92,6 +103,18 @@ export const VerseItem = ({
                                 ? ACCENT.goldBgDark
                                 : ACCENT.goldBgLight,
                             borderLeftColor: ACCENT.gold,
+                        },
+                    ],
+                    // Persistent user highlight color
+                    !isPlaying && highlightColor && [
+                        styles.userHighlightContainer,
+                        {
+                            backgroundColor: theme.dark
+                                ? (DARK_BG_MAP[highlightColor] || highlightColor + '20')
+                                : highlightColor + '25',
+                            borderLeftColor: theme.dark
+                                ? getDarkBorderColor(highlightColor)
+                                : highlightColor,
                         },
                     ],
 
@@ -130,7 +153,7 @@ export const VerseItem = ({
                         {onPlay && (
                             <IconButton
                                 icon={isPlaying ? 'pause-circle' : 'play-circle-outline'}
-                                iconColor={isPlaying ? ACCENT.gold : theme.colors.primary}
+                                iconColor={isPlaying ? ACCENT.gold : theme.colors.onSurfaceVariant}
                                 size={22}
                                 onPress={handlePlay}
                                 style={styles.controlButton}
@@ -140,11 +163,7 @@ export const VerseItem = ({
                             <View>
                                 <IconButton
                                     icon={hasNote ? 'pencil' : 'pencil-outline'}
-                                    iconColor={
-                                        hasNote
-                                            ? theme.colors.primary
-                                            : theme.colors.onSurfaceVariant
-                                    }
+                                    iconColor={theme.colors.onSurfaceVariant}
                                     size={22}
                                     onPress={onNote}
                                     style={styles.controlButton}
@@ -181,14 +200,36 @@ export const VerseItem = ({
                             />
                         )}
                         {onExplain && (
-                            <IconButton
-                                icon="lightbulb-outline"
-                                iconColor={theme.colors.onSurfaceVariant}
-                                size={22}
+                            <Pressable
                                 onPress={() => {
                                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                                     onExplain();
                                 }}
+                                hitSlop={8}
+                                style={styles.tafsirButton}
+                            >
+                                <MotiView
+                                    from={{ scale: 0.95 }}
+                                    animate={{ scale: 1.05 }}
+                                    transition={{
+                                        type: 'timing',
+                                        duration: 2000,
+                                        loop: true,
+                                    }}
+                                >
+                                    <Ionicons name="sparkles" size={20} color={ACCENT.gold} />
+                                </MotiView>
+                            </Pressable>
+                        )}
+                        {onHighlight && (
+                            <IconButton
+                                icon={highlightColor ? 'marker-check' : 'format-color-highlight'}
+                                iconColor={highlightColor
+                                    ? (theme.dark ? getDarkBorderColor(highlightColor) : highlightColor)
+                                    : theme.colors.onSurfaceVariant
+                                }
+                                size={22}
+                                onPress={onHighlight}
                                 style={styles.controlButton}
                             />
                         )}
@@ -254,6 +295,11 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 6,
     },
+    userHighlightContainer: {
+        borderLeftWidth: 3,
+        borderRadius: BorderRadius.md,
+        marginHorizontal: Spacing.xs,
+    },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -303,6 +349,12 @@ const styles = StyleSheet.create({
         height: 1,
         opacity: 0.15,
         marginTop: Spacing.lg,
+    },
+    tafsirButton: {
+        width: 40,
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     noteDot: {
         position: 'absolute',

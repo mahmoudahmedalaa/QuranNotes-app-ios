@@ -11,6 +11,7 @@ export const useNotes = () => {
         getNoteById: context.getNoteById,
         saveNote: context.saveNote,
         deleteNote: context.deleteNote,
+        togglePin: context.togglePin,
         refreshNotes: context.refreshNotes,
     };
 };

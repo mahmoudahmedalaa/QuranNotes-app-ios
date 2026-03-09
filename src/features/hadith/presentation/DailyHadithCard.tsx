@@ -10,11 +10,11 @@ import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Spacing, BorderRadius, Shadows, Typography } from '../../../core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
-import ViewShot from 'react-native-view-shot';
-import * as Sharing from 'expo-sharing';
 import { useHadith } from '../infrastructure/HadithContext';
 import { usePro } from '../../auth/infrastructure/ProContext';
 import { useRouter } from 'expo-router';
+import { PremiumShareSheet } from '../../sharing/presentation/PremiumShareSheet';
+import { ShareCardData } from '../../sharing/domain/ShareTemplateTypes';
 
 const FREE_REFRESH_LIMIT = 3;
 
@@ -43,9 +43,7 @@ export const DailyHadithCard: React.FC = () => {
     } = useHadith();
     const [expanded, setExpanded] = useState(false);
     const [currentHour, setCurrentHour] = useState(new Date().getHours());
-
-    const viewShotRef = React.useRef<ViewShot>(null);
-    const [isCapturing, setIsCapturing] = useState(false);
+    const [showShareSheet, setShowShareSheet] = useState(false);
 
     useEffect(() => {
         const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
@@ -81,34 +79,19 @@ export const DailyHadithCard: React.FC = () => {
         );
     }, [hadith, isPro, isBookmarked, bookmarkedIds, toggleBookmark, router]);
 
-    const handleShare = useCallback(async () => {
-        if (!viewShotRef.current) return;
+    const handleShare = useCallback(() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        setShowShareSheet(true);
+    }, []);
 
-        const wasExpanded = expanded;
-        setExpanded(true);
-        setIsCapturing(true);
-
-        setTimeout(async () => {
-            try {
-                const capture = (viewShotRef.current as any)?.capture;
-                if (capture) {
-                    const uri = await capture();
-                    if (uri && (await Sharing.isAvailableAsync())) {
-                        await Sharing.shareAsync(uri, {
-                            mimeType: 'image/png',
-                            dialogTitle: 'Share Hadith of the Day',
-                        });
-                    }
-                }
-            } catch (err) {
-                if (__DEV__) console.warn('[DailyHadithCard] Share failed:', err);
-            } finally {
-                setExpanded(wasExpanded);
-                setIsCapturing(false);
-            }
-        }, 150);
-    }, [expanded]);
+    // Build share card data for the hadith
+    const shareData: ShareCardData | null = hadith ? {
+        type: 'hadith',
+        arabicText: hadith.arabicText,
+        englishText: hadith.englishText,
+        hadithSource: `${hadith.collection}, #${hadith.reference}`,
+        narrator: hadith.narrator,
+    } : null;
 
     const handleExploreTopics = useCallback(() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -129,139 +112,132 @@ export const DailyHadithCard: React.FC = () => {
             transition={{ type: 'spring', damping: 18, delay: 180 }}
             style={{ paddingHorizontal: Spacing.md }}
         >
-            <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1.0 }} style={isCapturing ? { backgroundColor: theme.colors.background } : {}}>
-                <Pressable
-                    onPress={() => {
-                        if (isCapturing) return;
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        setExpanded(!expanded);
-                    }}
-                    style={({ pressed }) => [
-                        pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
-                    ]}
-                >
-                    <View style={[styles.card, Shadows.md]}>
-                        <LinearGradient
-                            colors={gradientColors}
-                            style={[styles.gradientOverlay, { borderRadius: BorderRadius.lg }]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                        />
+            <Pressable
+                onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setExpanded(!expanded);
+                }}
+                style={({ pressed }) => [
+                    pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
+                ]}
+            >
+                <View style={[styles.card, Shadows.md]}>
+                    <LinearGradient
+                        colors={gradientColors}
+                        style={[styles.gradientOverlay, { borderRadius: BorderRadius.lg }]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                    />
 
-                        {/* Header */}
-                        <View style={styles.cardHeader}>
-                            <View style={styles.labelRow}>
-                                <Text style={[styles.label, { color: 'rgba(255,255,255,0.95)' }]}>
-                                    Hadith of the Day
-                                </Text>
-                            </View>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-                                {/* Refresh button with limit indicator */}
-                                <View style={styles.refreshContainer}>
-                                    <IconButton
-                                        icon={refreshExhausted ? 'lock' : 'refresh'}
-                                        size={18}
-                                        onPress={handleRefresh}
-                                        iconColor={refreshExhausted ? TEXT_TERTIARY : TEXT_SECONDARY}
-                                        style={styles.actionButton}
-                                    />
-                                    {showRefreshBadge && (
-                                        <View style={styles.refreshBadge}>
-                                            <Text style={styles.refreshBadgeText}>
-                                                {FREE_REFRESH_LIMIT - refreshCount}
-                                            </Text>
-                                        </View>
-                                    )}
-                                </View>
-
-                                {/* Bookmark */}
-                                {!isCapturing && (
-                                    <IconButton
-                                        icon={bookmarked ? 'heart' : 'heart-outline'}
-                                        size={18}
-                                        onPress={handleBookmark}
-                                        iconColor={bookmarked ? TEXT_PRIMARY : TEXT_SECONDARY}
-                                        style={styles.actionButton}
-                                    />
-                                )}
-
-                                {/* Share */}
+                    {/* Header */}
+                    <View style={styles.cardHeader}>
+                        <View style={styles.labelRow}>
+                            <Text style={[styles.label, { color: 'rgba(255,255,255,0.95)' }]}>
+                                Hadith of the Day
+                            </Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                            {/* Refresh button with limit indicator */}
+                            <View style={styles.refreshContainer}>
                                 <IconButton
-                                    icon="share-variant"
+                                    icon={refreshExhausted ? 'lock' : 'refresh'}
                                     size={18}
-                                    onPress={handleShare}
-                                    iconColor={TEXT_SECONDARY}
+                                    onPress={handleRefresh}
+                                    iconColor={refreshExhausted ? TEXT_TERTIARY : TEXT_SECONDARY}
                                     style={styles.actionButton}
                                 />
-
-                                {/* Expand chevron */}
-                                {!isCapturing && (
-                                    <Feather
-                                        name={expanded ? 'chevron-up' : 'chevron-down'}
-                                        size={20}
-                                        color={TEXT_SECONDARY}
-                                    />
+                                {showRefreshBadge && (
+                                    <View style={styles.refreshBadge}>
+                                        <Text style={styles.refreshBadgeText}>
+                                            {FREE_REFRESH_LIMIT - refreshCount}
+                                        </Text>
+                                    </View>
                                 )}
                             </View>
+
+                            {/* Bookmark */}
+                            <IconButton
+                                icon={bookmarked ? 'heart' : 'heart-outline'}
+                                size={18}
+                                onPress={handleBookmark}
+                                iconColor={bookmarked ? TEXT_PRIMARY : TEXT_SECONDARY}
+                                style={styles.actionButton}
+                            />
+
+                            {/* Share */}
+                            <IconButton
+                                icon="share-variant"
+                                size={18}
+                                onPress={handleShare}
+                                iconColor={TEXT_SECONDARY}
+                                style={styles.actionButton}
+                            />
+
+                            {/* Expand chevron */}
+                            <Feather
+                                name={expanded ? 'chevron-up' : 'chevron-down'}
+                                size={20}
+                                color={TEXT_SECONDARY}
+                            />
                         </View>
-
-                        {/* Compact: one-line preview */}
-                        {!expanded && (
-                            <View style={styles.compactRow}>
-                                <Feather name="chevron-right" size={16} color={TEXT_TERTIARY} />
-                                <Text style={[styles.compactNarrator, { color: TEXT_SECONDARY }]} numberOfLines={1}>
-                                    {hadith.narrator}
-                                </Text>
-                                <Text style={[styles.compactPreview, { color: TEXT_PRIMARY }]} numberOfLines={1}>
-                                    {hadith.englishText}
-                                </Text>
-                            </View>
-                        )}
-
-                        {/* Expanded: full content */}
-                        {expanded && (
-                            <>
-                                <Text style={[styles.arabicText, { color: TEXT_PRIMARY }]}>
-                                    {hadith.arabicText}
-                                </Text>
-
-                                <Text style={[styles.translationText, { color: TEXT_SECONDARY }]}>
-                                    {hadith.englishText}
-                                </Text>
-
-                                <View style={styles.reflectionBox}>
-                                    <Text style={styles.reflectionText}>
-                                        {hadith.reflection}
-                                    </Text>
-                                </View>
-
-                                <View style={styles.sourceRow}>
-                                    <Feather name="book-open" size={14} color={TEXT_TERTIARY} />
-                                    <Text style={[styles.sourceText, { color: TEXT_SECONDARY }]}>
-                                        {hadith.narrator} · {hadith.collection}, #{hadith.reference}
-                                    </Text>
-                                </View>
-
-                                {/* Explore Topics link */}
-                                {!isCapturing && (
-                                    <Pressable onPress={handleExploreTopics} style={styles.exploreRow}>
-                                        <MaterialCommunityIcons name="book-open-variant" size={18} color={TEXT_PRIMARY} />
-                                        <Text style={styles.exploreText}>Explore Hadith Library</Text>
-                                        <Feather name="chevron-right" size={16} color={TEXT_SECONDARY} />
-                                    </Pressable>
-                                )}
-                            </>
-                        )}
-
-                        {/* Watermark for sharing */}
-                        {isCapturing && (
-                            <View style={styles.watermarkContainer}>
-                                <Text style={styles.watermarkText}>QuranNotes App</Text>
-                            </View>
-                        )}
                     </View>
-                </Pressable>
-            </ViewShot>
+
+                    {/* Compact: one-line preview */}
+                    {!expanded && (
+                        <View style={styles.compactRow}>
+                            <Feather name="chevron-right" size={16} color={TEXT_TERTIARY} />
+                            <Text style={[styles.compactNarrator, { color: TEXT_SECONDARY }]} numberOfLines={1}>
+                                {hadith.narrator}
+                            </Text>
+                            <Text style={[styles.compactPreview, { color: TEXT_PRIMARY }]} numberOfLines={1}>
+                                {hadith.englishText}
+                            </Text>
+                        </View>
+                    )}
+
+                    {/* Expanded: full content */}
+                    {expanded && (
+                        <>
+                            <Text style={[styles.arabicText, { color: TEXT_PRIMARY }]}>
+                                {hadith.arabicText}
+                            </Text>
+
+                            <Text style={[styles.translationText, { color: TEXT_SECONDARY }]}>
+                                {hadith.englishText}
+                            </Text>
+
+                            <View style={styles.reflectionBox}>
+                                <Text style={styles.reflectionText}>
+                                    {hadith.reflection}
+                                </Text>
+                            </View>
+
+                            <View style={styles.sourceRow}>
+                                <Feather name="book-open" size={14} color={TEXT_TERTIARY} />
+                                <Text style={[styles.sourceText, { color: TEXT_SECONDARY }]}>
+                                    {hadith.narrator} · {hadith.collection}, #{hadith.reference}
+                                </Text>
+                            </View>
+
+                            {/* Explore Topics link */}
+                            <Pressable onPress={handleExploreTopics} style={styles.exploreRow}>
+                                <MaterialCommunityIcons name="book-open-variant" size={18} color={TEXT_PRIMARY} />
+                                <Text style={styles.exploreText}>Explore Hadith Library</Text>
+                                <Feather name="chevron-right" size={16} color={TEXT_SECONDARY} />
+                            </Pressable>
+                        </>
+                    )}
+                </View>
+            </Pressable>
+
+            {/* Premium Share Sheet */}
+            {shareData && (
+                <PremiumShareSheet
+                    visible={showShareSheet}
+                    onDismiss={() => setShowShareSheet(false)}
+                    data={shareData}
+                />
+            )}
         </MotiView>
     );
 };

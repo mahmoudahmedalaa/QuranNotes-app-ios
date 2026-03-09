@@ -16,7 +16,7 @@ export class LocalRecordingRepository {
             }
             return [];
         } catch (error) {
-            console.error('Failed to get recordings from local storage:', error);
+            if (__DEV__) console.error('Failed to get recordings from local storage:', error);
             return [];
         }
     }

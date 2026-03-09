@@ -1,5 +1,5 @@
 import { View, StyleSheet, ScrollView, Pressable, Alert, Switch as RNSwitch, LayoutAnimation, Platform, UIManager, Linking } from 'react-native';
-import { Text, useTheme, Switch } from 'react-native-paper';
+import { Text, useTheme } from 'react-native-paper';
 import { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -21,6 +21,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import { usePro } from '../../src/features/auth/infrastructure/ProContext';
 import { useAuth } from '../../src/features/auth/infrastructure/AuthContext';
+import { revenueCatService } from '../../src/features/payments/infrastructure/RevenueCatService';
 
 
 import { NotificationService } from '../../src/features/notifications/infrastructure/NotificationService';
@@ -49,6 +50,7 @@ export default function SettingsScreen() {
     const [reciterPickerVisible, setReciterPickerVisible] = useState(false);
     const [translationPickerExpanded, setTranslationPickerExpanded] = useState(false);
     const [fontPickerExpanded, setFontPickerExpanded] = useState(false);
+    const [restoringPurchases, setRestoringPurchases] = useState(false);
 
     // Derived translation data
     const currentEdition = getEditionById(settings.translationEdition);
@@ -206,6 +208,38 @@ export default function SettingsScreen() {
         );
     };
 
+    const handleManageSubscription = async () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        // Apple's deep link to subscription management
+        const url = 'https://apps.apple.com/account/subscriptions';
+        const canOpen = await Linking.canOpenURL(url);
+        if (canOpen) {
+            await Linking.openURL(url);
+        } else {
+            Alert.alert(
+                'Manage Subscription',
+                'To manage your subscription, go to Settings → Apple ID → Subscriptions on your device.'
+            );
+        }
+    };
+
+    const handleRestorePurchases = async () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setRestoringPurchases(true);
+        try {
+            const success = await revenueCatService.restorePurchases();
+            if (success) {
+                Alert.alert('Restored', 'Your purchases have been restored successfully.');
+            } else {
+                Alert.alert('No Purchases Found', 'No previous purchases were found for this account.');
+            }
+        } catch (error: any) {
+            Alert.alert('Error', error.message || 'Could not restore purchases. Please try again.');
+        } finally {
+            setRestoringPurchases(false);
+        }
+    };
+
     const toggleDarkMode = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         updateSettings({ theme: settings.theme === 'light' ? 'dark' : 'light' });
@@ -315,6 +349,80 @@ export default function SettingsScreen() {
                                     </Pressable>
                                 )}
 
+                                {/* Manage Subscription — only visible for Pro users */}
+                                {isPro && (
+                                    <Pressable
+                                        style={({ pressed }) => [
+                                            styles.card,
+                                            { backgroundColor: theme.colors.surface, marginBottom: Spacing.sm },
+                                            Shadows.sm,
+                                            pressed && styles.cardPressed,
+                                        ]}
+                                        onPress={handleManageSubscription}>
+                                        <View
+                                            style={[
+                                                styles.iconContainer,
+                                                { backgroundColor: theme.colors.primaryContainer },
+                                            ]}>
+                                            <Ionicons name="card" size={18} color={theme.colors.primary} />
+                                        </View>
+                                        <View style={styles.cardContent}>
+                                            <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
+                                                Manage Subscription
+                                            </Text>
+                                            <Text
+                                                style={[
+                                                    styles.cardSubtitle,
+                                                    { color: theme.colors.onSurfaceVariant },
+                                                ]}>
+                                                Cancel or change your plan
+                                            </Text>
+                                        </View>
+                                        <Ionicons
+                                            name="open-outline"
+                                            size={18}
+                                            color={theme.colors.onSurfaceVariant}
+                                        />
+                                    </Pressable>
+                                )}
+
+                                {/* Restore Purchases */}
+                                <Pressable
+                                    style={({ pressed }) => [
+                                        styles.card,
+                                        { backgroundColor: theme.colors.surface, marginBottom: Spacing.sm },
+                                        Shadows.sm,
+                                        pressed && styles.cardPressed,
+                                        restoringPurchases && { opacity: 0.6 },
+                                    ]}
+                                    onPress={handleRestorePurchases}
+                                    disabled={restoringPurchases}>
+                                    <View
+                                        style={[
+                                            styles.iconContainer,
+                                            { backgroundColor: theme.colors.secondaryContainer },
+                                        ]}>
+                                        <Ionicons name="refresh" size={18} color={theme.colors.secondary} />
+                                    </View>
+                                    <View style={styles.cardContent}>
+                                        <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
+                                            {restoringPurchases ? 'Restoring...' : 'Restore Purchases'}
+                                        </Text>
+                                        <Text
+                                            style={[
+                                                styles.cardSubtitle,
+                                                { color: theme.colors.onSurfaceVariant },
+                                            ]}>
+                                            Recover previous subscriptions
+                                        </Text>
+                                    </View>
+                                    <Ionicons
+                                        name="chevron-forward"
+                                        size={20}
+                                        color={theme.colors.onSurfaceVariant}
+                                    />
+                                </Pressable>
+
                                 <Pressable
                                     style={({ pressed }) => [
                                         styles.card,
@@ -382,105 +490,41 @@ export default function SettingsScreen() {
                         )}
                     </View>
 
-                    {/* Audio Section */}
+                    {/* ═══ QURAN & AUDIO ═══ */}
                     <View style={styles.section}>
-                        <Text
-                            style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>
-                            AUDIO
+                        <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>
+                            QURAN & AUDIO
                         </Text>
-                        <Pressable
-                            style={({ pressed }) => [
-                                styles.card,
-                                { backgroundColor: theme.colors.surface },
-                                Shadows.sm,
-                                pressed && styles.cardPressed,
-                            ]}
-                            onPress={() => {
-                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                setReciterPickerVisible(true);
-                            }}>
-                            <View
-                                style={[
-                                    styles.iconContainer,
-                                    { backgroundColor: theme.colors.primaryContainer },
-                                ]}>
-                                <Ionicons
-                                    name="musical-notes"
-                                    size={18}
-                                    color={theme.colors.primary}
-                                />
-                            </View>
-                            <View style={styles.cardContent}>
-                                <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
-                                    Reciter
-                                </Text>
-                                <Text
-                                    style={[
-                                        styles.cardSubtitle,
-                                        { color: theme.colors.onSurfaceVariant },
-                                    ]}>
-                                    {getReciterById(settings.reciterId).name}
-                                </Text>
-                            </View>
-                            <Ionicons
-                                name="chevron-forward"
-                                size={20}
-                                color={theme.colors.onSurfaceVariant}
-                            />
-                        </Pressable>
-                    </View>
-
-                    {/* Reading / Translation Section */}
-                    <View style={styles.section}>
-                        <Text
-                            style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>
-                            READING
-                        </Text>
-
-                        {/* Translation Language Picker — expandable */}
-                        <View
-                            style={[
-                                styles.expandableCard,
-                                { backgroundColor: theme.colors.surface, marginBottom: Spacing.sm },
-                                Shadows.sm,
-                            ]}>
+                        <View style={[styles.groupedCard, { backgroundColor: theme.colors.surface }, Shadows.sm]}>
+                            {/* Reciter */}
                             <Pressable
-                                style={styles.expandableHeader}
-                                onPress={() => {
-                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                                    setTranslationPickerExpanded(!translationPickerExpanded);
-                                }}>
-                                <View
-                                    style={[
-                                        styles.iconContainer,
-                                        { backgroundColor: theme.colors.primaryContainer },
-                                    ]}>
-                                    <Ionicons
-                                        name="globe-outline"
-                                        size={18}
-                                        color={theme.colors.primary}
-                                    />
+                                style={({ pressed }) => [styles.groupedRow, pressed && styles.cardPressed]}
+                                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setReciterPickerVisible(true); }}>
+                                <View style={[styles.iconContainer, { backgroundColor: theme.colors.primaryContainer }]}>
+                                    <Ionicons name="musical-notes" size={18} color={theme.colors.primary} />
                                 </View>
                                 <View style={styles.cardContent}>
-                                    <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
-                                        Translation Language
-                                    </Text>
-                                    <Text
-                                        style={[
-                                            styles.cardSubtitle,
-                                            { color: theme.colors.onSurfaceVariant },
-                                        ]}>
-                                        {currentEdition ? `${currentEdition.flag} ${currentEdition.languageName} · ${currentEdition.name}` : 'English · Saheeh International'}
-                                    </Text>
+                                    <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Reciter</Text>
+                                    <Text style={[styles.cardSubtitle, { color: theme.colors.onSurfaceVariant }]}>{getReciterById(settings.reciterId).name}</Text>
                                 </View>
-                                <Ionicons
-                                    name={translationPickerExpanded ? 'chevron-up' : 'chevron-down'}
-                                    size={20}
-                                    color={theme.colors.onSurfaceVariant}
-                                />
+                                <Ionicons name="chevron-forward" size={20} color={theme.colors.onSurfaceVariant} />
                             </Pressable>
 
+                            <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant, marginHorizontal: Spacing.md }]} />
+
+                            {/* Translation Language */}
+                            <Pressable
+                                style={({ pressed }) => [styles.groupedRow, pressed && styles.cardPressed]}
+                                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setTranslationPickerExpanded(!translationPickerExpanded); }}>
+                                <View style={[styles.iconContainer, { backgroundColor: theme.colors.primaryContainer }]}>
+                                    <Ionicons name="globe-outline" size={18} color={theme.colors.primary} />
+                                </View>
+                                <View style={styles.cardContent}>
+                                    <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Translation</Text>
+                                    <Text style={[styles.cardSubtitle, { color: theme.colors.onSurfaceVariant }]}>{currentEdition ? `${currentEdition.flag} ${currentEdition.languageName}` : 'English'}</Text>
+                                </View>
+                                <Ionicons name={translationPickerExpanded ? 'chevron-up' : 'chevron-down'} size={20} color={theme.colors.onSurfaceVariant} />
+                            </Pressable>
                             {translationPickerExpanded && (
                                 <View style={styles.expandedContent}>
                                     <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant }]} />
@@ -489,34 +533,12 @@ export default function SettingsScreen() {
                                             {lang.editions.map((edition) => {
                                                 const isActive = settings.translationEdition === edition.identifier;
                                                 return (
-                                                    <Pressable
-                                                        key={edition.identifier}
-                                                        style={({ pressed }) => [
-                                                            styles.prayerRow,
-                                                            isActive && { backgroundColor: theme.colors.primaryContainer },
-                                                            pressed && { opacity: 0.7 },
-                                                        ]}
-                                                        onPress={() => {
-                                                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                                            updateSettings({ translationEdition: edition.identifier });
-                                                            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                                                            setTranslationPickerExpanded(false);
-                                                        }}>
+                                                    <Pressable key={edition.identifier} style={({ pressed }) => [styles.prayerRow, isActive && { backgroundColor: theme.colors.primaryContainer }, pressed && { opacity: 0.7 }]}
+                                                        onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); updateSettings({ translationEdition: edition.identifier }); LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setTranslationPickerExpanded(false); }}>
                                                         <Ionicons name="globe-outline" size={20} color={theme.colors.onSurfaceVariant} style={{ marginRight: Spacing.sm }} />
-                                                        <Text style={[styles.prayerLabel, { color: theme.colors.onSurface }]}>
-                                                            {edition.languageName}
-                                                        </Text>
-                                                        <Text style={[styles.prayerTime, { color: theme.colors.onSurfaceVariant }]}>
-                                                            {edition.name}
-                                                        </Text>
-                                                        {isActive && (
-                                                            <Ionicons
-                                                                name="checkmark-circle"
-                                                                size={20}
-                                                                color={theme.colors.primary}
-                                                                style={{ marginLeft: Spacing.xs }}
-                                                            />
-                                                        )}
+                                                        <Text style={[styles.prayerLabel, { color: theme.colors.onSurface }]}>{edition.languageName}</Text>
+                                                        <Text style={[styles.prayerTime, { color: theme.colors.onSurfaceVariant }]}>{edition.name}</Text>
+                                                        {isActive && <Ionicons name="checkmark-circle" size={20} color={theme.colors.primary} style={{ marginLeft: Spacing.xs }} />}
                                                     </Pressable>
                                                 );
                                             })}
@@ -524,142 +546,67 @@ export default function SettingsScreen() {
                                     ))}
                                 </View>
                             )}
-                        </View>
 
-                        {/* Arabic Font Picker — expandable */}
-                        <View
-                            style={[
-                                styles.expandableCard,
-                                { backgroundColor: theme.colors.surface, marginBottom: Spacing.sm },
-                                Shadows.sm,
-                            ]}>
+                            <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant, marginHorizontal: Spacing.md }]} />
+
+                            {/* Arabic Font */}
                             <Pressable
-                                style={styles.expandableHeader}
-                                onPress={() => {
-                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                                    setFontPickerExpanded(!fontPickerExpanded);
-                                }}>
-                                <View
-                                    style={[
-                                        styles.iconContainer,
-                                        { backgroundColor: theme.colors.tertiaryContainer },
-                                    ]}>
-                                    <Ionicons
-                                        name="text-outline"
-                                        size={18}
-                                        color={theme.colors.tertiary}
-                                    />
+                                style={({ pressed }) => [styles.groupedRow, pressed && styles.cardPressed]}
+                                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setFontPickerExpanded(!fontPickerExpanded); }}>
+                                <View style={[styles.iconContainer, { backgroundColor: theme.colors.tertiaryContainer }]}>
+                                    <Ionicons name="text-outline" size={18} color={theme.colors.tertiary} />
                                 </View>
                                 <View style={styles.cardContent}>
-                                    <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
-                                        Arabic Font
-                                    </Text>
-                                    <Text
-                                        style={[
-                                            styles.cardSubtitle,
-                                            { color: theme.colors.onSurfaceVariant },
-                                        ]}>
-                                        {getQuranFontOption(settings.quranFont).name} · {getQuranFontOption(settings.quranFont).description}
-                                    </Text>
+                                    <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Arabic Font</Text>
+                                    <Text style={[styles.cardSubtitle, { color: theme.colors.onSurfaceVariant }]}>{getQuranFontOption(settings.quranFont).name}</Text>
                                 </View>
-                                <Ionicons
-                                    name={fontPickerExpanded ? 'chevron-up' : 'chevron-down'}
-                                    size={20}
-                                    color={theme.colors.onSurfaceVariant}
-                                />
+                                <Ionicons name={fontPickerExpanded ? 'chevron-up' : 'chevron-down'} size={20} color={theme.colors.onSurfaceVariant} />
                             </Pressable>
-
                             {fontPickerExpanded && (
                                 <View style={styles.expandedContent}>
                                     <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant }]} />
                                     {QURAN_FONT_OPTIONS.map((font) => {
                                         const isActive = settings.quranFont === font.id;
                                         return (
-                                            <Pressable
-                                                key={font.id}
-                                                style={({ pressed }) => [
-                                                    styles.prayerRow,
-                                                    isActive && { backgroundColor: theme.colors.primaryContainer },
-                                                    pressed && { opacity: 0.7 },
-                                                ]}
-                                                onPress={() => {
-                                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                                    updateSettings({ quranFont: font.id as QuranFontId });
-                                                    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                                                    setFontPickerExpanded(false);
-                                                }}>
+                                            <Pressable key={font.id} style={({ pressed }) => [styles.prayerRow, isActive && { backgroundColor: theme.colors.primaryContainer }, pressed && { opacity: 0.7 }]}
+                                                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); updateSettings({ quranFont: font.id as QuranFontId }); LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setFontPickerExpanded(false); }}>
                                                 <View style={{ flex: 1 }}>
-                                                    <Text style={[styles.prayerLabel, { color: theme.colors.onSurface }]}>
-                                                        {font.name}
-                                                    </Text>
-                                                    <Text style={{ fontSize: 11, color: theme.colors.onSurfaceVariant }}>
-                                                        {font.description}
-                                                    </Text>
+                                                    <Text style={[styles.prayerLabel, { color: theme.colors.onSurface }]}>{font.name}</Text>
+                                                    <Text style={{ fontSize: 11, color: theme.colors.onSurfaceVariant }}>{font.description}</Text>
                                                 </View>
-                                                <Text
-                                                    style={{
-                                                        fontFamily: font.fontFamily,
-                                                        fontSize: 18,
-                                                        color: theme.colors.onSurface,
-                                                        writingDirection: 'rtl',
-                                                    }}>
-                                                    بِسْمِ ٱللَّهِ
-                                                </Text>
-                                                {isActive && (
-                                                    <Ionicons
-                                                        name="checkmark-circle"
-                                                        size={20}
-                                                        color={theme.colors.primary}
-                                                        style={{ marginLeft: Spacing.xs }}
-                                                    />
-                                                )}
+                                                <Text style={{ fontFamily: font.fontFamily, fontSize: 18, color: theme.colors.onSurface, writingDirection: 'rtl' }}>بِسْمِ ٱللَّهِ</Text>
+                                                {isActive && <Ionicons name="checkmark-circle" size={20} color={theme.colors.primary} style={{ marginLeft: Spacing.xs }} />}
                                             </Pressable>
                                         );
                                     })}
                                 </View>
                             )}
-                        </View>
 
-                        {/* Transliteration Toggle */}
-                        <View
-                            style={[
-                                styles.card,
-                                { backgroundColor: theme.colors.surface },
-                                Shadows.sm,
-                            ]}>
-                            <View
-                                style={[
-                                    styles.iconContainer,
-                                    { backgroundColor: theme.colors.secondaryContainer },
-                                ]}>
-                                <Ionicons
-                                    name="text-outline"
-                                    size={18}
-                                    color={theme.colors.secondary}
-                                />
+                            <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant, marginHorizontal: Spacing.md }]} />
+
+                            {/* Transliteration */}
+                            <View style={styles.groupedRow}>
+                                <View style={[styles.iconContainer, { backgroundColor: theme.colors.secondaryContainer }]}>
+                                    <Ionicons name="text-outline" size={18} color={theme.colors.secondary} />
+                                </View>
+                                <View style={styles.cardContent}>
+                                    <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Transliteration</Text>
+                                </View>
+                                <RNSwitch value={settings.showTransliteration} onValueChange={(value) => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); updateSettings({ showTransliteration: value }); }} trackColor={{ false: '#48484A', true: theme.colors.primary }} thumbColor={settings.showTransliteration ? '#FFF' : '#F4F4F4'} />
                             </View>
-                            <View style={styles.cardContent}>
-                                <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
-                                    Transliteration
-                                </Text>
-                                <Text
-                                    style={[
-                                        styles.cardSubtitle,
-                                        { color: theme.colors.onSurfaceVariant },
-                                    ]}>
-                                    Show Arabic pronunciation in Latin script
-                                </Text>
+
+                            <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant, marginHorizontal: Spacing.md }]} />
+
+                            {/* Dark Mode */}
+                            <View style={styles.groupedRow}>
+                                <View style={[styles.iconContainer, { backgroundColor: theme.colors.primaryContainer }]}>
+                                    <Ionicons name="moon" size={18} color={theme.colors.primary} />
+                                </View>
+                                <View style={styles.cardContent}>
+                                    <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Dark Mode</Text>
+                                </View>
+                                <RNSwitch value={settings.theme === 'dark'} onValueChange={toggleDarkMode} trackColor={{ false: '#48484A', true: theme.colors.primary }} thumbColor={settings.theme === 'dark' ? '#FFF' : '#F4F4F4'} />
                             </View>
-                            <RNSwitch
-                                value={settings.showTransliteration}
-                                onValueChange={(value) => {
-                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                    updateSettings({ showTransliteration: value });
-                                }}
-                                trackColor={{ false: '#48484A', true: theme.colors.primary }}
-                                thumbColor={settings.showTransliteration ? '#FFF' : '#F4F4F4'}
-                            />
                         </View>
                     </View>
                     {/* Notifications Section */}
@@ -871,178 +818,73 @@ export default function SettingsScreen() {
                         </View>
                     </View>
 
-                    {/* Appearance Section */}
+                    {/* ═══ SUPPORT & LEGAL ═══ */}
                     <View style={styles.section}>
-                        <Text
-                            style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>
-                            APPEARANCE
+                        <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>
+                            SUPPORT & LEGAL
                         </Text>
-                        <View
-                            style={[
-                                styles.card,
-                                { backgroundColor: theme.colors.surface },
-                                Shadows.sm,
-                            ]}>
-                            <View
-                                style={[
-                                    styles.iconContainer,
-                                    { backgroundColor: theme.colors.primaryContainer },
-                                ]}>
-                                <Ionicons name="moon" size={18} color={theme.colors.primary} />
-                            </View>
-                            <View style={styles.cardContent}>
-                                <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
-                                    Dark Mode
-                                </Text>
-                            </View>
-                            <Switch
-                                value={settings.theme === 'dark'}
-                                onValueChange={toggleDarkMode}
-                                color={theme.colors.primary}
-                            />
-                        </View>
-                    </View>
-
-                    {/* About Section */}
-                    <View style={styles.section}>
-                        <Text
-                            style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>
-                            ABOUT
-                        </Text>
-                        <View
-                            style={[
-                                styles.card,
-                                { backgroundColor: theme.colors.surface },
-                                Shadows.sm,
-                            ]}>
-                            <View
-                                style={[
-                                    styles.iconContainer,
-                                    { backgroundColor: theme.colors.secondaryContainer },
-                                ]}>
-                                <Ionicons
-                                    name="information"
-                                    size={18}
-                                    color={theme.colors.secondary}
-                                />
-                            </View>
-                            <View style={styles.cardContent}>
-                                <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
-                                    Version
-                                </Text>
-                                <Text
-                                    style={[
-                                        styles.cardSubtitle,
-                                        { color: theme.colors.onSurfaceVariant },
-                                    ]}>
-                                    2.0.0
-                                </Text>
-                            </View>
-                        </View>
-                    </View>
-
-                    {/* Legal Section */}
-                    <View style={styles.section}>
-                        <Text
-                            style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>
-                            LEGAL
-                        </Text>
-                        <Pressable
-                            style={({ pressed }) => [
-                                styles.card,
-                                { backgroundColor: theme.colors.surface, marginBottom: Spacing.sm },
-                                Shadows.sm,
-                                pressed && styles.cardPressed,
-                            ]}
-                            onPress={() => Linking.openURL('https://mahmoudahmedalaa.github.io/QuranNotes-app/legal/privacy.html')}>
-                            <View
-                                style={[
-                                    styles.iconContainer,
-                                    { backgroundColor: theme.colors.primaryContainer },
-                                ]}>
-                                <Ionicons name="shield-checkmark" size={18} color={theme.colors.primary} />
-                            </View>
-                            <View style={styles.cardContent}>
-                                <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
-                                    Privacy Policy
-                                </Text>
-                            </View>
-                            <Ionicons
-                                name="open-outline"
-                                size={18}
-                                color={theme.colors.onSurfaceVariant}
-                            />
-                        </Pressable>
-                        <Pressable
-                            style={({ pressed }) => [
-                                styles.card,
-                                { backgroundColor: theme.colors.surface },
-                                Shadows.sm,
-                                pressed && styles.cardPressed,
-                            ]}
-                            onPress={() => Linking.openURL('https://mahmoudahmedalaa.github.io/QuranNotes-app/legal/terms.html')}>
-                            <View
-                                style={[
-                                    styles.iconContainer,
-                                    { backgroundColor: theme.colors.secondaryContainer },
-                                ]}>
-                                <Ionicons name="document-text" size={18} color={theme.colors.secondary} />
-                            </View>
-                            <View style={styles.cardContent}>
-                                <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>
-                                    Terms of Use
-                                </Text>
-                            </View>
-                            <Ionicons
-                                name="open-outline"
-                                size={18}
-                                color={theme.colors.onSurfaceVariant}
-                            />
-                        </Pressable>
-                    </View>
-
-                    {/* Account Actions */}
-                    {user && (
-                        <View style={styles.section}>
-                            <Text
-                                style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>
-                                ACCOUNT
-                            </Text>
-                            <Pressable
-                                style={({ pressed }) => [
-                                    styles.card,
-                                    { backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.error + '40' },
-                                    Shadows.sm,
-                                    pressed && styles.cardPressed,
-                                ]}
-                                onPress={handleDeleteAccount}>
-                                <View
-                                    style={[
-                                        styles.iconContainer,
-                                        { backgroundColor: theme.colors.errorContainer || '#FFEBEE' },
-                                    ]}>
-                                    <Ionicons name="trash" size={18} color={theme.colors.error} />
+                        <View style={[styles.groupedCard, { backgroundColor: theme.colors.surface }, Shadows.sm]}>
+                            {/* Version */}
+                            <View style={styles.groupedRow}>
+                                <View style={[styles.iconContainer, { backgroundColor: theme.colors.secondaryContainer }]}>
+                                    <Ionicons name="information" size={18} color={theme.colors.secondary} />
                                 </View>
                                 <View style={styles.cardContent}>
-                                    <Text style={[styles.cardTitle, { color: theme.colors.error }]}>
-                                        Delete Account
-                                    </Text>
-                                    <Text
-                                        style={[
-                                            styles.cardSubtitle,
-                                            { color: theme.colors.onSurfaceVariant },
-                                        ]}>
-                                        Permanently delete all data
-                                    </Text>
+                                    <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Version</Text>
+                                    <Text style={[styles.cardSubtitle, { color: theme.colors.onSurfaceVariant }]}>2.0.0</Text>
                                 </View>
-                                <Ionicons
-                                    name="chevron-forward"
-                                    size={20}
-                                    color={theme.colors.error}
-                                />
+                            </View>
+
+                            <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant, marginHorizontal: Spacing.md }]} />
+
+                            {/* Privacy Policy */}
+                            <Pressable
+                                style={({ pressed }) => [styles.groupedRow, pressed && styles.cardPressed]}
+                                onPress={() => Linking.openURL('https://mahmoudahmedalaa.github.io/QuranNotes-app/legal/privacy.html')}>
+                                <View style={[styles.iconContainer, { backgroundColor: theme.colors.primaryContainer }]}>
+                                    <Ionicons name="shield-checkmark" size={18} color={theme.colors.primary} />
+                                </View>
+                                <View style={styles.cardContent}>
+                                    <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Privacy Policy</Text>
+                                </View>
+                                <Ionicons name="open-outline" size={18} color={theme.colors.onSurfaceVariant} />
                             </Pressable>
+
+                            <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant, marginHorizontal: Spacing.md }]} />
+
+                            {/* Terms of Use */}
+                            <Pressable
+                                style={({ pressed }) => [styles.groupedRow, pressed && styles.cardPressed]}
+                                onPress={() => Linking.openURL('https://mahmoudahmedalaa.github.io/QuranNotes-app/legal/terms.html')}>
+                                <View style={[styles.iconContainer, { backgroundColor: theme.colors.secondaryContainer }]}>
+                                    <Ionicons name="document-text" size={18} color={theme.colors.secondary} />
+                                </View>
+                                <View style={styles.cardContent}>
+                                    <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Terms of Use</Text>
+                                </View>
+                                <Ionicons name="open-outline" size={18} color={theme.colors.onSurfaceVariant} />
+                            </Pressable>
+
+                            {/* Delete Account (destructive, at bottom) */}
+                            {user && (
+                                <>
+                                    <View style={[styles.divider, { backgroundColor: theme.colors.surfaceVariant, marginHorizontal: Spacing.md }]} />
+                                    <Pressable
+                                        style={({ pressed }) => [styles.groupedRow, pressed && styles.cardPressed]}
+                                        onPress={handleDeleteAccount}>
+                                        <View style={[styles.iconContainer, { backgroundColor: theme.colors.errorContainer || '#FFEBEE' }]}>
+                                            <Ionicons name="trash" size={18} color={theme.colors.error} />
+                                        </View>
+                                        <View style={styles.cardContent}>
+                                            <Text style={[styles.cardTitle, { color: theme.colors.error }]}>Delete Account</Text>
+                                            <Text style={[styles.cardSubtitle, { color: theme.colors.onSurfaceVariant }]}>Permanently delete all data</Text>
+                                        </View>
+                                        <Ionicons name="chevron-forward" size={20} color={theme.colors.error} />
+                                    </Pressable>
+                                </>
+                            )}
                         </View>
-                    )}
+                    </View>
 
 
 
@@ -1151,6 +993,16 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     // Expandable card styles
+    groupedCard: {
+        borderRadius: BorderRadius.lg,
+        overflow: 'hidden',
+    },
+    groupedRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: Spacing.md,
+        paddingVertical: 14,
+    },
     expandableCard: {
         borderRadius: BorderRadius.lg,
         overflow: 'hidden',

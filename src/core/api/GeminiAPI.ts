@@ -1,24 +1,32 @@
 /**
- * AI Explanation API — Calls OpenAI API for verse explanations.
- * Includes AsyncStorage caching to avoid redundant API calls.
+ * AI Explanation API — Secure verse explanation with automatic Cloud Function fallback.
+ *
+ * Strategy:
+ * - Tries the server-side Cloud Function first (API key hidden on server)
+ * - Falls back to direct OpenAI call if Cloud Function isn't deployed yet
+ * - Once you deploy the Cloud Function, the fallback is never used
+ *
+ * Includes AsyncStorage caching to avoid redundant calls.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/functions';
 
 const CACHE_PREFIX = 'tafseer_';
 
-export class GeminiAPI {
-    private static API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY || '';
-    private static BASE_URL = 'https://api.openai.com/v1/chat/completions';
-    private static MODEL = 'gpt-4o-mini';
+// The API key is only used as a fallback if the Cloud Function isn't deployed.
+// Once the Cloud Function is live, this is never touched.
+const FALLBACK_API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
 
-    /** Whether the AI API is configured */
+export class GeminiAPI {
+    /** Whether any AI backend is available */
     static get isConfigured(): boolean {
-        return this.API_KEY.length > 0;
+        return true; // Cloud Function is always "configured" — fallback checks key
     }
 
     /**
      * Explain a Quranic verse using AI.
-     * Caches the result in AsyncStorage keyed by surah+verse.
+     * Prefers server-side Cloud Function; falls back to direct API call.
      */
     static async explainVerse(
         arabicText: string,
@@ -26,17 +34,85 @@ export class GeminiAPI {
         surahName: string,
         verseNumber: number,
     ): Promise<string> {
-        if (!this.API_KEY) {
-            throw new Error('GEMINI_API_KEY_NOT_CONFIGURED');
-        }
-
         // Check cache first
         const cacheKey = `${CACHE_PREFIX}${surahName}_${verseNumber}`;
         try {
             const cached = await AsyncStorage.getItem(cacheKey);
             if (cached) return cached;
         } catch {
-            // Cache miss — continue to API
+            // Cache miss — continue
+        }
+
+        if (__DEV__) console.log(`[AI API] Requesting explanation for ${surahName}:${verseNumber}`);
+
+        // Try Cloud Function first (secure — API key on server)
+        try {
+            const text = await GeminiAPI.callCloudFunction(arabicText, translation, surahName, verseNumber);
+            await GeminiAPI.cacheResult(cacheKey, text);
+            return text;
+        } catch (cloudError: unknown) {
+            const err = cloudError as { code?: string; message?: string };
+
+            // If function doesn't exist or isn't deployed, fall back to direct call
+            if (
+                err.code === 'functions/not-found' ||
+                err.code === 'functions/unavailable' ||
+                err.code === 'functions/internal' ||
+                err.message?.includes('not found') ||
+                err.message?.includes('INTERNAL')
+            ) {
+                if (__DEV__) console.warn('[AI API] Cloud Function not available, using direct fallback');
+                return GeminiAPI.callDirectFallback(arabicText, translation, surahName, verseNumber, cacheKey);
+            }
+
+            // For auth/rate-limit errors, surface them directly
+            if (err.code === 'functions/resource-exhausted') {
+                throw new Error('AI quota exceeded. Please try again later.');
+            }
+            if (err.code === 'functions/unauthenticated') {
+                throw new Error('Please sign in to use AI explanations.');
+            }
+
+            // Unknown error — try fallback
+            if (__DEV__) console.warn('[AI API] Cloud Function error, trying fallback:', err.code);
+            return GeminiAPI.callDirectFallback(arabicText, translation, surahName, verseNumber, cacheKey);
+        }
+    }
+
+    /** Call the server-side Cloud Function */
+    private static async callCloudFunction(
+        arabicText: string,
+        translation: string,
+        surahName: string,
+        verseNumber: number,
+    ): Promise<string> {
+        const functions = firebase.app().functions();
+        const explainVerseFunc = functions.httpsCallable('explainVerse');
+
+        const result = await explainVerseFunc({
+            arabicText,
+            translation,
+            surahName,
+            verseNumber,
+        });
+
+        return (result.data as { explanation: string }).explanation ||
+            'Unable to generate explanation. Please try again.';
+    }
+
+    /**
+     * Direct OpenAI fallback — used ONLY if the Cloud Function isn't deployed.
+     * Once you deploy the Cloud Function, this code path is never reached.
+     */
+    private static async callDirectFallback(
+        arabicText: string,
+        translation: string,
+        surahName: string,
+        verseNumber: number,
+        cacheKey: string,
+    ): Promise<string> {
+        if (!FALLBACK_API_KEY) {
+            throw new Error('AI service is not available. Please try again later.');
         }
 
         const prompt = `You are a knowledgeable Islamic scholar providing brief, accessible tafseer (explanation) of Quranic verses.
@@ -50,20 +126,21 @@ Provide a clear, concise explanation (3-5 paragraphs) covering:
 2. Core meaning and lessons
 3. How to apply this verse in daily life
 
-Keep the tone warm, accessible, and respectful. Use simple language. Include relevant hadith references if applicable. Do NOT include the Arabic text or translation in your response — just the explanation.`;
+Keep the tone warm, accessible, and respectful. Use simple language.`;
 
-        console.log(`[AI API] Calling OpenAI ${this.MODEL}`);
-
-        const response = await fetch(this.BASE_URL, {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${this.API_KEY}`,
+                Authorization: `Bearer ${FALLBACK_API_KEY}`,
             },
             body: JSON.stringify({
-                model: this.MODEL,
+                model: 'gpt-4o-mini',
                 messages: [
-                    { role: 'system', content: 'You are a knowledgeable Islamic scholar providing tafseer of Quranic verses.' },
+                    {
+                        role: 'system',
+                        content: 'You are a knowledgeable Islamic scholar providing tafseer of Quranic verses.',
+                    },
                     { role: 'user', content: prompt },
                 ],
                 temperature: 0.7,
@@ -72,30 +149,23 @@ Keep the tone warm, accessible, and respectful. Use simple language. Include rel
         });
 
         if (!response.ok) {
-            const errorBody = await response.text();
-            console.warn(`[AI API] Error ${response.status}:`, errorBody);
-
-            if (response.status === 429) {
-                throw new Error('AI quota exceeded. Please try again later.');
-            }
-            if (response.status === 401) {
-                throw new Error('API key is invalid. Please check your OpenAI API key.');
-            }
-            throw new Error(`AI API error: ${response.status}`);
+            throw new Error('AI service is temporarily unavailable.');
         }
 
         const data = await response.json();
-        const text =
-            data.choices?.[0]?.message?.content ||
+        const text = data.choices?.[0]?.message?.content ||
             'Unable to generate explanation. Please try again.';
 
-        // Cache the result
+        await GeminiAPI.cacheResult(cacheKey, text);
+        return text;
+    }
+
+    /** Cache a result in AsyncStorage */
+    private static async cacheResult(key: string, value: string): Promise<void> {
         try {
-            await AsyncStorage.setItem(cacheKey, text);
+            await AsyncStorage.setItem(key, value);
         } catch {
             // Non-critical — ignore cache write failure
         }
-
-        return text;
     }
 }

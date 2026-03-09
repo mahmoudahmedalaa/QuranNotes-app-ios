@@ -23,7 +23,7 @@ export class RemoteRecordingRepository {
         try {
             await deleteDoc(doc(db, 'recordings', recordingId));
         } catch (error) {
-            console.error("Error deleting recording:", error);
+            if (__DEV__) console.error("Error deleting recording:", error);
             throw error;
         }
     }

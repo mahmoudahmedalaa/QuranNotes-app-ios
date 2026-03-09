@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, Pressable, Animated, ViewToken, AppState, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Animated, ViewToken, AppState, Alert, Modal } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,6 +11,7 @@ import { useAudio } from '../../src/features/audio-player/infrastructure/AudioCo
 import { useAudioRecorder } from '../../src/core/hooks/useAudioRecorder';
 import { VerseItem } from '../../src/features/quran-reading/presentation/VerseItem';
 import { useNotes } from '../../src/core/hooks/useNotes';
+import { useHighlights, HIGHLIGHT_COLORS } from '../../src/features/notes/infrastructure/HighlightContext';
 import { useVoiceFollowAlong } from '../../src/core/hooks/useVoiceFollowAlong';
 import { useSettings } from '../../src/features/settings/infrastructure/SettingsContext';
 import { WaveBackground } from '../../src/core/components/animated/WaveBackground';
@@ -25,7 +26,9 @@ import { FollowAlongSession } from '../../src/core/domain/entities/FollowAlongSe
 
 import { Verse } from '../../src/core/domain/entities/Quran';
 import { ReadingPositionService, ReadingPosition } from '../../src/features/quran-reading/infrastructure/ReadingPositionService';
-import { ShareCardGenerator, ShareCardHandle, VerseShareData } from '../../src/features/sharing/presentation/ShareCardGenerator';
+import { PremiumShareSheet } from '../../src/features/sharing/presentation/PremiumShareSheet';
+import { ShareCardData } from '../../src/features/sharing/domain/ShareTemplateTypes';
+import { TafsirBottomSheet, TafsirSheetData } from '../../src/features/tafsir';
 
 
 
@@ -51,6 +54,7 @@ export default function SurahDetail() {
     const { isRecording, isPaused, startRecording, stopRecording, forceCleanup } = useAudioRecorder();
     const navigation = useNavigation();
     const { notes } = useNotes();
+    const { highlightVerse, unhighlightVerse, getHighlight } = useHighlights();
 
     const followAlong = useVoiceFollowAlong(surah?.verses || [], surah?.number, surah?.englishName, surah?.name);
 
@@ -59,6 +63,7 @@ export default function SurahDetail() {
     const [lastRecordingUri, setLastRecordingUri] = useState<string | null>(null);
     const [recordingVerseId, setRecordingVerseId] = useState<number | undefined>();
     const [isStudyMode, setIsStudyMode] = useState(false);
+    const [selectedVerseForHighlight, setSelectedVerseForHighlight] = useState<number | null>(null);
 
     const [followAlongModalVisible, setFollowAlongModalVisible] = useState(false);
     const [completedFollowAlongSession, setCompletedFollowAlongSession] = useState<FollowAlongSession | null>(null);
@@ -84,13 +89,12 @@ export default function SurahDetail() {
     const [showReturnToAudio, setShowReturnToAudio] = useState(false);
 
     // ── Share state ──
-    const shareCardRef = useRef<ShareCardHandle>(null);
-    const [shareVerseData, setShareVerseData] = useState<VerseShareData | null>(null);
+    const [showShareSheet, setShowShareSheet] = useState(false);
+    const [shareVerseData, setShareVerseData] = useState<ShareCardData | null>(null);
 
-    // ── Tafseer state ──
-    // tafseerVerse state kept for future tafseer modal integration
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [, setTafseerVerse] = useState<{ arabicText: string; translation: string; surahName: string; verseNumber: number } | null>(null);
+    // ── Tafsir state ──
+    const [showTafsir, setShowTafsir] = useState(false);
+    const [tafsirData, setTafsirData] = useState<TafsirSheetData | null>(null);
 
     useEffect(() => {
         if (id) loadSurah(Number(id), settings.translationEdition, settings.showTransliteration);
@@ -515,17 +519,14 @@ export default function SurahDetail() {
     // ── Share a verse ──
     const handleShareVerse = useCallback((verse: Verse) => {
         if (!surah) return;
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         setShareVerseData({
-            surahName: surah.englishName,
-            surahNameArabic: surah.name,
-            verseNumber: verse.number,
+            type: 'verse',
             arabicText: verse.text,
             englishText: verse.translation,
+            reference: `${surah.englishName} ${surah.number}:${verse.number}`,
         });
-        // Wait for render, then capture
-        setTimeout(() => {
-            shareCardRef.current?.capture();
-        }, 100);
+        setShowShareSheet(true);
     }, [surah]);
 
     if (loading) {
@@ -581,6 +582,7 @@ export default function SurahDetail() {
                         hasNote={notes.some(
                             n => n.surahId === surah.number && n.verseId === item.number,
                         )}
+                        highlightColor={getHighlight(surah.number, item.number)?.color}
                         onPlay={() => playFromVerse(surah, item.number)}
                         onPause={pause}
                         onNote={() =>
@@ -591,7 +593,17 @@ export default function SurahDetail() {
                         }
                         onRecord={() => handleRecordVerse(item.number)}
                         onShare={() => handleShareVerse(item)}
-
+                        onExplain={() => {
+                            setTafsirData({
+                                arabicText: item.text,
+                                translation: item.translation || '',
+                                surahName: surah.englishName,
+                                verseNumber: item.number,
+                                surahNumber: surah.number,
+                            });
+                            setShowTafsir(true);
+                        }}
+                        onHighlight={() => setSelectedVerseForHighlight(item.number)}
                         isStudyMode={isStudyMode}
                         isHighlighted={followAlong.matchedVerseId === item.number}
                         showTransliteration={settings.showTransliteration}
@@ -968,14 +980,90 @@ export default function SurahDetail() {
                 )}
             </AnimatePresence>
 
-            {/* Share Card Generator — rendered offscreen for capture */}
+            {/* Premium Share Sheet */}
             {shareVerseData && (
-                <ShareCardGenerator
-                    ref={shareCardRef}
-                    type="verse"
-                    verseData={shareVerseData}
+                <PremiumShareSheet
+                    visible={showShareSheet}
+                    onDismiss={() => {
+                        setShowShareSheet(false);
+                        setShareVerseData(null);
+                    }}
+                    data={shareVerseData}
                 />
             )}
+
+            {/* Tafsir Bottom Sheet */}
+            <TafsirBottomSheet
+                visible={showTafsir}
+                onDismiss={() => {
+                    setShowTafsir(false);
+                    setTafsirData(null);
+                }}
+                data={tafsirData}
+            />
+
+            {/* Highlight Color Picker Modal */}
+            <Modal
+                visible={selectedVerseForHighlight !== null}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setSelectedVerseForHighlight(null)}
+            >
+                <Pressable
+                    style={highlightStyles.overlay}
+                    onPress={() => setSelectedVerseForHighlight(null)}
+                >
+                    <View style={[
+                        highlightStyles.pickerCard,
+                        { backgroundColor: theme.colors.surface },
+                        Shadows.lg,
+                    ]}>
+                        <Text style={[highlightStyles.pickerTitle, { color: theme.colors.onSurface }]}>
+                            Highlight Verse {selectedVerseForHighlight}
+                        </Text>
+                        <View style={highlightStyles.colorRow}>
+                            {HIGHLIGHT_COLORS.map(({ name, color }) => {
+                                const isActive = surah && selectedVerseForHighlight
+                                    ? getHighlight(surah.number, selectedVerseForHighlight)?.color === color
+                                    : false;
+                                return (
+                                    <Pressable
+                                        key={name}
+                                        onPress={() => {
+                                            if (surah && selectedVerseForHighlight) {
+                                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                                highlightVerse(surah.number, selectedVerseForHighlight, color);
+                                                setSelectedVerseForHighlight(null);
+                                            }
+                                        }}
+                                        style={[
+                                            highlightStyles.colorCircle,
+                                            { backgroundColor: color },
+                                            isActive && highlightStyles.colorCircleActive,
+                                        ]}
+                                    />
+                                );
+                            })}
+                        </View>
+                        {surah && selectedVerseForHighlight && getHighlight(surah.number, selectedVerseForHighlight) && (
+                            <Pressable
+                                onPress={() => {
+                                    if (surah && selectedVerseForHighlight) {
+                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                        unhighlightVerse(surah.number, selectedVerseForHighlight);
+                                        setSelectedVerseForHighlight(null);
+                                    }
+                                }}
+                                style={[highlightStyles.removeButton, { borderColor: theme.colors.outline }]}
+                            >
+                                <Text style={{ color: theme.colors.error, fontWeight: '600', fontSize: 13 }}>
+                                    Remove Highlight
+                                </Text>
+                            </Pressable>
+                        )}
+                    </View>
+                </Pressable>
+            </Modal>
 
 
 
@@ -1176,5 +1264,47 @@ const styles = StyleSheet.create({
         color: '#FFF',
         fontSize: 14,
         fontWeight: '700',
+    },
+});
+
+const highlightStyles = StyleSheet.create({
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.45)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    pickerCard: {
+        borderRadius: BorderRadius.xl,
+        padding: Spacing.lg,
+        width: 280,
+        alignItems: 'center',
+    },
+    pickerTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        marginBottom: Spacing.md,
+    },
+    colorRow: {
+        flexDirection: 'row',
+        gap: 12,
+        marginBottom: Spacing.md,
+    },
+    colorCircle: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+    },
+    colorCircleActive: {
+        borderWidth: 3,
+        borderColor: '#333',
+        transform: [{ scale: 1.15 }],
+    },
+    removeButton: {
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: BorderRadius.md,
+        borderWidth: 1,
+        marginTop: 4,
     },
 });

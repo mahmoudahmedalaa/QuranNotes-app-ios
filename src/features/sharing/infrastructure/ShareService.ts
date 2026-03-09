@@ -2,6 +2,7 @@ import * as Sharing from 'expo-sharing';
 import { captureRef } from 'react-native-view-shot';
 import { RefObject } from 'react';
 import { View } from 'react-native';
+import ViewShot from 'react-native-view-shot';
 
 /**
  * Service for capturing and sharing visual content.
@@ -26,7 +27,7 @@ export class ShareService {
 
             await ShareService.shareImage(uri, message);
         } catch (error) {
-            console.error('Failed to capture and share:', error);
+            if (__DEV__) console.error('Failed to capture and share:', error);
             throw error;
         }
     }
@@ -45,5 +46,40 @@ export class ShareService {
             dialogTitle: message || 'Share from QuranNotes',
             UTI: 'public.png',
         });
+    }
+
+    /**
+     * Capture from a ViewShot ref and share. Returns true on success, false otherwise.
+     * Used by PremiumShareSheet for template-based sharing.
+     */
+    static async shareFromViewShot(
+        viewShotRef: RefObject<ViewShot | null>,
+        message?: string,
+    ): Promise<boolean> {
+        try {
+            if (!viewShotRef.current?.capture) {
+                if (__DEV__) console.warn('[ShareService] ViewShot ref not available');
+                return false;
+            }
+
+            const uri = await viewShotRef.current.capture();
+
+            const isAvailable = await Sharing.isAvailableAsync();
+            if (!isAvailable) {
+                if (__DEV__) console.warn('[ShareService] Sharing not available on device');
+                return false;
+            }
+
+            await Sharing.shareAsync(uri, {
+                mimeType: 'image/png',
+                dialogTitle: message || 'Share from QuranNotes',
+                UTI: 'public.png',
+            });
+
+            return true;
+        } catch (error) {
+            if (__DEV__) console.error('[ShareService] shareFromViewShot failed:', error);
+            return false;
+        }
     }
 }

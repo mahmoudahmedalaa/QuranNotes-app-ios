@@ -25,7 +25,7 @@ export const useRecordingStorage = () => {
             const data = await repo.getAllRecordings();
             setRecordings(data);
         } catch (error) {
-            console.error('Failed to load recordings:', error);
+            if (__DEV__) console.error('Failed to load recordings:', error);
         } finally {
             setLoading(false);
         }
@@ -57,7 +57,7 @@ export const useRecordingStorage = () => {
             await recordActivity(); // Update streak
             return newRecording;
         } catch (error) {
-            console.error('Failed to save recording:', error);
+            if (__DEV__) console.error('Failed to save recording:', error);
             throw error;
         }
     };
@@ -67,7 +67,7 @@ export const useRecordingStorage = () => {
             await repo.deleteRecording(id);
             await loadRecordings();
         } catch (error) {
-            console.error('Failed to delete recording:', error);
+            if (__DEV__) console.error('Failed to delete recording:', error);
         }
     };
 

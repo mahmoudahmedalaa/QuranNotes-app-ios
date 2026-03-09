@@ -4,6 +4,9 @@ export interface Note {
     verseId?: number;
     content: string;
     folderId?: string;
+    isPinned?: boolean;
+    tags?: string[];
+    highlightColor?: string;
     createdAt: Date;
     updatedAt: Date;
 }

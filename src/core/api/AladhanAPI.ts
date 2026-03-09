@@ -180,13 +180,13 @@ export class AladhanAPI {
             const url = `${BASE_URL}/${apiDate}?latitude=${latitude}&longitude=${longitude}&method=${method}`;
             const response = await fetch(url);
             if (!response.ok) {
-                console.warn('[AladhanAPI] HTTP error:', response.status);
+                if (__DEV__) console.warn('[AladhanAPI] HTTP error:', response.status);
                 return null;
             }
 
             const json = await response.json();
             if (json.code !== 200 || !json.data) {
-                console.warn('[AladhanAPI] Unexpected response:', json.code);
+                if (__DEV__) console.warn('[AladhanAPI] Unexpected response:', json.code);
                 return null;
             }
 
@@ -224,7 +224,7 @@ export class AladhanAPI {
 
             return data;
         } catch (err) {
-            console.warn('[AladhanAPI] Fetch failed:', err);
+            if (__DEV__) console.warn('[AladhanAPI] Fetch failed:', err);
             return null;
         }
     }

@@ -76,7 +76,7 @@ export class AudioPlayerService {
                 this.subscribeToEvents();
                 this.isSetup = true;
             } catch (e) {
-                console.warn('[AudioPlayer] Setup failed:', e);
+                if (__DEV__) console.warn('[AudioPlayer] Setup failed:', e);
                 // Player may already be set up (hot reload). Try to continue.
                 this.isSetup = true;
                 this.subscribeToEvents();
@@ -179,7 +179,7 @@ export class AudioPlayerService {
 
         // Playback error
         TrackPlayer.addEventListener(Event.PlaybackError, (event) => {
-            console.error('[AudioPlayer] Playback error:', event.message);
+            if (__DEV__) console.error('[AudioPlayer] Playback error:', event.message);
         });
     }
 

@@ -49,7 +49,7 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             const isProStatus = revenueCatService.isPro(customerInfo);
 
             if (__DEV__) {
-                console.log('[ProContext] checkStatus result:', {
+                if (__DEV__) console.log('[ProContext] checkStatus result:', {
                     isPro: isProStatus,
                     userId: user?.id ?? 'anonymous',
                     activeEntitlements: Object.keys(customerInfo.entitlements.active),
@@ -58,7 +58,7 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
             setIsPro(isProStatus);
         } catch (e) {
-            console.warn('[ProContext] Error checking pro status:', e);
+            if (__DEV__) console.warn('[ProContext] Error checking pro status:', e);
             // SECURE DEFAULT: deny Pro access on error
             setIsPro(false);
         } finally {
@@ -107,7 +107,7 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             const isProStatus = await revenueCatService.restorePurchases();
             setIsPro(isProStatus);
         } catch (e) {
-            console.warn('[ProContext] Error restoring purchases:', e);
+            if (__DEV__) console.warn('[ProContext] Error restoring purchases:', e);
         } finally {
             setLoading(false);
         }

@@ -82,7 +82,7 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
                 setState(INITIAL_STATE);
             }
         } catch (error) {
-            console.error('Failed to load onboarding state:', error);
+            if (__DEV__) console.error('Failed to load onboarding state:', error);
         } finally {
             setLoading(false);
         }
@@ -94,7 +94,7 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
             try {
                 await AsyncStorage.setItem(key, JSON.stringify(newState));
             } catch (error) {
-                console.error('Failed to save onboarding state:', error);
+                if (__DEV__) console.error('Failed to save onboarding state:', error);
             }
         }
         setState(newState);

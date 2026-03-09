@@ -1,7 +1,10 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { INoteRepository } from '../domain/repositories/INoteRepository';
 import { Note } from '../domain/Note';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
+/**
+ * LocalNoteRepository — Stores user notes locally via AsyncStorage.
+ */
 export class LocalNoteRepository implements INoteRepository {
     private readonly STORAGE_KEY = 'user_notes';
 

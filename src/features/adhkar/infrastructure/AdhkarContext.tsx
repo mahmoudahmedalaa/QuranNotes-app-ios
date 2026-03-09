@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import adhkarData from '../data/adhkar.json';
+import { ReviewService } from '../../../core/services/ReviewService';
+import { CloudSyncEvents } from '../../../core/application/services/CloudSyncEvents';
 
 // ── Types ────────────────────────────────────────────────────────────
 export interface Dhikr {
@@ -83,6 +85,14 @@ export const AdhkarProvider = ({ children }: { children: React.ReactNode }) => {
         loadStreak();
     }, []);
 
+    // Re-read when cloud sync pulls remote data
+    useEffect(() => {
+        return CloudSyncEvents.onPull(() => {
+            loadProgress();
+            loadStreak();
+        });
+    }, []);
+
     const loadProgress = async () => {
         try {
             const today = getToday();
@@ -98,7 +108,7 @@ export const AdhkarProvider = ({ children }: { children: React.ReactNode }) => {
                 night: nightData ? JSON.parse(nightData) : null,
             });
         } catch (e) {
-            console.error('Failed to load adhkar progress:', e);
+            if (__DEV__) console.error('Failed to load adhkar progress:', e);
         } finally {
             setIsLoading(false);
         }
@@ -122,7 +132,7 @@ export const AdhkarProvider = ({ children }: { children: React.ReactNode }) => {
                 }
             }
         } catch (e) {
-            console.error('Failed to load adhkar streak:', e);
+            if (__DEV__) console.error('Failed to load adhkar streak:', e);
         }
     };
 
@@ -131,7 +141,7 @@ export const AdhkarProvider = ({ children }: { children: React.ReactNode }) => {
             const today = getToday();
             await AsyncStorage.setItem(getStorageKey(today, period), JSON.stringify(progress));
         } catch (e) {
-            console.error('Failed to save adhkar progress:', e);
+            if (__DEV__) console.error('Failed to save adhkar progress:', e);
         }
     };
 
@@ -152,9 +162,12 @@ export const AdhkarProvider = ({ children }: { children: React.ReactNode }) => {
                 count += 1;
                 await AsyncStorage.setItem(STREAK_KEY, JSON.stringify({ count, lastDate: today }));
                 setStreak(count);
+
+                // Trigger smart review prompt at streak milestones (3, 7, 14, 30)
+                ReviewService.onAdhkarStreakUpdate(count);
             }
         } catch (e) {
-            console.error('Failed to update adhkar streak:', e);
+            if (__DEV__) console.error('Failed to update adhkar streak:', e);
         }
     };
 

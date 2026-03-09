@@ -65,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const authUser = await authRepo.signInAnonymously();
             setUser(authUser);
         } catch (e) {
-            console.error('[AuthContext] loginAnonymously error:', e);
+            if (__DEV__) console.error('[AuthContext] loginAnonymously error:', e);
             throw e;
         } finally {
             setLoading(false);
@@ -82,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const authUser = await authRepo.signInWithEmail(email, pass);
             setUser(authUser);
         } catch (e) {
-            console.error('[AuthContext] loginWithEmail error:', e);
+            if (__DEV__) console.error('[AuthContext] loginWithEmail error:', e);
             throw e;
         } finally {
             setLoading(false);
@@ -101,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const authUser = await authRepo.signInWithGoogle();
             setUser(authUser);
         } catch (e) {
-            console.error('[AuthContext] loginWithGoogle error:', e);
+            if (__DEV__) console.error('[AuthContext] loginWithGoogle error:', e);
             throw e;
         } finally {
             setLoading(false);
@@ -120,7 +120,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const authUser = await authRepo.signInWithApple();
             setUser(authUser);
         } catch (e) {
-            console.error('[AuthContext] loginWithApple error:', e);
+            if (__DEV__) console.error('[AuthContext] loginWithApple error:', e);
             throw e;
         } finally {
             setLoading(false);
@@ -136,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             await HadithBookmarkService.clearAll();
             await authRepo.signUpWithEmail(email, pass);
         } catch (e) {
-            console.error('[AuthContext] registerWithEmail error:', e);
+            if (__DEV__) console.error('[AuthContext] registerWithEmail error:', e);
             throw e;
         } finally {
             setLoading(false);
@@ -147,7 +147,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             await authRepo.sendPasswordReset(email);
         } catch (e) {
-            console.error('[AuthContext] resetPassword error:', e);
+            if (__DEV__) console.error('[AuthContext] resetPassword error:', e);
             throw e;
         }
     };
@@ -166,7 +166,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             await AsyncStorage.removeItem('hasSeenWelcome');
 
         } catch (e) {
-            console.error('[AuthContext] logout error:', e);
+            if (__DEV__) console.error('[AuthContext] logout error:', e);
             throw e;
         } finally {
             setLoading(false);
@@ -180,7 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(null);
             await AsyncStorage.clear();
         } catch (e) {
-            console.error('[AuthContext] deleteAccount error:', e);
+            if (__DEV__) console.error('[AuthContext] deleteAccount error:', e);
             throw e;
         } finally {
             setLoading(false);
@@ -194,7 +194,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(null);
             await AsyncStorage.clear();
         } catch (e) {
-            console.error('[AuthContext] deleteAccountWithPassword error:', e);
+            if (__DEV__) console.error('[AuthContext] deleteAccountWithPassword error:', e);
             throw e;
         } finally {
             setLoading(false);

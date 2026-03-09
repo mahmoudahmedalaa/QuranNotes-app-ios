@@ -24,6 +24,8 @@ const FEATURES = [
     { icon: 'book-open-page-variant', title: 'Hadith Library', description: 'Browse all topics & hadiths' },
     { icon: 'refresh', title: 'Unlimited Hadith Refresh', description: 'Discover new hadiths anytime' },
     { icon: 'bell-ring', title: 'Daily Hadith Notifications', description: 'Prophetic wisdom every morning' },
+    { icon: 'image-multiple', title: 'Premium Share Templates', description: 'Beautiful cards for social sharing' },
+    { icon: 'auto-fix', title: 'Unlimited AI Quran Insights', description: 'AI-powered verse explanations & Q&A' },
 ];
 
 const MONTHLY_PRICE = 4.99;
@@ -47,7 +49,7 @@ export default function PaywallScreen() {
             const current = await revenueCatService.getOfferings();
             setOffering(current);
         } catch (e) {
-            console.error('Failed to load offerings:', e);
+            if (__DEV__) console.error('Failed to load offerings:', e);
         } finally {
             setLoading(false);
         }
@@ -109,6 +111,18 @@ export default function PaywallScreen() {
                     subtitle: 'Browse all hadith topics and discover the Prophet\'s wisdom. Upgrade to Pro for full access.',
                     highlightIndex: 7
                 };
+            case 'premium-sharing':
+                return {
+                    title: 'Unlock Premium Templates',
+                    subtitle: 'Share beautiful, professionally designed cards with your community.',
+                    highlightIndex: 10
+                };
+            case 'ai-tafsir':
+                return {
+                    title: 'Unlock Unlimited AI Insights',
+                    subtitle: "You've used your free AI explanations for today. Upgrade to Pro for unlimited AI-powered verse insights and Q&A.",
+                    highlightIndex: 11
+                };
             default:
                 return {
                     title: 'QuranNotes Pro',
@@ -151,7 +165,7 @@ export default function PaywallScreen() {
                 Alert.alert('Purchase Failed', error || 'Could not complete purchase. Please try again.');
             }
         } catch (error) {
-            console.error('Purchase failed:', error);
+            if (__DEV__) console.error('Purchase failed:', error);
             Alert.alert('Error', 'Something went wrong. Please try again.');
         } finally {
             setPurchasing(false);

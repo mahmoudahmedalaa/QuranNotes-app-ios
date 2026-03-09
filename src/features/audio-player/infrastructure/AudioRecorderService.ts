@@ -7,7 +7,7 @@ export class AudioRecorderService {
         try {
             const permission = await Audio.requestPermissionsAsync();
             if (permission.status !== 'granted') {
-                console.warn('Audio permission denied');
+                if (__DEV__) console.warn('Audio permission denied');
                 return;
             }
 
@@ -21,14 +21,14 @@ export class AudioRecorderService {
             );
             this.recording = recording;
         } catch (err) {
-            console.error('Failed to start recording', err);
+            if (__DEV__) console.error('Failed to start recording', err);
             throw err; // Re-throw to UI
         }
     }
 
     async stopRecording(): Promise<string | null> {
         if (!this.recording) {
-            console.warn('No recording to stop');
+            if (__DEV__) console.warn('No recording to stop');
             return null;
         }
 
@@ -43,7 +43,7 @@ export class AudioRecorderService {
             });
             return uri;
         } catch (error) {
-            console.error('Failed to stop recording', error);
+            if (__DEV__) console.error('Failed to stop recording', error);
             return null;
         }
     }

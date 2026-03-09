@@ -22,7 +22,7 @@ export class LocalFollowAlongRepository implements IFollowAlongRepository {
                 endedAt: new Date(s.endedAt),
             }));
         } catch (error) {
-            console.error('Failed to load follow along sessions:', error);
+            if (__DEV__) console.error('Failed to load follow along sessions:', error);
             return [];
         }
     }
@@ -47,7 +47,7 @@ export class LocalFollowAlongRepository implements IFollowAlongRepository {
             const trimmedSessions = sessions.slice(0, 100);
             await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(trimmedSessions));
         } catch (error) {
-            console.error('Failed to save follow along session:', error);
+            if (__DEV__) console.error('Failed to save follow along session:', error);
             throw error;
         }
     }
@@ -58,7 +58,7 @@ export class LocalFollowAlongRepository implements IFollowAlongRepository {
             const filteredSessions = sessions.filter(s => s.id !== id);
             await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(filteredSessions));
         } catch (error) {
-            console.error('Failed to delete follow along session:', error);
+            if (__DEV__) console.error('Failed to delete follow along session:', error);
             throw error;
         }
     }
@@ -72,7 +72,7 @@ export class LocalFollowAlongRepository implements IFollowAlongRepository {
         try {
             await AsyncStorage.removeItem(STORAGE_KEY);
         } catch (error) {
-            console.error('Failed to clear follow along sessions:', error);
+            if (__DEV__) console.error('Failed to clear follow along sessions:', error);
         }
     }
 }

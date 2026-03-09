@@ -29,7 +29,7 @@ export const useQuran = () => {
                 return result;
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to load Surah');
-                console.error(err);
+                if (__DEV__) console.error(err);
                 return null;
             } finally {
                 setLoading(false);
@@ -47,7 +47,7 @@ export const useQuran = () => {
             return result;
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to load Surah list');
-            console.error(err);
+            if (__DEV__) console.error(err);
             return [];
         } finally {
             setLoading(false);

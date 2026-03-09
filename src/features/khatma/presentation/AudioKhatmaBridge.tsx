@@ -50,7 +50,7 @@ export const AudioKhatmaBridge: React.FC = () => {
         markSurahComplete(lastCompletedPlayback.surah);
 
         if (__DEV__) {
-            console.log(`[AudioKhatmaBridge] Auto-completed surah ${lastCompletedPlayback.surah}`);
+            if (__DEV__) console.log(`[AudioKhatmaBridge] Auto-completed surah ${lastCompletedPlayback.surah}`);
         }
     }, [lastCompletedPlayback, markSurahComplete]);
 

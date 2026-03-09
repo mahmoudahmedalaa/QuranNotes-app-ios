@@ -27,7 +27,7 @@ export class RemoteNoteRepository implements INoteRepository {
         try {
             await deleteDoc(doc(db, 'notes', noteId));
         } catch (error) {
-            console.error("Error deleting note:", error);
+            if (__DEV__) console.error("Error deleting note:", error);
             throw error;
         }
     }

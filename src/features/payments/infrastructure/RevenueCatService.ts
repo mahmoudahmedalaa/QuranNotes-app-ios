@@ -30,7 +30,7 @@ class RevenueCatService {
 
         const apiKey = Platform.OS === 'ios' ? API_KEYS.ios : API_KEYS.android;
         if (!apiKey) {
-            console.warn('RevenueCat API key not found');
+            if (__DEV__) console.warn('RevenueCat API key not found');
             return;
         }
 
@@ -44,14 +44,14 @@ class RevenueCatService {
 
     async getOfferings(): Promise<PurchasesOffering | null> {
         if (!this.isInitialized) {
-            console.warn('[RevenueCat] Not initialized, attempting to initialize...');
+            if (__DEV__) console.warn('[RevenueCat] Not initialized, attempting to initialize...');
             await this.initialize();
         }
 
         try {
             const offerings = await Purchases.getOfferings();
             if (!offerings.current) {
-                console.warn('[RevenueCat] No current offering found. Check RevenueCat dashboard.');
+                if (__DEV__) console.warn('[RevenueCat] No current offering found. Check RevenueCat dashboard.');
             }
             return offerings.current;
         } catch (e: unknown) {
@@ -103,14 +103,14 @@ class RevenueCatService {
             const customerInfo = await Purchases.restorePurchases();
             return this.isPro(customerInfo);
         } catch (e) {
-            console.warn('Restore error:', e);
+            if (__DEV__) console.warn('Restore error:', e);
             return false;
         }
     }
 
     async getCustomerInfo(): Promise<CustomerInfo> {
         if (!this.isInitialized) {
-            console.warn('[RevenueCat] Not initialized, attempting to initialize before getCustomerInfo...');
+            if (__DEV__) console.warn('[RevenueCat] Not initialized, attempting to initialize before getCustomerInfo...');
             await this.initialize();
         }
         return await Purchases.getCustomerInfo();
@@ -129,7 +129,7 @@ class RevenueCatService {
             if (__DEV__) console.log('[RevenueCat] logIn success for:', appUserId, 'isPro:', this.isPro(customerInfo));
             return customerInfo;
         } catch (e) {
-            console.warn('[RevenueCat] logIn error:', e);
+            if (__DEV__) console.warn('[RevenueCat] logIn error:', e);
             return null;
         }
     }
@@ -144,7 +144,7 @@ class RevenueCatService {
             const customerInfo = await Purchases.logOut();
             if (__DEV__) console.log('[RevenueCat] logOut success, isPro:', this.isPro(customerInfo));
         } catch (e) {
-            console.warn('[RevenueCat] logOut error:', e);
+            if (__DEV__) console.warn('[RevenueCat] logOut error:', e);
         }
     }
 
@@ -152,7 +152,7 @@ class RevenueCatService {
         const entitlement = customerInfo.entitlements.active['pro_access'];
         const result = !!entitlement;
         if (__DEV__) {
-            console.log('[RevenueCat] isPro check:', result,
+            if (__DEV__) console.log('[RevenueCat] isPro check:', result,
                 'activeEntitlements:', Object.keys(customerInfo.entitlements.active));
         }
         return result;

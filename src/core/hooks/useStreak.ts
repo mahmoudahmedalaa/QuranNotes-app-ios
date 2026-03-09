@@ -3,6 +3,8 @@ import { AppState, AppStateStatus } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserStreak, INITIAL_STREAK } from '../domain/entities/UserStreak';
 import { StreakService } from '../application/services/StreakService';
+import { ReviewService } from '../services/ReviewService';
+import { CloudSyncEvents } from '../application/services/CloudSyncEvents';
 
 const STORAGE_KEY = 'reflection_streaks';
 
@@ -24,6 +26,11 @@ export const useStreak = () => {
         };
     }, []);
 
+    // Re-read when cloud sync pulls remote data
+    useEffect(() => {
+        return CloudSyncEvents.onPull(() => { loadStreak(); });
+    }, []);
+
     const loadStreak = async () => {
         try {
             const data = await AsyncStorage.getItem(STORAGE_KEY);
@@ -36,7 +43,7 @@ export const useStreak = () => {
                 await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
             }
         } catch (error) {
-            console.error('Failed to load streak:', error);
+            if (__DEV__) console.error('Failed to load streak:', error);
         } finally {
             setLoading(false);
         }
@@ -47,8 +54,11 @@ export const useStreak = () => {
             const newStreak = StreakService.calculateNewStreak(streak, new Date());
             setStreak(newStreak);
             await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newStreak));
+
+            // Trigger review prompt at reading streak milestones (7, 14, 30)
+            ReviewService.onReadingStreakUpdate(newStreak.currentStreak);
         } catch (error) {
-            console.error('Failed to record activity:', error);
+            if (__DEV__) console.error('Failed to record activity:', error);
         }
     };
 

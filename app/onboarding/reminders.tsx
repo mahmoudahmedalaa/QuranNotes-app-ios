@@ -45,9 +45,9 @@ export default function OnboardingReminders() {
         }
     };
 
-    const navigateToPremium = () => {
-        goToStep(6);
-        router.push('/onboarding/premium');
+    const navigateToAiTafseer = () => {
+        goToStep(7);
+        router.push('/onboarding/ai-tafseer');
     };
 
     const handleContinue = async () => {
@@ -84,11 +84,11 @@ export default function OnboardingReminders() {
                 }
             }
 
-            navigateToPremium();
+            navigateToAiTafseer();
         } catch (err) {
             if (__DEV__) console.warn('[Onboarding] handleContinue error:', err);
             // Still navigate even if something failed
-            navigateToPremium();
+            navigateToAiTafseer();
         }
     };
 
@@ -96,7 +96,7 @@ export default function OnboardingReminders() {
         if (navigating) return;
         setNavigating(true);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        navigateToPremium();
+        navigateToAiTafseer();
     };
 
     return (
@@ -106,17 +106,17 @@ export default function OnboardingReminders() {
             <SafeAreaView style={styles.safeArea}>
                 {/* Progress Indicator */}
                 <View style={styles.progressContainer}>
-                    {Array.from({ length: 6 }).map((_, i) => (
+                    {Array.from({ length: 8 }).map((_, i) => (
                         <View
                             key={i}
                             style={[
                                 styles.progressDot,
                                 {
                                     backgroundColor:
-                                        i < 5
+                                        i < 6
                                             ? theme.colors.primary
                                             : theme.colors.surfaceVariant,
-                                    width: i === 4 ? 20 : 8,
+                                    width: i === 5 ? 20 : 8,
                                 },
                             ]}
                         />

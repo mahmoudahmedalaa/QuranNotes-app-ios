@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CloudSyncEvents } from '../../../core/application/services/CloudSyncEvents';
 import { MD3LightTheme, MD3DarkTheme, Provider as PaperProvider } from 'react-native-paper';
 import { View, Text, Button } from 'react-native';
 
@@ -125,6 +126,11 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
         loadSettings();
     }, []);
 
+    // Re-read settings when cloud sync pulls remote data
+    useEffect(() => {
+        return CloudSyncEvents.onPull(() => { loadSettings(); });
+    }, []);
+
     const loadSettings = async () => {
         try {
             const data = await AsyncStorage.getItem(STORAGE_KEY);
@@ -160,7 +166,7 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
                 setSettings({ ...DEFAULT_SETTINGS, ...loaded });
             }
         } catch (e) {
-            console.error('Failed to load settings', e);
+            if (__DEV__) console.error('Failed to load settings', e);
             await AsyncStorage.removeItem(STORAGE_KEY); // Corrupt? Kill it.
         } finally {
             setIsReady(true);
@@ -173,7 +179,7 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
             setSettings(updated);
             await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
         } catch (e) {
-            console.error('Failed to save settings', e);
+            if (__DEV__) console.error('Failed to save settings', e);
         }
     };
 
@@ -182,7 +188,7 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
             await AsyncStorage.removeItem(STORAGE_KEY);
             setSettings(DEFAULT_SETTINGS);
         } catch (e) {
-            console.error('Failed to reset settings', e);
+            if (__DEV__) console.error('Failed to reset settings', e);
         }
     };
 
