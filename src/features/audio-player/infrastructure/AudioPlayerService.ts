@@ -1,8 +1,12 @@
 /**
  * AudioPlayerService — Verse playback via react-native-track-player
  *
+ * Supports TWO playback modes:
+ * 1. Full-surah (gapless): Single MP3 + progress polling + timestamp-based verse detection
+ * 2. Per-verse (fallback): Individual MP3 queue from everyayah.com
+ *
  * Uses the native OS audio queue (AVQueuePlayer on iOS, ExoPlayer on Android)
- * for gapless playback and lock screen / Dynamic Island controls.
+ * for lock screen / Dynamic Island controls.
  *
  * NOTE: Recording functionality stays on expo-av (AudioRecorderService.ts).
  */
@@ -12,6 +16,8 @@ import TrackPlayer, {
     Event,
     AppKilledPlaybackBehavior,
 } from 'react-native-track-player';
+import { AppState, type NativeEventSubscription } from 'react-native';
+import { VerseTimestamp, findVerseAtPosition } from './QuranAudioApi';
 
 export type PlaybackStatus = {
     isPlaying: boolean;
@@ -19,8 +25,10 @@ export type PlaybackStatus = {
     positionMillis: number;
     durationMillis: number;
     didJustFinish: boolean;
-    /** Track index that just became active (used to sync verse state) */
+    /** Track index that just became active (per-verse mode only) */
     activeTrackIndex?: number;
+    /** Current verse key from timestamp polling (full-surah mode only) */
+    currentVerseKey?: string;
 };
 
 export class AudioPlayerService {
@@ -29,6 +37,13 @@ export class AudioPlayerService {
     private setupPromise: Promise<void> | null = null;
     /** Debounce timer for PlaybackState — suppresses transient Loading/Buffering flicker */
     private playbackStateTimer: ReturnType<typeof setTimeout> | null = null;
+
+    // ── Full-surah mode state ──
+    private progressTimer: ReturnType<typeof setInterval> | null = null;
+    private currentTimestamps: VerseTimestamp[] | null = null;
+    private lastEmittedVerseKey: string | null = null;
+    private isFullSurahMode = false;
+    private appStateSubscription: NativeEventSubscription | null = null;
 
     /** Build CDN URL for a verse */
     private buildUrl(surah: number, verse: number, cdnFolder: string): string {
@@ -89,8 +104,9 @@ export class AudioPlayerService {
     /** Subscribe to RNTP native events and translate to our PlaybackStatus */
     private subscribeToEvents() {
         // Track changed — fires when the player moves to a new track in the queue
+        // Only relevant for per-verse mode (queue of tracks)
         TrackPlayer.addEventListener(Event.PlaybackActiveTrackChanged, (event) => {
-            if (event.index !== undefined && event.index !== null) {
+            if (!this.isFullSurahMode && event.index !== undefined && event.index !== null) {
                 this.notifyListeners({
                     isPlaying: true,
                     isBuffering: false,
@@ -110,6 +126,15 @@ export class AudioPlayerService {
             const state = event.state;
             const isPlaying = state === State.Playing;
             const isBuffering = state === State.Buffering || state === State.Loading;
+
+            // Manage progress polling based on play state
+            if (this.isFullSurahMode) {
+                if (isPlaying) {
+                    this.startProgressPolling();
+                } else if (!isBuffering) {
+                    this.stopProgressPolling();
+                }
+            }
 
             // If transitioning TO playing, fire immediately (cancel any pending "paused" notification)
             if (isPlaying) {
@@ -168,6 +193,7 @@ export class AudioPlayerService {
 
         // Queue ended — all tracks finished playing
         TrackPlayer.addEventListener(Event.PlaybackQueueEnded, () => {
+            this.stopProgressPolling();
             this.notifyListeners({
                 isPlaying: false,
                 isBuffering: false,
@@ -181,7 +207,176 @@ export class AudioPlayerService {
         TrackPlayer.addEventListener(Event.PlaybackError, (event) => {
             if (__DEV__) console.error('[AudioPlayer] Playback error:', event.message);
         });
+
+        // ── Lock screen skip overrides for full-surah mode ──
+        TrackPlayer.addEventListener(Event.RemoteNext, async () => {
+            if (this.isFullSurahMode && this.currentTimestamps) {
+                await this.skipToNextVerse();
+            } else {
+                try { await TrackPlayer.skipToNext(); } catch { /* no next track */ }
+            }
+        });
+
+        TrackPlayer.addEventListener(Event.RemotePrevious, async () => {
+            if (this.isFullSurahMode && this.currentTimestamps) {
+                await this.skipToPreviousVerse();
+            } else {
+                try { await TrackPlayer.skipToPrevious(); } catch { /* no prev track */ }
+            }
+        });
+
+        // Seek event — update verse key after user seeks on lock screen
+        TrackPlayer.addEventListener(Event.RemoteSeek, async (event) => {
+            if (this.isFullSurahMode && this.currentTimestamps) {
+                await TrackPlayer.seekTo(event.position);
+                const positionMs = event.position * 1000;
+                const idx = findVerseAtPosition(this.currentTimestamps, positionMs);
+                if (idx >= 0) {
+                    const verseKey = this.currentTimestamps[idx].verseKey;
+                    if (verseKey !== this.lastEmittedVerseKey) {
+                        this.lastEmittedVerseKey = verseKey;
+                        this.notifyListeners({
+                            isPlaying: true,
+                            isBuffering: false,
+                            positionMillis: Math.round(positionMs),
+                            durationMillis: 0,
+                            didJustFinish: false,
+                            currentVerseKey: verseKey,
+                        });
+                    }
+                }
+            }
+        });
     }
+
+    // ── Progress polling for full-surah mode ──
+
+    private startProgressPolling() {
+        if (this.progressTimer) return; // already running
+        this.progressTimer = setInterval(async () => {
+            if (!this.currentTimestamps) return;
+            try {
+                const progress = await TrackPlayer.getProgress();
+                const positionMs = progress.position * 1000;
+                const idx = findVerseAtPosition(this.currentTimestamps, positionMs);
+                if (idx >= 0) {
+                    const verseKey = this.currentTimestamps[idx].verseKey;
+                    if (verseKey !== this.lastEmittedVerseKey) {
+                        this.lastEmittedVerseKey = verseKey;
+                        this.notifyListeners({
+                            isPlaying: true,
+                            isBuffering: false,
+                            positionMillis: Math.round(positionMs),
+                            durationMillis: Math.round((progress.duration || 0) * 1000),
+                            didJustFinish: false,
+                            currentVerseKey: verseKey,
+                        });
+                    }
+                }
+            } catch {
+                // Player may be in transition — ignore
+            }
+        }, 200);
+
+        // Pause polling when app goes to background, resume on foreground
+        if (!this.appStateSubscription) {
+            this.appStateSubscription = AppState.addEventListener('change', (nextState) => {
+                if (nextState === 'active' && this.isFullSurahMode) {
+                    // Catch up: do an immediate poll
+                    this.pollProgressOnce();
+                }
+            });
+        }
+    }
+
+    private stopProgressPolling() {
+        if (this.progressTimer) {
+            clearInterval(this.progressTimer);
+            this.progressTimer = null;
+        }
+    }
+
+    /** Single immediate poll — used for foreground catch-up */
+    private async pollProgressOnce() {
+        if (!this.currentTimestamps) return;
+        try {
+            const progress = await TrackPlayer.getProgress();
+            const positionMs = progress.position * 1000;
+            const idx = findVerseAtPosition(this.currentTimestamps, positionMs);
+            if (idx >= 0) {
+                const verseKey = this.currentTimestamps[idx].verseKey;
+                if (verseKey !== this.lastEmittedVerseKey) {
+                    this.lastEmittedVerseKey = verseKey;
+                    this.notifyListeners({
+                        isPlaying: true,
+                        isBuffering: false,
+                        positionMillis: Math.round(positionMs),
+                        durationMillis: Math.round((progress.duration || 0) * 1000),
+                        didJustFinish: false,
+                        currentVerseKey: verseKey,
+                    });
+                }
+            }
+        } catch { /* ignore */ }
+    }
+
+    // ── Skip controls for full-surah mode ──
+
+    private async skipToNextVerse() {
+        if (!this.currentTimestamps || !this.lastEmittedVerseKey) return;
+        const currentIdx = this.currentTimestamps.findIndex(t => t.verseKey === this.lastEmittedVerseKey);
+        if (currentIdx >= 0 && currentIdx < this.currentTimestamps.length - 1) {
+            const nextTs = this.currentTimestamps[currentIdx + 1];
+            await TrackPlayer.seekTo(nextTs.timestampFrom / 1000);
+            this.lastEmittedVerseKey = nextTs.verseKey;
+            this.notifyListeners({
+                isPlaying: true,
+                isBuffering: false,
+                positionMillis: nextTs.timestampFrom,
+                durationMillis: 0,
+                didJustFinish: false,
+                currentVerseKey: nextTs.verseKey,
+            });
+        }
+    }
+
+    private async skipToPreviousVerse() {
+        if (!this.currentTimestamps || !this.lastEmittedVerseKey) return;
+        const currentIdx = this.currentTimestamps.findIndex(t => t.verseKey === this.lastEmittedVerseKey);
+        if (currentIdx < 0) return;
+
+        try {
+            const progress = await TrackPlayer.getProgress();
+            const positionMs = progress.position * 1000;
+            const currentTs = this.currentTimestamps[currentIdx];
+
+            // If > 3s into current verse, restart current. Otherwise go to previous.
+            if (positionMs - currentTs.timestampFrom > 3000) {
+                await TrackPlayer.seekTo(currentTs.timestampFrom / 1000);
+                // Keep same verseKey — it's a restart, not a change
+            } else if (currentIdx > 0) {
+                const prevTs = this.currentTimestamps[currentIdx - 1];
+                await TrackPlayer.seekTo(prevTs.timestampFrom / 1000);
+                this.lastEmittedVerseKey = prevTs.verseKey;
+                this.notifyListeners({
+                    isPlaying: true,
+                    isBuffering: false,
+                    positionMillis: prevTs.timestampFrom,
+                    durationMillis: 0,
+                    didJustFinish: false,
+                    currentVerseKey: prevTs.verseKey,
+                });
+            } else {
+                // Already at first verse — restart it
+                await TrackPlayer.seekTo(currentTs.timestampFrom / 1000);
+            }
+        } catch {
+            // Fallback: seek to beginning
+            await TrackPlayer.seekTo(0);
+        }
+    }
+
+    // ── Public API ──
 
     addListener(callback: (status: PlaybackStatus) => void) {
         this.listeners.push(callback);
@@ -195,8 +390,118 @@ export class AudioPlayerService {
     }
 
     /**
+     * Full-surah gapless playback — loads a single MP3 track with verse timestamps.
+     * Progress polling detects verse transitions and emits currentVerseKey.
+     */
+    async loadFullSurah(
+        surahNum: number,
+        audioUrl: string,
+        timestamps: VerseTimestamp[],
+        reciterName: string,
+        surahName: string,
+        startVerseKey?: string,
+    ): Promise<void> {
+        await this.setup();
+
+        // Clean up previous state
+        this.stopProgressPolling();
+        await TrackPlayer.reset();
+
+        // Set full-surah mode
+        this.isFullSurahMode = true;
+        this.currentTimestamps = timestamps;
+        this.lastEmittedVerseKey = null;
+
+        // Calculate starting position (seconds)
+        let startPosition = 0;
+        if (startVerseKey) {
+            const startTs = timestamps.find(t => t.verseKey === startVerseKey);
+            if (startTs) {
+                startPosition = startTs.timestampFrom / 1000;
+                this.lastEmittedVerseKey = startVerseKey;
+            }
+        } else if (timestamps.length > 0) {
+            this.lastEmittedVerseKey = timestamps[0].verseKey;
+        }
+
+        // Calculate total verse count for display
+        const totalVerses = timestamps.length;
+        const startVerseNum = startVerseKey
+            ? parseInt(startVerseKey.split(':')[1]) || 1
+            : 1;
+
+        const track = {
+            id: `surah-${surahNum}`,
+            url: audioUrl,
+            title: surahName,
+            artist: `Verse ${startVerseNum}/${totalVerses} · ${reciterName}`,
+            album: 'QuranNotes',
+            artwork: require('../../../../assets/icon.png'),
+        };
+
+        await TrackPlayer.add(track);
+
+        // Seek to starting verse position if needed
+        if (startPosition > 0) {
+            await TrackPlayer.seekTo(startPosition);
+        }
+
+        await TrackPlayer.play();
+    }
+
+    /**
+     * Seek to a specific verse within the current full-surah track.
+     * @param verseKey - e.g. "2:142"
+     */
+    async seekToVerse(verseKey: string): Promise<void> {
+        if (!this.isFullSurahMode || !this.currentTimestamps) return;
+        const ts = this.currentTimestamps.find(t => t.verseKey === verseKey);
+        if (ts) {
+            await TrackPlayer.seekTo(ts.timestampFrom / 1000);
+            this.lastEmittedVerseKey = verseKey;
+            this.notifyListeners({
+                isPlaying: true,
+                isBuffering: false,
+                positionMillis: ts.timestampFrom,
+                durationMillis: 0,
+                didJustFinish: false,
+                currentVerseKey: verseKey,
+            });
+        }
+    }
+
+    /** Update the lock screen now-playing info with current verse */
+    async updateNowPlayingVerse(
+        surahName: string,
+        verseNum: number,
+        totalVerses: number,
+        reciterName: string,
+    ): Promise<void> {
+        if (!this.isFullSurahMode) return;
+        try {
+            await TrackPlayer.updateNowPlayingMetadata({
+                title: surahName,
+                artist: `Verse ${verseNum}/${totalVerses} · ${reciterName}`,
+            });
+        } catch {
+            // updateNowPlayingMetadata may not be available on all versions
+        }
+    }
+
+    /** Check if currently in full-surah mode */
+    getIsFullSurahMode(): boolean {
+        return this.isFullSurahMode;
+    }
+
+    /** Get current timestamps (for use by AudioContext) */
+    getCurrentTimestamps(): VerseTimestamp[] | null {
+        return this.currentTimestamps;
+    }
+
+    /**
      * Load a full surah as a queue and start playing from a specific verse.
      * Each verse becomes a track with metadata for lock screen display.
+     * (Per-verse fallback mode — used when reciter has no Quran.com ID)
      */
     async loadPlaylist(
         surahNum: number,
@@ -207,6 +512,12 @@ export class AudioPlayerService {
         surahName: string,
     ): Promise<void> {
         await this.setup();
+
+        // Clean up full-surah state if switching mode
+        this.stopProgressPolling();
+        this.isFullSurahMode = false;
+        this.currentTimestamps = null;
+        this.lastEmittedVerseKey = null;
 
         // Reset current queue
         await TrackPlayer.reset();
@@ -233,7 +544,7 @@ export class AudioPlayerService {
 
     /**
      * Play a single verse (used when no surah context is available).
-     * For full surah playback, prefer loadPlaylist().
+     * For full surah playback, prefer loadFullSurah() or loadPlaylist().
      */
     async playVerse(
         surah: number,
@@ -243,6 +554,13 @@ export class AudioPlayerService {
         surahName: string = 'Quran',
     ): Promise<void> {
         await this.setup();
+
+        // Clean up full-surah state
+        this.stopProgressPolling();
+        this.isFullSurahMode = false;
+        this.currentTimestamps = null;
+        this.lastEmittedVerseKey = null;
+
         await TrackPlayer.reset();
 
         const track = {
@@ -272,6 +590,14 @@ export class AudioPlayerService {
     }
 
     async stop(): Promise<void> {
+        this.stopProgressPolling();
+        this.isFullSurahMode = false;
+        this.currentTimestamps = null;
+        this.lastEmittedVerseKey = null;
+        if (this.appStateSubscription) {
+            this.appStateSubscription.remove();
+            this.appStateSubscription = null;
+        }
         await TrackPlayer.reset();
         this.notifyListeners({
             isPlaying: false,
@@ -291,7 +617,7 @@ export class AudioPlayerService {
         }
     }
 
-    /** Skip to a specific track in the queue by index */
+    /** Skip to a specific track in the queue by index (per-verse mode) */
     async skipToTrack(index: number): Promise<void> {
         await TrackPlayer.skip(index);
         await TrackPlayer.play();
