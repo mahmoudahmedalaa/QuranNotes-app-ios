@@ -45,9 +45,9 @@ export default function OnboardingReminders() {
         }
     };
 
-    const navigateToAiTafseer = () => {
-        goToStep(7);
-        router.push('/onboarding/ai-tafseer');
+    const navigateNext = () => {
+        goToStep(8);
+        router.push('/onboarding/premium');
     };
 
     const handleContinue = async () => {
@@ -84,11 +84,11 @@ export default function OnboardingReminders() {
                 }
             }
 
-            navigateToAiTafseer();
+            navigateNext();
         } catch (err) {
             if (__DEV__) console.warn('[Onboarding] handleContinue error:', err);
             // Still navigate even if something failed
-            navigateToAiTafseer();
+            navigateNext();
         }
     };
 
@@ -96,7 +96,7 @@ export default function OnboardingReminders() {
         if (navigating) return;
         setNavigating(true);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        navigateToAiTafseer();
+        navigateNext();
     };
 
     return (

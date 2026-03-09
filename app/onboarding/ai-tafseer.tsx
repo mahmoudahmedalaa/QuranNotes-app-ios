@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Pressable, Dimensions } from 'react-native';
-import { Text, useTheme, Button } from 'react-native-paper';
+import { Text, useTheme } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
@@ -10,13 +10,12 @@ import { useOnboarding } from '../../src/features/onboarding/infrastructure/Onbo
 import {
     Spacing,
     BorderRadius,
-    Shadows,
 } from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const TOTAL_STEPS = 8;
-const CURRENT_STEP = 7;
+const CURRENT_STEP = 3;
 
 // Sparkle positions for ambient floating particles
 const SPARKLES = [
@@ -38,13 +37,13 @@ export default function OnboardingAiTafseer() {
     const handleContinue = () => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         goToStep(CURRENT_STEP + 1);
-        router.push('/onboarding/premium');
+        router.push('/onboarding/quran-font');
     };
 
     const handleSkip = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         goToStep(CURRENT_STEP + 1);
-        router.push('/onboarding/premium');
+        router.push('/onboarding/quran-font');
     };
 
     return (
@@ -139,7 +138,7 @@ export default function OnboardingAiTafseer() {
                         </LinearGradient>
                     </View>
 
-                    {/* Title with gradient feel */}
+                    {/* Title */}
                     <Text style={[styles.headline, { color: theme.dark ? '#F5F3FF' : '#1E1B4B' }]}>
                         AI Tafsir
                     </Text>
@@ -148,11 +147,64 @@ export default function OnboardingAiTafseer() {
                     </Text>
                 </MotiView>
 
-                {/* Visual Demo Card — mockup of the tafsir experience */}
+                {/* AI Q&A Showcase — the hero feature */}
+                <MotiView
+                    from={{ opacity: 0, translateY: 20 }}
+                    animate={{ opacity: 1, translateY: 0 }}
+                    transition={{ type: 'timing', duration: 500, delay: 200 }}
+                    style={styles.qaShowcase}
+                >
+                    {/* Mock question input */}
+                    <View style={[
+                        styles.qaInputContainer,
+                        {
+                            backgroundColor: theme.dark ? 'rgba(45,27,105,0.5)' : 'rgba(245,243,255,0.95)',
+                            borderColor: theme.dark ? 'rgba(167,139,250,0.3)' : 'rgba(124,58,237,0.2)',
+                        },
+                    ]}>
+                        <Ionicons name="chatbubble-ellipses-outline" size={18} color={theme.dark ? '#A78BFA' : '#7C3AED'} />
+                        <Text style={[styles.qaPlaceholder, { color: theme.dark ? '#8B7BB8' : '#9B89C5' }]}>
+                            Ask anything about this verse...
+                        </Text>
+                        <View style={[styles.qaSendButton, { backgroundColor: theme.dark ? '#7C3AED' : '#8B5CF6' }]}>
+                            <Ionicons name="arrow-up" size={14} color="#FFF" />
+                        </View>
+                    </View>
+
+                    {/* Example questions */}
+                    <View style={styles.qaExamples}>
+                        {[
+                            'Why was this verse revealed?',
+                            'How to apply this in daily life?',
+                        ].map((q, i) => (
+                            <MotiView
+                                key={q}
+                                from={{ opacity: 0, translateX: -10 }}
+                                animate={{ opacity: 1, translateX: 0 }}
+                                transition={{ type: 'timing', duration: 300, delay: 400 + i * 150 }}
+                            >
+                                <View style={[
+                                    styles.qaExamplePill,
+                                    {
+                                        backgroundColor: theme.dark ? 'rgba(167,139,250,0.1)' : 'rgba(124,58,237,0.06)',
+                                        borderColor: theme.dark ? 'rgba(167,139,250,0.15)' : 'rgba(124,58,237,0.12)',
+                                    },
+                                ]}>
+                                    <Ionicons name="help-circle-outline" size={12} color={theme.dark ? '#A78BFA' : '#7C3AED'} />
+                                    <Text style={[styles.qaExampleText, { color: theme.dark ? '#C4B5FD' : '#6D28D9' }]}>
+                                        {q}
+                                    </Text>
+                                </View>
+                            </MotiView>
+                        ))}
+                    </View>
+                </MotiView>
+
+                {/* Visual Demo Card — compact tafsir preview */}
                 <MotiView
                     from={{ opacity: 0, translateY: 30 }}
                     animate={{ opacity: 1, translateY: 0 }}
-                    transition={{ type: 'timing', duration: 500, delay: 300 }}
+                    transition={{ type: 'timing', duration: 500, delay: 400 }}
                     style={styles.demoContainer}
                 >
                     <LinearGradient
@@ -168,18 +220,6 @@ export default function OnboardingAiTafseer() {
                             },
                         ]}
                     >
-                        {/* Simulated verse */}
-                        <Text
-                            style={[
-                                styles.demoArabic,
-                                { color: theme.dark ? '#E9E5F5' : '#1E1B4B' },
-                            ]}
-                        >
-                            بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
-                        </Text>
-
-                        <View style={[styles.demoDivider, { backgroundColor: theme.dark ? 'rgba(167,139,250,0.2)' : 'rgba(124,58,237,0.1)' }]} />
-
                         {/* Simulated tafsir response */}
                         <View style={styles.demoResponseRow}>
                             <MotiView
@@ -190,7 +230,7 @@ export default function OnboardingAiTafseer() {
                                 <Ionicons name="sparkles" size={14} color={theme.dark ? '#A78BFA' : '#7C3AED'} />
                             </MotiView>
                             <Text style={[styles.demoLabel, { color: theme.dark ? '#A78BFA' : '#7C3AED' }]}>
-                                AI Tafsir
+                                AI TAFSIR
                             </Text>
                         </View>
                         <Text style={[styles.demoText, { color: theme.dark ? '#C9C2DB' : '#4B3B73' }]}>
@@ -220,7 +260,7 @@ export default function OnboardingAiTafseer() {
                     {[
                         { icon: 'book-outline' as const, label: 'Classical\nScholars' },
                         { icon: 'flash-outline' as const, label: 'Instant\nAnswers' },
-                        { icon: 'cloud-offline-outline' as const, label: 'Works\nOffline' },
+                        { icon: 'chatbubbles-outline' as const, label: 'Ask\nAnything' },
                     ].map((f, i) => (
                         <MotiView
                             key={f.label}
@@ -251,15 +291,15 @@ export default function OnboardingAiTafseer() {
                     ))}
                 </MotiView>
 
-                {/* Disclaimer */}
+                {/* Disclaimer — visible black text, no em-dashes */}
                 <MotiView
                     from={{ opacity: 0 }}
-                    animate={{ opacity: 0.6 }}
+                    animate={{ opacity: 1 }}
                     transition={{ type: 'timing', duration: 500, delay: 1000 }}
                     style={styles.disclaimerContainer}
                 >
-                    <Text style={[styles.disclaimerText, { color: theme.dark ? '#71717A' : '#9CA3AF' }]}>
-                        AI explanations complement — never replace — traditional scholarship
+                    <Text style={[styles.disclaimerText, { color: theme.dark ? '#D4D4D8' : '#374151' }]}>
+                        AI explanations complement, never replace, traditional scholarship
                     </Text>
                 </MotiView>
 
@@ -321,94 +361,129 @@ const styles = StyleSheet.create({
     // ── Hero ──
     heroSection: {
         alignItems: 'center',
-        marginTop: Spacing.md,
+        marginTop: Spacing.sm,
     },
     iconOuter: {
-        width: 100,
-        height: 100,
+        width: 88,
+        height: 88,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: Spacing.md,
+        marginBottom: Spacing.sm,
     },
     glowRing: {
         position: 'absolute',
-        width: 100,
-        height: 100,
-        borderRadius: 50,
+        width: 88,
+        height: 88,
+        borderRadius: 44,
         borderWidth: 2,
     },
     iconCircle: {
-        width: 76,
-        height: 76,
-        borderRadius: 38,
+        width: 66,
+        height: 66,
+        borderRadius: 33,
         alignItems: 'center',
         justifyContent: 'center',
     },
     headline: {
-        fontSize: 32,
+        fontSize: 30,
         fontWeight: '900',
         letterSpacing: -1,
-        marginBottom: 4,
+        marginBottom: 2,
     },
     headlineSub: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '600',
         letterSpacing: 0.3,
     },
 
+    // ── Q&A Showcase ──
+    qaShowcase: {
+        marginTop: Spacing.lg,
+        gap: 10,
+    },
+    qaInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        borderRadius: BorderRadius.lg,
+        borderWidth: 1,
+        gap: 10,
+    },
+    qaPlaceholder: {
+        flex: 1,
+        fontSize: 14,
+        fontWeight: '500',
+    },
+    qaSendButton: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    qaExamples: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    qaExamplePill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 16,
+        borderWidth: 1,
+    },
+    qaExampleText: {
+        fontSize: 11,
+        fontWeight: '600',
+    },
+
     // ── Demo Card ──
     demoContainer: {
-        marginTop: Spacing.lg,
+        marginTop: Spacing.md,
     },
     demoCard: {
         borderRadius: BorderRadius.xl,
-        padding: Spacing.lg,
+        padding: Spacing.md,
         borderWidth: 1,
-    },
-    demoArabic: {
-        fontSize: 22,
-        fontFamily: 'KFGQPC HAFS Uthmanic Script',
-        textAlign: 'center',
-        lineHeight: 38,
-    },
-    demoDivider: {
-        height: 1,
-        marginVertical: Spacing.md,
     },
     demoResponseRow: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
-        marginBottom: 6,
+        marginBottom: 4,
     },
     demoLabel: {
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: '700',
         letterSpacing: 0.5,
         textTransform: 'uppercase',
     },
     demoText: {
-        fontSize: 14,
-        lineHeight: 21,
-        marginBottom: Spacing.md,
+        fontSize: 13,
+        lineHeight: 19,
+        marginBottom: Spacing.sm,
     },
     demoPills: {
         flexDirection: 'row',
         gap: 8,
     },
     pill: {
-        paddingHorizontal: 14,
-        paddingVertical: 6,
-        borderRadius: 20,
+        paddingHorizontal: 12,
+        paddingVertical: 5,
+        borderRadius: 16,
     },
     pillActive: {},
     pillTextActive: {
         color: '#FFF',
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: '700',
     },
     pillText: {
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: '600',
     },
 
@@ -416,17 +491,17 @@ const styles = StyleSheet.create({
     featureStrip: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        marginTop: Spacing.lg,
+        marginTop: Spacing.md,
         paddingHorizontal: Spacing.sm,
     },
     featureItem: {
         alignItems: 'center',
-        gap: 8,
+        gap: 6,
     },
     featureIcon: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         alignItems: 'center',
         justifyContent: 'center',
     },

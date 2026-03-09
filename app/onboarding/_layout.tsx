@@ -12,11 +12,11 @@ export default function OnboardingLayout() {
             <Stack.Screen name="index" />        {/* 1. Welcome */}
             <Stack.Screen name="pick-surah" />   {/* entry → listen */}
             <Stack.Screen name="listen" />        {/* 2. Listen & Explore (surah + audio + reciter) */}
-            <Stack.Screen name="quran-font" />    {/* 3. Choose Your Script */}
-            <Stack.Screen name="record" />        {/* 4. Capture & Organize (record + notes + folders + library) */}
-            <Stack.Screen name="widgets" />       {/* 5. Widgets education */}
-            <Stack.Screen name="reminders" />     {/* 6. Notifications */}
-            <Stack.Screen name="ai-tafseer" />    {/* 7. AI Tafsir — verse insights */}
+            <Stack.Screen name="ai-tafseer" />    {/* 3. AI Tafsir — verse insights (right after reciter) */}
+            <Stack.Screen name="quran-font" />    {/* 4. Choose Your Script */}
+            <Stack.Screen name="record" />        {/* 5. Capture & Organize (record + notes + folders + library) */}
+            <Stack.Screen name="widgets" />       {/* 6. Widgets education */}
+            <Stack.Screen name="reminders" />     {/* 7. Notifications */}
             <Stack.Screen name="premium" />       {/* 8. Premium paywall */}
         </Stack>
     );
