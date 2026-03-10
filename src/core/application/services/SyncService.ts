@@ -104,7 +104,7 @@ class EntitySyncManager<T extends SyncableEntity = SyncableEntity> {
             await this.localRepo.saveAllFolders?.(finalItems);
 
         } catch (e) {
-            if (__DEV__) console.error(`${label} sync error:`, e);
+            if (__DEV__) console.warn(`[Sync] ${label} sync skipped:`, (e as Error)?.message || e);
         }
     }
 }

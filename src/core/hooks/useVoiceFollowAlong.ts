@@ -87,7 +87,7 @@ export function useVoiceFollowAlong(
                 setSessionsUsedToday(parseInt(stored, 10));
             }
         } catch (error) {
-            if (__DEV__) console.error('Failed to load sessions:', error);
+            if (__DEV__) console.warn('[VoiceFollowAlong] Failed to load sessions:', (error as Error)?.message || error);
         }
     };
 
@@ -100,7 +100,7 @@ export function useVoiceFollowAlong(
             await AsyncStorage.setItem(key, newCount.toString());
             setSessionsUsedToday(newCount);
         } catch (error) {
-            if (__DEV__) console.error('Failed to increment sessions:', error);
+            if (__DEV__) console.warn('[VoiceFollowAlong] Failed to increment sessions:', (error as Error)?.message || error);
         }
     };
 
@@ -224,7 +224,7 @@ export function useVoiceFollowAlong(
             try {
                 await repository.current.saveSession(session);
             } catch (error) {
-                if (__DEV__) console.error('Failed to save session:', error);
+                if (__DEV__) console.warn('[VoiceFollowAlong] Failed to save session:', (error as Error)?.message || error);
             }
         }
 

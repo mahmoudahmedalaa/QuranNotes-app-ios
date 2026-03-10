@@ -74,7 +74,7 @@ export class CloudSyncService {
             // Record last sync time
             await AsyncStorage.setItem(LAST_SYNCED_KEY, new Date().toISOString());
         } catch (e) {
-            if (__DEV__) console.error('[CloudSync] syncAll error:', e);
+            if (__DEV__) console.warn('[CloudSync] syncAll skipped:', (e as Error)?.message || e);
         }
     }
 
