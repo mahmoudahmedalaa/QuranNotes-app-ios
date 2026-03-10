@@ -8,18 +8,18 @@ import {
     Platform,
 } from 'react-native';
 import { Text, useTheme, Button } from 'react-native-paper';
-import { LinearGradient } from 'expo-linear-gradient';
+import { WaveBackground } from '../../src/core/components/animated/WaveBackground';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
+import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
 import {
     Spacing,
     BorderRadius,
     Shadows,
     Gradients,
-} from '../../src/presentation/theme/DesignSystem';
+} from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 export default function OnboardingNote() {
@@ -49,9 +49,7 @@ export default function OnboardingNote() {
     };
 
     return (
-        <LinearGradient
-            colors={theme.dark ? (['#0F1419', '#1A1F26'] as const) : Gradients.sereneSky}
-            style={styles.container}>
+        <WaveBackground variant="spiritual" intensity="subtle">
             <KeyboardAvoidingView
                 style={styles.keyboardView}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -83,7 +81,7 @@ export default function OnboardingNote() {
                         <View
                             style={[styles.coachBubble, { backgroundColor: theme.colors.primary }]}>
                             <Text style={styles.coachText}>
-                                📝 Write your thoughts on any verse
+                                Write your thoughts on any verse
                             </Text>
                         </View>
                     </MotiView>
@@ -96,10 +94,10 @@ export default function OnboardingNote() {
                         style={styles.verseRef}>
                         <Text
                             style={[styles.verseRefText, { color: theme.colors.onSurfaceVariant }]}>
-                            Al-Fatiha • Verse 1
+                            Ash-Sharh (The Relief) • Verses 5-6
                         </Text>
                         <Text style={[styles.verseArabic, { color: theme.colors.onSurface }]}>
-                            "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"
+                            {'"'}فَإِنَّ مَعَ الْعُسْرِ يُسْرًا ۝ إِنَّ مَعَ الْعُسْرِ يُسْرًا{'"'}
                         </Text>
                     </MotiView>
 
@@ -161,7 +159,7 @@ export default function OnboardingNote() {
                     </View>
                 </SafeAreaView>
             </KeyboardAvoidingView>
-        </LinearGradient>
+        </WaveBackground>
     );
 }
 

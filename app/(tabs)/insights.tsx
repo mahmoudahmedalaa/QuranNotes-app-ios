@@ -1,30 +1,41 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
-import { Text, useTheme } from 'react-native-paper';
+import React, { useState } from 'react';
+import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { Text, useTheme, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Spacing, Gradients, BorderRadius } from '../../src/presentation/theme/DesignSystem';
-import { ConsistencyHeatmap } from '../../src/presentation/components/stats/ConsistencyHeatmap';
-import { ActivityChart } from '../../src/presentation/components/stats/ActivityChart';
-import { TopicBreakdown } from '../../src/presentation/components/stats/TopicBreakdown';
-import { StatsWidgetGrid } from '../../src/presentation/components/stats/StatsWidgetGrid';
-import { useStreaks } from '../../src/infrastructure/auth/StreakContext';
-
-const { width } = Dimensions.get('window');
-
-import { useInsightsData } from '../../src/presentation/hooks/useInsightsData';
-
-import { Button } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { usePro } from '../../src/infrastructure/auth/ProContext';
-
-// ...
+import { Spacing, Gradients, BorderRadius } from '../../src/core/theme/DesignSystem';
+import { TimeframePeriod } from '../../src/shared/components/TimeframeSelector';
+import { ConsistencyHeatmap } from '../../src/features/user-stats/presentation/ConsistencyHeatmap';
+import { ActivityChart } from '../../src/features/user-stats/presentation/ActivityChart';
+import { TopicBreakdown } from '../../src/features/user-stats/presentation/TopicBreakdown';
+import { StatsWidgetGrid } from '../../src/features/user-stats/presentation/StatsWidgetGrid';
+import MoodInsightWidget from '../../src/features/mood/presentation/MoodInsightWidget';
+import { useInsightsData } from '../../src/core/hooks/useInsightsData';
+import { usePro } from '../../src/features/auth/infrastructure/ProContext';
+import { useKhatma } from '../../src/features/khatma/infrastructure/KhatmaContext';
 
 export default function InsightsScreen() {
     const theme = useTheme();
     const router = useRouter();
-    const { isPro } = usePro();
-    const { dailyActivity, heatmapData, topicBreakdown, stats, loading } = useInsightsData();
+    const { isPro, loading: proLoading } = usePro();
+    const [breakdownTimeframe, setBreakdownTimeframe] = useState<TimeframePeriod>('all');
+    const { completedJuz, currentRound } = useKhatma();
+
+    // Pass timeframe to hook so breakdown data updates dynamically
+    const { dailyActivity, heatmapData, topicBreakdown, filteredTotalTime, stats } = useInsightsData(breakdownTimeframe);
+
+    if (proLoading) {
+        return (
+            <LinearGradient
+                colors={theme.dark ? (['#0F1419', '#1A1F26'] as const) : Gradients.sereneSky}
+                style={styles.container}>
+                <SafeAreaView style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
+                    <ActivityIndicator size="large" color={theme.colors.primary} />
+                </SafeAreaView>
+            </LinearGradient>
+        );
+    }
 
     if (!isPro) {
         return (
@@ -33,7 +44,7 @@ export default function InsightsScreen() {
                 style={styles.container}>
                 <SafeAreaView style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center', padding: Spacing.xl }]}>
                     <View style={styles.header}>
-                        <Text style={[styles.headerTitle, { color: theme.colors.onBackground, textAlign: 'center' }]}>
+                        <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>
                             Insights
                         </Text>
                     </View>
@@ -64,7 +75,7 @@ export default function InsightsScreen() {
             style={styles.container}>
             <SafeAreaView style={styles.safeArea} edges={['top']}>
                 <View style={styles.header}>
-                    <Text style={[styles.headerTitle, { color: theme.colors.onBackground }]}>
+                    <Text style={[styles.headerTitle, { color: theme.colors.primary }]}>
                         Insights
                     </Text>
                 </View>
@@ -75,9 +86,11 @@ export default function InsightsScreen() {
                     showsVerticalScrollIndicator={false}>
                     <StatsWidgetGrid
                         currentStreak={stats.currentStreak}
-                        totalTime={`${stats.totalTimeMinutes}m`}
-                        versesRead={stats.versesRead}
-                        recordingsCount={stats.recordingsCount}
+                        longestStreak={stats.longestStreak}
+                        totalTime={stats.totalTimeFormatted}
+                        pagesRead={stats.pagesRead}
+                        completedJuzCount={completedJuz.length}
+                        currentRound={currentRound}
                     />
 
                     <ActivityChart data={dailyActivity} />
@@ -86,8 +99,12 @@ export default function InsightsScreen() {
 
                     <TopicBreakdown
                         data={topicBreakdown}
-                        totalTime={`${stats.totalTimeMinutes}m`}
+                        totalTime={filteredTotalTime}
+                        timeframe={breakdownTimeframe}
+                        onTimeframeChange={setBreakdownTimeframe}
                     />
+
+                    <MoodInsightWidget />
 
                     <View style={{ height: Spacing.xl }} />
                 </ScrollView>
@@ -116,6 +133,6 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: {
-        paddingBottom: Spacing.xxl,
+        paddingBottom: 100,
     },
 });

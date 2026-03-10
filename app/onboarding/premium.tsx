@@ -1,28 +1,32 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Pressable, Switch, Dimensions } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, StyleSheet, Pressable, Switch, Alert } from 'react-native';
 import { Text, useTheme, Button } from 'react-native-paper';
-import { LinearGradient } from 'expo-linear-gradient';
+import { WaveBackground } from '../../src/core/components/animated/WaveBackground';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
+import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
 import {
     Spacing,
     BorderRadius,
-    Shadows,
-    Gradients,
-} from '../../src/presentation/theme/DesignSystem';
+    BrandTokens,
+} from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
+import { revenueCatService, PurchasesOffering } from '../../src/features/payments/infrastructure/RevenueCatService';
+import { usePro } from '../../src/features/auth/infrastructure/ProContext';
+import { isRamadanSeason } from '../../src/core/utils/ramadanUtils';
+import RamadanPaywallScreen from '../../src/features/payments/presentation/RamadanPaywallScreen';
 
-const { width } = Dimensions.get('window');
+
 
 const FEATURES = [
-    { icon: 'infinity', title: 'Unlimited Recordings', description: 'No 10-recording limit' },
+    { icon: 'infinity', title: 'Unlimited Recordings', description: 'No 5-recording limit' },
+    { icon: 'book-open-page-variant', title: 'Khatma Tracker', description: 'Full Quran completion tracking' },
+    { icon: 'meditation', title: 'Unlimited Reflections', description: 'Daily mood-based verse guidance' },
     { icon: 'chart-box', title: 'Pro Insights', description: 'Reflection heatmap & analytics' },
     { icon: 'fire', title: 'Streak Tracking', description: 'Daily consistency gamification' },
     { icon: 'cloud-sync', title: 'Cloud Sync', description: 'Backup across all devices' },
-    { icon: 'school', title: 'Smart Study Mode', description: 'Memorization helper' },
     { icon: 'file-export', title: 'Data Export', description: 'PDF & JSON downloads' },
 ];
 
@@ -30,25 +34,108 @@ const MONTHLY_PRICE = 4.99;
 const ANNUAL_PRICE = 35.99;
 
 export default function OnboardingPremium() {
-    const theme = useTheme();
+    useTheme();
     const router = useRouter();
     const { highlight } = useLocalSearchParams();
     const { completeOnboarding } = useOnboarding();
+    const { checkStatus } = usePro();
     const [isAnnual, setIsAnnual] = useState(true);
+    const [offering, setOffering] = useState<PurchasesOffering | null>(null);
+    const [purchasing, setPurchasing] = useState(false);
 
     const highlightIndex = highlight ? parseInt(highlight as string) : null;
 
+    // ── Ramadan season? Show the Ramadan paywall instead ──
+    const handleOnboardingComplete = useCallback(async () => {
+        try {
+            await completeOnboarding();
+        } catch (err) {
+            if (__DEV__) console.warn('[Premium] completeOnboarding failed:', err);
+        }
+        try {
+            // Dismiss entire onboarding stack first to force clean re-evaluation at index.tsx
+            router.dismissAll();
+            router.replace('/');
+        } catch (err) {
+            if (__DEV__) console.warn('[Premium] navigation failed:', err);
+            // Fallback: try a simple replace
+            try { router.replace('/'); } catch (_e) { /* last resort */ }
+        }
+    }, [completeOnboarding, router]);
+
+    useEffect(() => {
+        const loadOfferings = async () => {
+            try {
+                const current = await revenueCatService.getOfferings();
+                setOffering(current);
+            } catch (_e) {
+                // Offerings may fail on simulator — still allow free start
+            }
+        };
+        loadOfferings();
+    }, []);
+
+    // Render Ramadan paywall during Ramadan season (after all hooks)
+    let showRamadan = false;
+    try {
+        showRamadan = isRamadanSeason();
+    } catch (_e) {
+        // Date computation failure — fall back to standard paywall
+    }
+    if (showRamadan) {
+        return (
+            <RamadanPaywallScreen
+                onPurchaseSuccess={handleOnboardingComplete}
+                onDismiss={handleOnboardingComplete}
+            />
+        );
+    }
+
     const handleSubscribe = async () => {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        // TODO: Integrate with RevenueCat
-        console.log('Subscribing to:', isAnnual ? 'annual' : 'monthly');
-        await completeOnboarding();
-        router.replace('/');
+        if (!offering) {
+            Alert.alert('Error', 'Could not load products. Please try again or start free.');
+            return;
+        }
+
+        const packageToBuy = isAnnual ? offering.annual : offering.monthly;
+        if (!packageToBuy) {
+            Alert.alert('Error', 'Product not available.');
+            return;
+        }
+
+        setPurchasing(true);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+        try {
+            const { success, userCancelled, error: purchaseError } = await revenueCatService.purchasePackage(packageToBuy);
+            if (success) {
+                try { checkStatus(); } catch (_e) { /* non-critical */ }
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                try {
+                    await completeOnboarding();
+                } catch (err) {
+                    if (__DEV__) console.warn('[Premium] completeOnboarding failed:', err);
+                }
+                router.dismissAll();
+                router.replace('/');
+            } else if (!userCancelled) {
+                Alert.alert('Purchase Failed', purchaseError || 'Could not complete purchase. Please try again.');
+            }
+        } catch (_error) {
+            Alert.alert('Error', 'Something went wrong. Please try again.');
+        } finally {
+            setPurchasing(false);
+        }
     };
 
     const handleStartFree = async () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        await completeOnboarding();
+        try {
+            await completeOnboarding();
+        } catch (err) {
+            if (__DEV__) console.warn('[Premium] completeOnboarding failed:', err);
+        }
+        router.dismissAll();
         router.replace('/');
     };
 
@@ -56,11 +143,7 @@ export default function OnboardingPremium() {
     const savings = isAnnual ? Math.round((1 - ANNUAL_PRICE / 12 / MONTHLY_PRICE) * 100) : 0;
 
     return (
-        <LinearGradient
-            colors={Gradients.primary}
-            style={styles.container}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}>
+        <WaveBackground variant="spiritual" intensity="subtle">
             <SafeAreaView style={styles.safeArea}>
                 {/* Header */}
                 <MotiView
@@ -99,7 +182,7 @@ export default function OnboardingPremium() {
                                 <Text style={styles.featureTitle}>{feature.title}</Text>
                                 <Text style={styles.featureDescription}>{feature.description}</Text>
                             </View>
-                            <Ionicons name="checkmark-circle" size={22} color="#4ADE80" />
+                            <Ionicons name="checkmark-circle" size={22} color={BrandTokens.light.accentPrimary} />
                         </MotiView>
                     ))}
                 </MotiView>
@@ -154,7 +237,9 @@ export default function OnboardingPremium() {
                         style={styles.ctaButton}
                         labelStyle={styles.ctaLabel}
                         buttonColor="#FFFFFF"
-                        textColor="#5B7FFF">
+                        textColor={BrandTokens.light.accentPrimary}
+                        loading={purchasing}
+                        disabled={purchasing}>
                         Unlock Full Access
                     </Button>
                     <Pressable onPress={handleStartFree} style={styles.secondaryButton}>
@@ -162,7 +247,7 @@ export default function OnboardingPremium() {
                     </Pressable>
                 </MotiView>
             </SafeAreaView>
-        </LinearGradient>
+        </WaveBackground>
     );
 }
 
@@ -181,12 +266,12 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 32,
         fontWeight: '800',
-        color: '#FFFFFF',
+        color: '#1E1B4B',
         letterSpacing: -1,
     },
     subtitle: {
         fontSize: 16,
-        color: 'rgba(255,255,255,0.85)',
+        color: '#4C3D7A',
         marginTop: Spacing.xs,
     },
     featuresContainer: {
@@ -207,7 +292,7 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        backgroundColor: 'rgba(139, 92, 246, 0.15)',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: Spacing.md,
@@ -218,11 +303,11 @@ const styles = StyleSheet.create({
     featureTitle: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: '#1E1B4B',
     },
     featureDescription: {
         fontSize: 12,
-        color: 'rgba(255,255,255,0.7)',
+        color: '#6B5B95',
         marginTop: 1,
     },
     pricingContainer: {
@@ -236,7 +321,7 @@ const styles = StyleSheet.create({
     },
     toggleLabel: {
         fontSize: 14,
-        color: 'rgba(255,255,255,0.9)',
+        color: '#4C3D7A',
         fontWeight: '500',
     },
     annualLabel: {
@@ -245,7 +330,7 @@ const styles = StyleSheet.create({
         gap: Spacing.xs,
     },
     savingsBadge: {
-        backgroundColor: '#4ADE80',
+        backgroundColor: BrandTokens.light.accentPrimary,
         paddingHorizontal: 6,
         paddingVertical: 2,
         borderRadius: 4,
@@ -253,7 +338,7 @@ const styles = StyleSheet.create({
     savingsText: {
         fontSize: 10,
         fontWeight: '700',
-        color: '#065F46',
+        color: '#FFFFFF',
     },
     priceDisplay: {
         flexDirection: 'row',
@@ -263,16 +348,16 @@ const styles = StyleSheet.create({
     price: {
         fontSize: 48,
         fontWeight: '800',
-        color: '#FFFFFF',
+        color: '#1E1B4B',
     },
     priceUnit: {
         fontSize: 18,
-        color: 'rgba(255,255,255,0.8)',
+        color: '#6B5B95',
         marginLeft: 4,
     },
     priceNote: {
         fontSize: 14,
-        color: 'rgba(255,255,255,0.7)',
+        color: '#6B5B95',
         marginTop: Spacing.xs,
     },
     ctaContainer: {
@@ -295,7 +380,7 @@ const styles = StyleSheet.create({
     },
     secondaryText: {
         fontSize: 16,
-        color: 'rgba(255,255,255,0.8)',
+        color: '#6B5B95',
         fontWeight: '500',
     },
 });

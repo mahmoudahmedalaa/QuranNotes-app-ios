@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, FlatList, StyleSheet, Alert, Pressable, Dimensions } from 'react-native';
+import { View, FlatList, StyleSheet, Alert, Pressable, Platform } from 'react-native';
 import {
     Text,
     useTheme,
@@ -11,9 +11,9 @@ import {
     IconButton,
 } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useFolders } from '../../../src/infrastructure/notes/FolderContext';
-import { Folder, DEFAULT_FOLDER } from '../../../src/domain/entities/Folder';
-import { Spacing, BorderRadius, Shadows } from '../../../src/presentation/theme/DesignSystem';
+import { useFolders } from '../../../src/features/notes/infrastructure/FolderContext';
+import { Folder, DEFAULT_FOLDER } from '../../../src/core/domain/entities/Folder';
+import { Spacing, BorderRadius, Shadows } from '../../../src/core/theme/DesignSystem';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
@@ -51,7 +51,8 @@ export default function FoldersScreen() {
         setEditingFolder(null);
     };
 
-    const handleDelete = (folder: Folder) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _handleDelete = (folder: Folder) => {
         Alert.alert(
             'Delete Folder',
             `Delete "${folder.name}"? Items in this folder will be unassigned.`,
@@ -84,7 +85,7 @@ export default function FoldersScreen() {
                 <LinearGradient
                     colors={[item.color + '15', item.color + '05']}
                     style={styles.iconContainer}>
-                    <Ionicons name="folder" size={24} color={item.color} />
+                    <Ionicons name="folder" size={28} color={item.color} />
                 </LinearGradient>
 
                 <View style={styles.cardContent}>
@@ -182,12 +183,12 @@ const styles = StyleSheet.create({
         paddingVertical: Spacing.md,
     },
     headerText: {
-        fontSize: 14,
-        lineHeight: 20,
+        fontSize: 16,
+        lineHeight: 22,
     },
     list: {
         paddingHorizontal: Spacing.md,
-        paddingBottom: 100,
+        paddingBottom: Platform.OS === 'ios' ? 180 : 160,
     },
     card: {
         flexDirection: 'row',
@@ -215,12 +216,12 @@ const styles = StyleSheet.create({
     },
     cardContent: { flex: 1 },
     folderName: {
-        fontSize: 17, // Slightly larger
+        fontSize: 19,
         fontWeight: '700',
         letterSpacing: -0.3,
     },
     defaultBadge: {
-        fontSize: 11,
+        fontSize: 13,
         fontWeight: '600',
         textTransform: 'uppercase',
         letterSpacing: 0.5,
@@ -231,11 +232,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     empty: { alignItems: 'center', paddingTop: Spacing.xxl },
-    emptyTitle: { fontSize: 18, fontWeight: '600', marginTop: Spacing.sm },
-    emptyText: { fontSize: 14, textAlign: 'center', marginTop: Spacing.xs },
+    emptyTitle: { fontSize: 20, fontWeight: '600', marginTop: Spacing.sm },
+    emptyText: { fontSize: 16, textAlign: 'center', marginTop: Spacing.xs },
     fab: {
         position: 'absolute',
         right: Spacing.lg,
-        bottom: Spacing.lg,
+        bottom: Platform.OS === 'ios' ? 140 : 120,
     },
 });

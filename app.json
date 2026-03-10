@@ -1,32 +1,37 @@
 {
   "expo": {
     "name": "QuranNotes",
-    "slug": "quran-notes",
-    "version": "1.0.0",
+    "slug": "QuranNotes-app",
+    "version": "2.2.0",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#FAF5FF"
     },
     "assetBundlePatterns": [
       "**/*"
     ],
+    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mahmoudahmedalaa.qurannotes",
-      "buildNumber": "15",
+      "appleTeamId": "2S42RLH67Y",
+      "buildNumber": "23",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Allow QuranNotes to use the microphone for speech recognition",
+        "NSMicrophoneUsageDescription": "Allow QuranNotes to use the microphone for voice follow-along recitation",
         "NSSpeechRecognitionUsageDescription": "Allow QuranNotes to use speech recognition for voice follow-along",
         "NSPhotoLibraryUsageDescription": "Allow QuranNotes to access your photo library to select a profile picture",
         "ITSAppUsesNonExemptEncryption": false,
         "UIBackgroundModes": [
           "audio"
+        ]
+      },
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.com.mahmoudahmedalaa.qurannotes"
         ]
       }
     },
@@ -37,7 +42,8 @@
       },
       "package": "com.mahmoudahmedalaa.qurannotes",
       "permissions": [
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ]
     },
     "web": {
@@ -58,9 +64,16 @@
           "color": "#ffffff"
         }
       ],
-      "expo-web-browser",
       "@react-native-google-signin/google-signin",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "@jamsch/expo-speech-recognition",
+        {
+          "microphonePermission": "Allow QuranNotes to use the microphone for voice follow-along recitation",
+          "speechRecognitionPermission": "Allow QuranNotes to use speech recognition for voice follow-along"
+        }
+      ],
+      "@bacons/apple-targets"
     ],
     "scheme": [
       "qurannotes",

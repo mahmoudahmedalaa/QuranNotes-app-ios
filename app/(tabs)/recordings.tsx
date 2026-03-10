@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import { View, FlatList, StyleSheet, Alert } from 'react-native';
 import {
     Text,
     useTheme,
@@ -11,31 +11,34 @@ import {
     Portal,
     Chip,
 } from 'react-native-paper';
+import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRecordingStorage } from '../../src/presentation/hooks/useRecordingStorage';
-import { useAudioRecorder } from '../../src/presentation/hooks/useAudioRecorder';
-import { usePro } from '../../src/infrastructure/auth/ProContext';
-import { useFolders } from '../../src/infrastructure/notes/FolderContext';
-import { Recording } from '../../src/domain/entities/Recording';
-import { Spacing } from '../../src/presentation/theme/DesignSystem';
-import { ModernDropdown } from '../../src/presentation/components/common/ModernDropdown';
+import { useRecordingStorage } from '../../src/core/hooks/useRecordingStorage';
+import { useAudioRecorder } from '../../src/core/hooks/useAudioRecorder';
+import { usePro } from '../../src/features/auth/infrastructure/ProContext';
+import { useFolders } from '../../src/features/notes/infrastructure/FolderContext';
+import { Recording } from '../../src/core/domain/entities/Recording';
+import { Spacing } from '../../src/core/theme/DesignSystem';
+import { ModernDropdown } from '../../src/core/components/common/ModernDropdown';
 
-import { FolderManagementDialog } from '../../src/presentation/components/common/FolderManagementDialog';
+
 
 export default function RecordingsScreen() {
     const theme = useTheme();
+    const router = useRouter();
     const { recordings, saveRecording, deleteRecording, refreshRecordings } = useRecordingStorage();
-    const { folders, addFolder, updateFolder, deleteFolder } = useFolders();
+    const { folders } = useFolders();
     const { isRecording, startRecording, stopRecording } = useAudioRecorder();
     const { isPro } = usePro();
     const [dialogVisible, setDialogVisible] = useState(false);
-    const [manageFoldersVisible, setManageFoldersVisible] = useState(false);
+
     const [recordingName, setRecordingName] = useState('');
     const [selectedFolderIds, setSelectedFolderIds] = useState<string[]>([]);
     const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>();
 
     useEffect(() => {
         refreshRecordings();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const filteredRecordings = recordings.filter(r => {
@@ -44,14 +47,10 @@ export default function RecordingsScreen() {
     });
 
     const handleStartRecording = async () => {
-        // GATING LOGIC
-        if (!isPro && recordings.length >= 10) {
-            const { Alert } = require('react-native');
-            const { useRouter } = require('expo-router');
-            const router = require('expo-router').useRouter();
+        if (!isPro && recordings.length >= 5) {
             Alert.alert(
                 'Limit Reached',
-                'Free users can save up to 10 recordings. Upgrade to Pro for unlimited recordings.',
+                'Free users can save up to 5 recordings. Upgrade to Pro for unlimited recordings.',
                 [
                     { text: 'Cancel', style: 'cancel' },
                     { text: 'Unlock Premium', onPress: () => router.push('/paywall') }
@@ -133,7 +132,7 @@ export default function RecordingsScreen() {
                             icon="play-circle"
                             size={32}
                             iconColor={theme.colors.primary}
-                            onPress={() => console.log('Play recording:', item.id)}
+                            onPress={() => Alert.alert('Coming Soon', 'Playback will be available in the next update.')}
                         />
                     </View>
 

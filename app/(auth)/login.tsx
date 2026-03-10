@@ -1,20 +1,17 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
-import { Text, TextInput, Button, IconButton, useTheme, HelperText } from 'react-native-paper';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { Text, TextInput, Button, useTheme, HelperText } from 'react-native-paper';
 import { useRouter, Link, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Spacing, BorderRadius, Colors } from '../../src/presentation/theme/DesignSystem';
-import { useAuth } from '../../src/infrastructure/auth/AuthContext';
+import { Spacing, BorderRadius, Colors } from '../../src/core/theme/DesignSystem';
+import { useAuth } from '../../src/features/auth/infrastructure/AuthContext';
 import { MotiView } from 'moti';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
 
 export default function LoginScreen() {
     const theme = useTheme();
     const router = useRouter();
     const insets = useSafeAreaInsets();
-    const { user, loginWithEmail, loginAnonymously, loginWithGoogle, loginWithApple } = useAuth();
-    const { completeOnboarding } = useOnboarding();
+    const { user, loginWithEmail, loginWithGoogle, loginWithApple } = useAuth();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -29,6 +26,7 @@ export default function LoginScreen() {
         if (user) {
             router.replace('/');
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
 
     const handleLogin = async () => {
@@ -42,35 +40,10 @@ export default function LoginScreen() {
         try {
             await loginWithEmail(email, password);
 
-            // Check if email is verified using Firebase compat API
-            const firebase = require('firebase/compat/app').default;
-            const currentUser = firebase.auth().currentUser;
 
-            if (currentUser && !currentUser.emailVerified) {
-                // Sign out unverified user
-                await firebase.auth().signOut();
 
-                // Show toast notification
-                const Toast = require('react-native-toast-message').default;
-                Toast.show({
-                    type: 'info',
-                    text1: '📧 Email Not Verified',
-                    text2: 'Please verify your email before signing in. Check spam/junk folder.',
-                    visibilityTime: 5000,
-                    position: 'top',
-                });
-                return;
-            }
-
-            // Check if this is a new sign-up (should see onboarding) or returning user (skip it)
-            const isNewSignUp = await AsyncStorage.getItem('@quran_notes:isNewSignUp');
-            if (isNewSignUp === 'true') {
-                // New user — clear the flag, let them go through onboarding
-                await AsyncStorage.removeItem('@quran_notes:isNewSignUp');
-            } else {
-                // Returning user — skip onboarding
-                await completeOnboarding();
-            }
+            // Let index.tsx handle routing — OnboardingContext uses per-user state
+            // New users will have shouldShowOnboarding=true, returning users will have it false
             router.replace('/');
         } catch (e: any) {
             setError(e.message || 'Login failed');
@@ -84,8 +57,8 @@ export default function LoginScreen() {
         setError('');
         try {
             await loginWithGoogle();
-            // Social login — returning user, skip onboarding
-            await completeOnboarding();
+            // Don't call completeOnboarding here — let index.tsx decide
+            // based on per-user onboarding state (shouldShowOnboarding)
             router.replace('/');
         } catch (e: any) {
             setError(e.message || 'Google Sign-In failed');
@@ -99,8 +72,8 @@ export default function LoginScreen() {
         setError('');
         try {
             await loginWithApple();
-            // Social login — returning user, skip onboarding
-            await completeOnboarding();
+            // Don't call completeOnboarding here — let index.tsx decide
+            // based on per-user onboarding state (shouldShowOnboarding)
             router.replace('/');
         } catch (e: any) {
             setError(e.message || 'Apple Sign-In failed');
@@ -180,10 +153,7 @@ export default function LoginScreen() {
 
                     <Button
                         mode="text"
-                        onPress={() => {
-                            const router = require('expo-router').useRouter;
-                            require('expo-router').router.push('/(auth)/forgot-password');
-                        }}
+                        onPress={() => router.push('/(auth)/forgot-password')}
                         style={{ marginTop: Spacing.sm }}
                         textColor={theme.colors.primary}
                     >
@@ -226,7 +196,7 @@ export default function LoginScreen() {
                     style={styles.footer}
                 >
                     <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                        Don't have an account?{' '}
+                        Don&apos;t have an account?{' '}
                     </Text>
                     <Link href="/(auth)/sign-up" asChild>
                         <Button mode="text" compact>Sign Up</Button>

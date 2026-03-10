@@ -1,24 +1,20 @@
-import { useEffect, useState, useMemo } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import { useEffect, useState, useMemo, useCallback } from 'react';
+import { View, FlatList, StyleSheet, Alert } from 'react-native';
 import {
     Text,
     useTheme,
     Searchbar,
     TouchableRipple,
     IconButton,
-    FAB,
-    Portal,
-    Dialog,
-    TextInput,
-    Button,
 } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { useNotes } from '../../src/presentation/hooks/useNotes';
-import { useFolders } from '../../src/infrastructure/notes/FolderContext';
-import { Note } from '../../src/domain/entities/Note';
-import { Spacing } from '../../src/presentation/theme/DesignSystem';
-import { ModernDropdown } from '../../src/presentation/components/common/ModernDropdown';
-import { FolderManagementDialog } from '../../src/presentation/components/common/FolderManagementDialog';
+import { useNotes } from '../../src/core/hooks/useNotes';
+import { useFolders } from '../../src/features/notes/infrastructure/FolderContext';
+import { Note } from '../../src/features/notes/domain/Note';
+import { Spacing } from '../../src/core/theme/DesignSystem';
+import { ModernDropdown } from '../../src/core/components/common/ModernDropdown';
+import { FolderManagementDialog } from '../../src/core/components/common/FolderManagementDialog';
+import { ExportService } from '../../src/core/export/ExportService';
 
 export default function NotesScreen() {
     const router = useRouter();
@@ -42,6 +38,20 @@ export default function NotesScreen() {
             return matchesSearch && matchesFolder;
         });
     }, [notes, searchQuery, selectedFolders]);
+
+    const handleExport = useCallback(async () => {
+        if (filteredNotes.length === 0) {
+            Alert.alert('No Notes', 'There are no notes to export.');
+            return;
+        }
+        try {
+            await ExportService.exportNotes(filteredNotes, 'text');
+        } catch (error: any) {
+            if (error.message !== 'User did not share') {
+                Alert.alert('Export Failed', error.message || 'Something went wrong.');
+            }
+        }
+    }, [filteredNotes]);
 
     const folderOptions = folders.map(f => ({ label: f.name, value: f.id }));
 
@@ -115,6 +125,12 @@ export default function NotesScreen() {
                         My Reflections
                     </Text>
                     <IconButton
+                        icon="download-outline"
+                        mode="contained-tonal"
+                        onPress={handleExport}
+                        size={24}
+                    />
+                    <IconButton
                         icon="folder-plus"
                         mode="contained-tonal"
                         onPress={() => setDialogVisible(true)}
@@ -174,7 +190,6 @@ export default function NotesScreen() {
                     await updateFolder(id, { name });
                 }}
                 onDelete={async id => {
-                    const { Alert } = require('react-native');
                     Alert.alert(
                         'Delete Folder',
                         'Are you sure? Notes in this folder will be unassigned.',

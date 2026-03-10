@@ -1,0 +1,50 @@
+import { Audio } from 'expo-av';
+
+export class AudioRecorderService {
+    private recording: Audio.Recording | null = null;
+
+    async startRecording(): Promise<void> {
+        try {
+            const permission = await Audio.requestPermissionsAsync();
+            if (permission.status !== 'granted') {
+                if (__DEV__) console.warn('Audio permission denied');
+                return;
+            }
+
+            await Audio.setAudioModeAsync({
+                allowsRecordingIOS: true,
+                playsInSilentModeIOS: true,
+            });
+
+            const { recording } = await Audio.Recording.createAsync(
+                Audio.RecordingOptionsPresets.HIGH_QUALITY,
+            );
+            this.recording = recording;
+        } catch (err) {
+            if (__DEV__) console.error('Failed to start recording', err);
+            throw err; // Re-throw to UI
+        }
+    }
+
+    async stopRecording(): Promise<string | null> {
+        if (!this.recording) {
+            if (__DEV__) console.warn('No recording to stop');
+            return null;
+        }
+
+        try {
+            await this.recording.stopAndUnloadAsync();
+            const uri = this.recording.getURI();
+            this.recording = null;
+            // Reset Audio Mode for playback
+            await Audio.setAudioModeAsync({
+                allowsRecordingIOS: false,
+                playsInSilentModeIOS: true,
+            });
+            return uri;
+        } catch (error) {
+            if (__DEV__) console.error('Failed to stop recording', error);
+            return null;
+        }
+    }
+}

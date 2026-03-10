@@ -1,0 +1,21 @@
+{
+  "name": "WidgetBridge",
+  "version": "1.0.0",
+  "summary": "Bridge between RN app and iOS widgets via shared UserDefaults",
+  "homepage": "https://github.com/mahmoudahmedalaa/QuranNotes-app",
+  "license": "MIT",
+  "authors": "Mahmoud Ahmed Alaa",
+  "source": {
+    "git": ""
+  },
+  "static_framework": true,
+  "dependencies": {
+    "ExpoModulesCore": []
+  },
+  "platforms": {
+    "ios": "15.1"
+  },
+  "swift_versions": "5.4",
+  "source_files": "**/*.swift",
+  "swift_version": "5.4"
+}

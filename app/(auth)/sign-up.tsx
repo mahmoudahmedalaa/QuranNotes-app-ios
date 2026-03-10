@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Text, TextInput, Button, useTheme, HelperText } from 'react-native-paper';
 import { useRouter, Link, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Spacing, BorderRadius, Colors } from '../../src/presentation/theme/DesignSystem';
-import { useAuth } from '../../src/infrastructure/auth/AuthContext';
+import { Spacing, BorderRadius } from '../../src/core/theme/DesignSystem';
+import { useAuth } from '../../src/features/auth/infrastructure/AuthContext';
 import { MotiView } from 'moti';
+import Toast from 'react-native-toast-message';
 
 export default function SignUpScreen() {
     const theme = useTheme();
     const router = useRouter();
     const insets = useSafeAreaInsets();
-    const { registerWithEmail } = useAuth();
+    const { user, registerWithEmail } = useAuth();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -20,6 +20,14 @@ export default function SignUpScreen() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [secureTextEntry, setSecureTextEntry] = useState(true);
+
+    // If user is already authenticated on mount (persisted session), go straight to home.
+    React.useEffect(() => {
+        if (user) {
+            router.replace('/');
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
 
     const handleSignUp = async () => {
         if (!email || !password || !confirmPassword) {
@@ -42,23 +50,16 @@ export default function SignUpScreen() {
         try {
             await registerWithEmail(email, password);
 
-            // Mark as new sign-up so login screen knows to show onboarding
-            await AsyncStorage.setItem('@quran_notes:isNewSignUp', 'true');
-
             // Show modern toast notification
-            const Toast = require('react-native-toast-message').default;
             Toast.show({
                 type: 'success',
-                text1: '✅ Account Created!',
-                text2: 'Please check your email to verify your account before signing in.',
-                visibilityTime: 6000,
+                text1: 'Account Created!',
+                text2: 'Welcome to QuranNotes.',
+                visibilityTime: 3000,
                 position: 'top',
             });
-            // User is signed out after registration (must verify email first).
-            // Send them to login screen where they can sign in after verification.
-            setTimeout(() => {
-                router.replace('/(auth)/login');
-            }, 2000);
+            // Redirect to index router to handle the next screen (onboarding, welcome, or home)
+            router.replace('/');
         } catch (e: any) {
             setError(e.message || 'Registration failed');
         } finally {

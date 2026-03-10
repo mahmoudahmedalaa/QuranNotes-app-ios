@@ -38,7 +38,7 @@ QuranApp/
 2.  **Run**: `npx expo start`
 
 ## Deployment
-Refer to [DEPLOYMENT.md](./docs/DEPLOYMENT.md) for build instructions.
+Refer to [DEPLOYMENT.md](./docs/deployment/DEPLOYMENT.md) for build instructions.
 
 ## License
 MIT

@@ -11,10 +11,10 @@ jest.mock('moti', () => {
 
 // Import after mocks
 import { View, Text } from 'react-native';
-import PaywallScreen from '../../presentation/components/paywall/PaywallScreen';
-import { ProProvider } from '../../infrastructure/auth/ProContext';
+import PaywallScreen from '../../features/payments/presentation/PaywallScreen';
+import { ProProvider } from '../../features/auth/infrastructure/ProContext';
 import { PaperProvider } from 'react-native-paper';
-import { Colors, Spacing } from '../../presentation/theme/DesignSystem';
+import { Colors, Spacing } from '../../core/theme/DesignSystem';
 
 // --- MOCKS ---
 
@@ -45,7 +45,7 @@ jest.mock('expo-haptics', () => ({
     notificationAsync: jest.fn(),
 }));
 
-jest.mock('../../infrastructure/payments/RevenueCatService', () => ({
+jest.mock('../../features/payments/infrastructure/RevenueCatService', () => ({
     revenueCatService: {
         getOfferings: jest.fn().mockResolvedValue({
             current: { availablePackages: [] }
@@ -64,6 +64,10 @@ jest.mock('expo-av', () => ({
     }
 }));
 
+jest.mock('../../core/utils/ramadanUtils', () => ({
+    isRamadanSeason: jest.fn().mockReturnValue(false),
+}));
+
 
 describe('Comprehensive App Flow (50 Checks)', () => {
 
@@ -77,7 +81,7 @@ describe('Comprehensive App Flow (50 Checks)', () => {
         it('4. Async Storage mock is loaded', () => expect(require('@react-native-async-storage/async-storage').setItem).toBeDefined());
         it('5. Haptics mock is loaded', () => expect(require('expo-haptics').impactAsync).toBeDefined());
         it('6. Expo Router mock is loaded', () => expect(require('expo-router').useRouter).toBeDefined());
-        it('7. RevenueCat mock is loaded', () => expect(require('../../infrastructure/payments/RevenueCatService').revenueCatService).toBeDefined());
+        it('7. RevenueCat mock is loaded', () => expect(require('../../features/payments/infrastructure/RevenueCatService').revenueCatService).toBeDefined());
         it('8. Audio mock is loaded', () => expect(require('expo-av').Audio).toBeDefined());
         it('9. React Native View exists', () => expect(View).toBeDefined());
         it('10. React Native Text exists', () => expect(Text).toBeDefined());
@@ -93,7 +97,7 @@ describe('Comprehensive App Flow (50 Checks)', () => {
                     </PaperProvider>
                 </ProProvider>
             );
-            await waitFor(() => expect(getByText('Unlock Premium')).toBeTruthy());
+            await waitFor(() => expect(getByText('Unlimited Recordings')).toBeTruthy());
         });
 
         it('12. Paywall handles loading state', async () => {
@@ -106,7 +110,7 @@ describe('Comprehensive App Flow (50 Checks)', () => {
                 </ProProvider>
             );
             // Should resolve loading
-            await waitFor(() => expect(getByText('Unlock Premium')).toBeTruthy());
+            await waitFor(() => expect(getByText('Unlimited Recordings')).toBeTruthy());
         });
 
         it('13. Paywall safely handles getOfferings error', async () => {
@@ -117,12 +121,12 @@ describe('Comprehensive App Flow (50 Checks)', () => {
                     </PaperProvider>
                 </ProProvider>
             );
-            await waitFor(() => expect(getByText('Unlock Premium')).toBeTruthy());
+            await waitFor(() => expect(getByText('Unlimited Recordings')).toBeTruthy());
         });
 
         it('14. Features list is present', async () => {
             const { getByText } = render(<ProProvider><PaperProvider><PaywallScreen /></PaperProvider></ProProvider>);
-            await waitFor(() => expect(getByText('Unlimited AI Reflections')).toBeTruthy());
+            await waitFor(() => expect(getByText('Unlimited Recordings')).toBeTruthy());
         });
 
         it('15. Restore button is present', async () => {
@@ -161,12 +165,12 @@ describe('Comprehensive App Flow (50 Checks)', () => {
     // 4. Component Structure & Exports
     describe('4. Component Health Checks', () => {
         const componentsToCheck = [
-            '../../presentation/components/paywall/PaywallScreen',
-            '../../infrastructure/auth/ProContext',
-            '../../infrastructure/onboarding/OnboardingContext',
-            '../../presentation/theme/DesignSystem',
-            '../../presentation/hooks/useQuran',
-            '../../presentation/hooks/useInsightsData',
+            '../../features/payments/presentation/PaywallScreen',
+            '../../features/auth/infrastructure/ProContext',
+            '../../features/onboarding/infrastructure/OnboardingContext',
+            '../../core/theme/DesignSystem',
+            '../../core/hooks/useQuran',
+            '../../core/hooks/useInsightsData',
         ];
 
         componentsToCheck.forEach((path, idx) => {

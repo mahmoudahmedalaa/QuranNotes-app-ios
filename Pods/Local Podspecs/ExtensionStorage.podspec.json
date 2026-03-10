@@ -1,0 +1,23 @@
+{
+  "name": "ExtensionStorage",
+  "version": "1.0.0",
+  "summary": "A sample project summary",
+  "description": "A sample project description",
+  "authors": "",
+  "homepage": "https://docs.expo.dev/modules/",
+  "platforms": {
+    "ios": "15.1"
+  },
+  "source": {
+    "git": ""
+  },
+  "static_framework": true,
+  "dependencies": {
+    "ExpoModulesCore": []
+  },
+  "pod_target_xcconfig": {
+    "DEFINES_MODULE": "YES",
+    "SWIFT_COMPILATION_MODE": "wholemodule"
+  },
+  "source_files": "**/*.{h,m,mm,swift,hpp,cpp}"
+}

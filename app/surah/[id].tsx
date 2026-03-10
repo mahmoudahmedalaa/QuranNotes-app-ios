@@ -1,43 +1,61 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { View, Text, StyleSheet, Pressable, Animated, ViewToken, AppState, Alert, Modal } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { IconButton, useTheme, FAB } from 'react-native-paper';
+import { IconButton, useTheme } from 'react-native-paper';
 import { MotiView, AnimatePresence } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
-import { useQuran } from '../../src/presentation/hooks/useQuran';
-import { useAudioPlayer } from '../../src/presentation/hooks/useAudioPlayer';
-import { useAudioRecorder } from '../../src/presentation/hooks/useAudioRecorder';
-import { VerseItem } from '../../src/presentation/components/quran/VerseItem';
-import { useNotes } from '../../src/presentation/hooks/useNotes';
-import { useVoiceFollowAlong } from '../../src/presentation/hooks/useVoiceFollowAlong';
-import { WaveBackground } from '../../src/presentation/components/animated/WaveBackground';
-import { NoorMascot } from '../../src/presentation/components/mascot/NoorMascot';
-import { StickyAudioPlayer } from '../../src/presentation/components/quran/StickyAudioPlayer';
-import { RecordingIndicatorBar } from '../../src/presentation/components/recording/RecordingIndicatorBar';
-import { RecordingSaveModal } from '../../src/presentation/components/recording/RecordingSaveModal';
-import { VoiceFollowAlongOverlay } from '../../src/presentation/components/voice/VoiceFollowAlongOverlay';
-import { FollowAlongSaveModal } from '../../src/presentation/components/voice/FollowAlongSaveModal';
-import { FollowAlongSession } from '../../src/domain/entities/FollowAlongSession';
+import { useQuran } from '../../src/core/hooks/useQuran';
+import { useAudio } from '../../src/features/audio-player/infrastructure/AudioContext';
+import { useAudioRecorder } from '../../src/core/hooks/useAudioRecorder';
+import { VerseItem } from '../../src/features/quran-reading/presentation/VerseItem';
+import { useNotes } from '../../src/core/hooks/useNotes';
+import { useHighlights, HIGHLIGHT_COLORS } from '../../src/features/notes/infrastructure/HighlightContext';
+import { useVoiceFollowAlong } from '../../src/core/hooks/useVoiceFollowAlong';
+import { useSettings } from '../../src/features/settings/infrastructure/SettingsContext';
+import { WaveBackground } from '../../src/core/components/animated/WaveBackground';
+import { NoorMascot } from '../../src/core/components/mascot/NoorMascot';
+import { StickyAudioPlayer } from '../../src/features/quran-reading/presentation/StickyAudioPlayer';
+import { RecordingIndicatorBar } from '../../src/features/recording/presentation/RecordingIndicatorBar';
+
+import { RecordingSaveModal } from '../../src/features/recording/presentation/RecordingSaveModal';
+import { VoiceFollowAlongOverlay } from '../../src/features/voice/presentation/VoiceFollowAlongOverlay';
+import { FollowAlongSaveModal } from '../../src/features/voice/presentation/FollowAlongSaveModal';
+import { FollowAlongSession } from '../../src/core/domain/entities/FollowAlongSession';
+
+import { Verse } from '../../src/core/domain/entities/Quran';
+import { ReadingPositionService, ReadingPosition } from '../../src/features/quran-reading/infrastructure/ReadingPositionService';
+import { PremiumShareSheet } from '../../src/features/sharing/presentation/PremiumShareSheet';
+import { ShareCardData } from '../../src/features/sharing/domain/ShareTemplateTypes';
+import { TafsirBottomSheet, TafsirSheetData } from '../../src/features/tafsir';
+
+
+
 import {
     Spacing,
-    Gradients,
     Shadows,
     BorderRadius,
-} from '../../src/presentation/theme/DesignSystem';
+} from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
+const ACCENT_GOLD = '#D4A853';
+
 export default function SurahDetail() {
-    const { id } = useLocalSearchParams();
+    const { id, verse: verseParam, autoplay, page: pageParam } = useLocalSearchParams<{ id: string; verse?: string; autoplay?: string; page?: string }>();
     const router = useRouter();
     const theme = useTheme();
     const insets = useSafeAreaInsets();
     const scrollY = useRef(new Animated.Value(0)).current;
 
     const { surah, loading, error, loadSurah } = useQuran();
-    const { playingVerse, isPlaying, playFromVerse, pause, resume, stop } = useAudioPlayer();
-    const { isRecording, startRecording, stopRecording } = useAudioRecorder();
+    const { settings } = useSettings();
+    const { playingVerse, isPlaying, playFromVerse, pause, resume, stop } = useAudio();
+    const { isRecording, isPaused, startRecording, stopRecording, forceCleanup } = useAudioRecorder();
+    const navigation = useNavigation();
     const { notes } = useNotes();
+    const { highlightVerse, unhighlightVerse, getHighlight } = useHighlights();
+
     const followAlong = useVoiceFollowAlong(surah?.verses || [], surah?.number, surah?.englishName, surah?.name);
 
     const [saveModalVisible, setSaveModalVisible] = useState(false);
@@ -45,37 +63,408 @@ export default function SurahDetail() {
     const [lastRecordingUri, setLastRecordingUri] = useState<string | null>(null);
     const [recordingVerseId, setRecordingVerseId] = useState<number | undefined>();
     const [isStudyMode, setIsStudyMode] = useState(false);
+    const [selectedVerseForHighlight, setSelectedVerseForHighlight] = useState<number | null>(null);
+
     const [followAlongModalVisible, setFollowAlongModalVisible] = useState(false);
     const [completedFollowAlongSession, setCompletedFollowAlongSession] = useState<FollowAlongSession | null>(null);
     const flatListRef = useRef<any>(null);
+    const layoutReadyRef = useRef(false);
+    const autoplayTriggeredRef = useRef(false);
+    // Single scroll controller — all scroll requests go through scrollToVerse()
+    const scrollLockRef = useRef(false);
+    const scrollLockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Track previous playing verse to detect sequential auto-advance vs manual play
+    const prevPlayingVerseRef = useRef<{ surah: number; verse: number } | null>(null);
+    // Stable ref for surah used inside viewability callback (avoids stale closure)
+    const surahRef = useRef(surah);
+    useEffect(() => { surahRef.current = surah; }, [surah]);
+
+    // ── Reading position state ──
+    const lastVisibleVerseRef = useRef<number>(1);
+    // Track the currently playing verse so we save audio position, not scroll position
+    const playingVerseNumRef = useRef<number | null>(null);
+    const autoScrollEnabledRef = useRef(true);
+    const [savedPosition, setSavedPosition] = useState<ReadingPosition | null>(null);
+    const [showResumeBanner, setShowResumeBanner] = useState(false);
+    const [showReturnToAudio, setShowReturnToAudio] = useState(false);
+
+    // ── Share state ──
+    const [showShareSheet, setShowShareSheet] = useState(false);
+    const [shareVerseData, setShareVerseData] = useState<ShareCardData | null>(null);
+
+    // ── Tafsir state ──
+    const [showTafsir, setShowTafsir] = useState(false);
+    const [tafsirData, setTafsirData] = useState<TafsirSheetData | null>(null);
 
     useEffect(() => {
-        if (id) loadSurah(Number(id));
-    }, [id]);
+        if (id) loadSurah(Number(id), settings.translationEdition, settings.showTransliteration);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id, settings.translationEdition, settings.showTransliteration]);
 
+    // ── Keep playingVerseNumRef in sync so save logic uses audio position ──
+    useEffect(() => {
+        if (playingVerse && playingVerse.surah === Number(id)) {
+            playingVerseNumRef.current = playingVerse.verse;
+        } else {
+            playingVerseNumRef.current = null;
+        }
+    }, [playingVerse, id]);
+
+    // ── Compute whether we need boosted rendering for a high verse target ──
+    const hasHighVerseTarget = useMemo(() => {
+        if (!surah?.verses) return false;
+        if (verseParam && Number(verseParam) > 20) return true;
+        if (pageParam && !verseParam) return !!Number(pageParam);
+        return false;
+    }, [pageParam, verseParam, surah]);
+
+    // ── Compute initial scroll index so FlatList starts at the right verse ──
+    const initialScrollIndex = useMemo(() => {
+        if (!verseParam || !surah?.verses) return undefined;
+        const idx = surah.verses.findIndex((v: Verse) => v.number === Number(verseParam));
+        return idx >= 0 ? idx : undefined;
+    }, [verseParam, surah]);
+
+    // ── Load saved reading position on mount ──
+    // Skip when navigating to a specific verse/page (e.g. from Khatma)
+    // so the saved position doesn't override the intended scroll target
+    useEffect(() => {
+        if (!id) return;
+        if (verseParam || pageParam) return; // Don't load saved position when explicit nav params exist
+        const surahId = Number(id);
+        ReadingPositionService.get(surahId).then(pos => {
+            if (pos) {
+                setSavedPosition(pos);
+                lastVisibleVerseRef.current = pos.verse;
+                // Show resume banner only if user has real progress (past verse 1),
+                // didn't navigate to a specific verse, and isn't auto-playing
+                if (!autoplay && pos.verse > 1) {
+                    setShowResumeBanner(true);
+                }
+            }
+        }).catch(() => { /* silent — position loading is non-critical */ });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id, verseParam, pageParam]);
+
+
+
+    // ── Auto-save reading position on exit ──
+    useEffect(() => {
+        const surahRefLocal = surah;
+        return () => {
+            // Save position when unmounting (leaving screen)
+            // Prefer the playing verse over scroll position
+            const verseToSave = playingVerseNumRef.current ?? lastVisibleVerseRef.current;
+            if (surahRefLocal && verseToSave > 1) {
+                ReadingPositionService.save(
+                    surahRefLocal.number,
+                    verseToSave,
+                    surahRefLocal.englishName
+                );
+            }
+        };
+    }, [surah]);
+
+    // ── Also save position when app goes to background ──
+    useEffect(() => {
+        const subscription = AppState.addEventListener('change', (nextState) => {
+            if (nextState === 'background' || nextState === 'inactive') {
+                // Prefer the playing verse over scroll position
+                const verseToSave = playingVerseNumRef.current ?? lastVisibleVerseRef.current;
+                if (surah && verseToSave > 1) {
+                    ReadingPositionService.save(
+                        surah.number,
+                        verseToSave,
+                        surah.englishName
+                    );
+                }
+            }
+        });
+        return () => subscription.remove();
+    }, [surah]);
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SINGLE SCROLL CONTROLLER — all scroll requests go through this function.
+    // It acquires a lock for 1.5s to prevent any competing scroll.
+    // ═══════════════════════════════════════════════════════════════════════════
+    const scrollToVerse = useCallback((verseNum: number, animated = true) => {
+        if (!surah?.verses || !flatListRef.current || !layoutReadyRef.current) return;
+        const index = surah.verses.findIndex((v: Verse) => v.number === verseNum);
+        if (index < 0) return;
+
+        // Acquire scroll lock
+        scrollLockRef.current = true;
+        if (scrollLockTimerRef.current) clearTimeout(scrollLockTimerRef.current);
+        scrollLockTimerRef.current = setTimeout(() => {
+            scrollLockRef.current = false;
+        }, 1500);
+
+        flatListRef.current.scrollToIndex({
+            index,
+            animated,
+            viewPosition: 0.3, // Upper third — less estimation error than centering
+        });
+    }, [surah]);
+
+    // ── Resume banner handler ──
+    const handleResumeBannerPress = useCallback(async () => {
+        if (!savedPosition || !surah) return;
+        const verseNum = savedPosition.verse;
+        await stop();
+        scrollToVerse(verseNum);
+        setTimeout(() => playFromVerse(surah, verseNum), 700);
+        setShowResumeBanner(false);
+    }, [savedPosition, surah, playFromVerse, stop, scrollToVerse]);
+
+    // ── Scroll-to-bookmark: verse param from Khatma / Continue Reading ──
+    // initialScrollIndex handles positioning immediately.
+    // This effect ONLY handles autoplay and a delayed fine-tune scroll.
+    // We skip the immediate scroll when initialScrollIndex already did the work.
+    useEffect(() => {
+        if (verseParam && surah?.verses) {
+            const verseNum = Number(verseParam);
+            const tryAction = () => {
+                if (layoutReadyRef.current) {
+                    // Fine-tune scroll ONLY after a delay — initialScrollIndex
+                    // already positioned us, so this just adjusts viewPosition.
+                    // Using a delay prevents the visible "jump" from competing scrolls.
+                    setTimeout(() => {
+                        if (flatListRef.current && surah?.verses) {
+                            const index = surah.verses.findIndex((v: Verse) => v.number === verseNum);
+                            if (index >= 0) {
+                                flatListRef.current.scrollToIndex({
+                                    index,
+                                    animated: true,
+                                    viewPosition: 0.3,
+                                });
+                            }
+                        }
+                    }, 500);
+
+                    // Fire autoplay after layout is ready
+                    if (autoplay === 'true' && !autoplayTriggeredRef.current) {
+                        autoplayTriggeredRef.current = true;
+                        setTimeout(() => playFromVerse(surah, verseNum), 300);
+                    }
+                } else {
+                    setTimeout(tryAction, 100);
+                }
+            };
+            tryAction();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [verseParam, surah]);
+
+    // ── Autoplay from verse 1 when no specific verse is given ──
+    useEffect(() => {
+        if (autoplay === 'true' && !verseParam && !pageParam && surah && !autoplayTriggeredRef.current) {
+            autoplayTriggeredRef.current = true;
+            setTimeout(() => playFromVerse(surah, 1), 500);
+        }
+    }, [autoplay, verseParam, pageParam, surah, playFromVerse]);
+
+    // ── Page-based navigation: jump to first verse on the given page (Khatma Juz start) ──
+    // Uses aggressive retries to handle the case where FlatList hasn't measured
+    // all items yet (long surahs like Al-Baqarah with 286 verses).
+    useEffect(() => {
+        if (!pageParam || verseParam || !surah?.verses) return;
+        const targetPage = Number(pageParam);
+        if (!targetPage) return;
+        const firstVerseOnPage = surah.verses.find((v: Verse) => v.page >= targetPage);
+        if (!firstVerseOnPage) return;
+        const verseNum = firstVerseOnPage.number;
+        let attempts = 0;
+        const tryScroll = () => {
+            if (layoutReadyRef.current) {
+                scrollToVerse(verseNum, attempts === 0); // animated after first attempt
+                if (autoplay === 'true' && !autoplayTriggeredRef.current) {
+                    autoplayTriggeredRef.current = true;
+                    setTimeout(() => playFromVerse(surah, verseNum), 700);
+                }
+                // Retry once more after items have been measured to ensure accuracy
+                if (attempts < 2) {
+                    attempts++;
+                    setTimeout(tryScroll, 500);
+                }
+            } else {
+                attempts++;
+                if (attempts < 10) setTimeout(tryScroll, 200);
+            }
+        };
+        setTimeout(tryScroll, 300);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pageParam, verseParam, surah]);
+
+    // ── Auto-scroll to currently playing verse ──
+    // ONLY fires on sequential auto-advance (verse N → N+1), NOT on manual play.
+    // This prevents the jarring scroll jump when user taps play on a different verse.
+    useEffect(() => {
+        if (!surah?.verses || !playingVerse || !flatListRef.current) return;
+        if (playingVerse.surah !== surah.number) return;
+        if (scrollLockRef.current) return; // Another scroll is in progress
+
+        const prev = prevPlayingVerseRef.current;
+        prevPlayingVerseRef.current = playingVerse;
+
+        // Only auto-scroll if this is sequential advance (same surah, next verse)
+        const isSequentialAdvance = prev &&
+            prev.surah === playingVerse.surah &&
+            playingVerse.verse === prev.verse + 1;
+
+        if (!isSequentialAdvance) return; // Manual play — don't scroll
+
+        if (!autoScrollEnabledRef.current) {
+            setShowReturnToAudio(true);
+            return;
+        }
+
+        setShowReturnToAudio(false);
+        const index = surah.verses.findIndex((v: Verse) => v.number === playingVerse.verse);
+        if (index >= 0 && layoutReadyRef.current) {
+            flatListRef.current.scrollToIndex({
+                index,
+                animated: true,
+                viewPosition: 0.3,
+            });
+        }
+    }, [playingVerse, surah]);
+
+    // ── Reset auto-scroll when audio stops ──
+    useEffect(() => {
+        if (!playingVerse || !isPlaying) {
+            setShowReturnToAudio(false);
+            autoScrollEnabledRef.current = true;
+        }
+    }, [playingVerse, isPlaying]);
+
+    // ── Manual scroll detection — pause auto-scroll ──
+    const handleScrollBeginDrag = useCallback(() => {
+        if (playingVerse && isPlaying) {
+            autoScrollEnabledRef.current = false;
+            setShowReturnToAudio(true);
+        }
+    }, [playingVerse, isPlaying]);
+
+    // ── Return to Audio handler ──
+    const handleReturnToAudio = useCallback(() => {
+        if (!playingVerse) return;
+        scrollToVerse(playingVerse.verse);
+        autoScrollEnabledRef.current = true;
+        setShowReturnToAudio(false);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }, [playingVerse, scrollToVerse]);
+
+    // ── FlatList scroll error recovery ──
+    // Jump to estimated offset instantly (no animation), then do ONE smooth
+    // animated scroll to the exact position. This eliminates the double-hop.
+    const onScrollToIndexFailed = useCallback((info: { index: number; highestMeasuredFrameIndex: number; averageItemLength: number }) => {
+        const offset = info.averageItemLength * info.index;
+        // Instant jump — no visible animation
+        flatListRef.current?.scrollToOffset({ offset, animated: false });
+        // Then settle smoothly into exact position after items are measured
+        setTimeout(() => {
+            flatListRef.current?.scrollToIndex({
+                index: info.index,
+                animated: true,
+                viewPosition: 0.3,
+            });
+        }, 100);
+    }, []);
+
+
+
+    // ── Track visible verses for reading position ──
+    const viewabilityConfigCallbackPairs = useRef([
+        {
+            viewabilityConfig: {
+                viewAreaCoveragePercentThreshold: 50,
+                minimumViewTime: 500,
+            },
+            onViewableItemsChanged: ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+                if (viewableItems.length > 0) {
+                    const lastVisible = viewableItems[viewableItems.length - 1];
+                    if (lastVisible?.item?.number) {
+                        lastVisibleVerseRef.current = lastVisible.item.number;
+                    }
+                }
+            },
+        },
+    ]);
+
+    // Duration timer — ticks while recording, pauses (not resets) when paused
     useEffect(() => {
         let interval: ReturnType<typeof setInterval> | null = null;
         if (isRecording) {
             interval = setInterval(() => setRecordingDuration(d => d + 1), 1000);
-        } else {
-            setRecordingDuration(0);
         }
+        // Only reset duration when we fully stop (save modal takes over)
         return () => {
             if (interval) clearInterval(interval);
         };
     }, [isRecording]);
 
+    // Navigation guard — prevent accidental back navigation during recording
+    useEffect(() => {
+        if (!isRecording && !isPaused) return;
+
+        const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
+            e.preventDefault();
+            Alert.alert(
+                'Recording in Progress',
+                'You have an active recording. What would you like to do?',
+                [
+                    {
+                        text: 'Stay',
+                        style: 'cancel',
+                    },
+                    {
+                        text: 'Discard & Leave',
+                        style: 'destructive',
+                        onPress: async () => {
+                            await forceCleanup();
+                            setRecordingDuration(0);
+                            navigation.dispatch(e.data.action);
+                        },
+                    },
+                    {
+                        text: 'Save & Leave',
+                        onPress: async () => {
+                            const uri = await stopRecording();
+                            if (uri) {
+                                setLastRecordingUri(uri);
+                                setSaveModalVisible(true);
+                            }
+                            // Don't navigate yet — let them save first
+                        },
+                    },
+                ],
+            );
+        });
+
+        return unsubscribe;
+    }, [isRecording, isPaused, navigation, forceCleanup, stopRecording]);
+
+    // Unmount safety — force-cleanup if screen is removed while recording
+    useEffect(() => {
+        return () => {
+            forceCleanup();
+        };
+    }, [forceCleanup]);
+
     // Auto-scroll to highlighted verse during Follow Along
+    // Uses direct scrollToIndex (NOT scrollToVerse) because Follow Along fires
+    // rapid matches and the 1.5s lock would block most scrolls.
+    // This is safe: Follow Along is mutually exclusive with audio playback.
     useEffect(() => {
         if (followAlong.matchedVerseId && surah?.verses && flatListRef.current) {
             const verseIndex = surah.verses.findIndex(
-                (v: any) => v.number === followAlong.matchedVerseId
+                (v: Verse) => v.number === followAlong.matchedVerseId
             );
-            if (verseIndex >= 0) {
+            if (verseIndex >= 0 && layoutReadyRef.current) {
                 flatListRef.current.scrollToIndex({
                     index: verseIndex,
                     animated: true,
-                    viewPosition: 0.3, // Position verse 30% from top
+                    viewPosition: 0.5,
                 });
             }
         }
@@ -127,6 +516,19 @@ export default function SurahDetail() {
         }
     };
 
+    // ── Share a verse ──
+    const handleShareVerse = useCallback((verse: Verse) => {
+        if (!surah) return;
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        setShareVerseData({
+            type: 'verse',
+            arabicText: verse.text,
+            englishText: verse.translation,
+            reference: `${surah.englishName} ${surah.number}:${verse.number}`,
+        });
+        setShowShareSheet(true);
+    }, [surah]);
+
     if (loading) {
         return (
             <WaveBackground variant="spiritual" intensity="subtle">
@@ -148,28 +550,27 @@ export default function SurahDetail() {
         );
     }
 
-    // Determine bottom padding based on active bars
-    const bottomOffset = insets.bottom + (isRecording || playingVerse ? 130 : 60);
-
     return (
         <View style={styles.container}>
             <Animated.FlatList
+                style={{ flex: 1 }}
                 ref={flatListRef}
                 data={surah.verses}
                 keyExtractor={(item: any) => `${surah.number}-${item.number}`}
                 onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
                     useNativeDriver: false,
                 })}
-                onScrollToIndexFailed={(info) => {
-                    setTimeout(() => {
-                        flatListRef.current?.scrollToIndex({
-                            index: info.index,
-                            animated: true,
-                        });
-                    }, 100);
-                }}
+                onScrollToIndexFailed={onScrollToIndexFailed}
+                onScrollBeginDrag={handleScrollBeginDrag}
+                onLayout={() => { layoutReadyRef.current = true; }}
                 scrollEventThrottle={16}
                 showsVerticalScrollIndicator={false}
+                windowSize={10}
+                maxToRenderPerBatch={hasHighVerseTarget ? 20 : 8}
+                initialNumToRender={initialScrollIndex !== undefined ? Math.min(Math.max(initialScrollIndex + 10, 30), 100) : (hasHighVerseTarget ? 50 : 15)}
+                {...(initialScrollIndex !== undefined ? { initialScrollIndex } : {})}
+                removeClippedSubviews={true}
+                viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
                 renderItem={({ item, index }: { item: any; index: number }) => (
                     <VerseItem
                         verse={item}
@@ -181,7 +582,9 @@ export default function SurahDetail() {
                         hasNote={notes.some(
                             n => n.surahId === surah.number && n.verseId === item.number,
                         )}
+                        highlightColor={getHighlight(surah.number, item.number)?.color}
                         onPlay={() => playFromVerse(surah, item.number)}
+                        onPause={pause}
                         onNote={() =>
                             router.push({
                                 pathname: '/note/edit',
@@ -189,11 +592,24 @@ export default function SurahDetail() {
                             })
                         }
                         onRecord={() => handleRecordVerse(item.number)}
+                        onShare={() => handleShareVerse(item)}
+                        onExplain={() => {
+                            setTafsirData({
+                                arabicText: item.text,
+                                translation: item.translation || '',
+                                surahName: surah.englishName,
+                                verseNumber: item.number,
+                                surahNumber: surah.number,
+                            });
+                            setShowTafsir(true);
+                        }}
+                        onHighlight={() => setSelectedVerseForHighlight(item.number)}
                         isStudyMode={isStudyMode}
                         isHighlighted={followAlong.matchedVerseId === item.number}
+                        showTransliteration={settings.showTransliteration}
                     />
                 )}
-                contentContainerStyle={[styles.listContent, { paddingBottom: bottomOffset }]}
+                contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + (playingVerse ? 200 : 20) }]}
                 ListHeaderComponent={() => {
                     const headerHeight = scrollY.interpolate({
                         inputRange: [-100, 0, 250],
@@ -280,7 +696,7 @@ export default function SurahDetail() {
                                     <View
                                         style={[
                                             styles.metaBadge,
-                                            { backgroundColor: theme.colors.primaryContainer },
+                                            { backgroundColor: '#FFFFFF' },
                                         ]}>
                                         <Text
                                             style={[
@@ -293,12 +709,12 @@ export default function SurahDetail() {
                                     <View
                                         style={[
                                             styles.metaBadge,
-                                            { backgroundColor: theme.colors.surfaceVariant },
+                                            { backgroundColor: '#FFFFFF' },
                                         ]}>
                                         <Text
                                             style={[
                                                 styles.metaText,
-                                                { color: theme.colors.onSurfaceVariant },
+                                                { color: theme.colors.primary },
                                             ]}>
                                             {surah.numberOfAyahs} Verses
                                         </Text>
@@ -324,7 +740,7 @@ export default function SurahDetail() {
                                     <IconButton
                                         icon="pencil-outline"
                                         mode="contained-tonal"
-                                        containerColor={theme.colors.surfaceVariant}
+                                        containerColor="#FFFFFF"
                                         iconColor={theme.colors.primary}
                                         size={22}
                                         onPress={handleNoteSurah}
@@ -332,8 +748,8 @@ export default function SurahDetail() {
                                     <IconButton
                                         icon="microphone-outline"
                                         mode="contained-tonal"
-                                        containerColor={theme.colors.surfaceVariant}
-                                        iconColor={theme.colors.secondary}
+                                        containerColor="#FFFFFF"
+                                        iconColor={theme.colors.primary}
                                         size={22}
                                         onPress={handleRecordSurah}
                                     />
@@ -344,20 +760,18 @@ export default function SurahDetail() {
                                         containerColor={
                                             isStudyMode
                                                 ? theme.colors.primaryContainer
-                                                : theme.colors.surfaceVariant
+                                                : '#FFFFFF'
                                         }
-                                        iconColor={
-                                            isStudyMode
-                                                ? theme.colors.primary
-                                                : theme.colors.onSurfaceVariant
-                                        }
+                                        iconColor={theme.colors.primary}
                                         size={22}
                                         onPress={() => {
                                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                                             setIsStudyMode(!isStudyMode);
                                         }}
                                     />
+
                                 </View>
+
                             </Animated.View>
                         </Animated.View>
                     );
@@ -422,6 +836,7 @@ export default function SurahDetail() {
                         }}
                         style={styles.stickyActionIcon}
                     />
+
                     <IconButton
                         icon="play"
                         iconColor={theme.colors.primary}
@@ -431,6 +846,52 @@ export default function SurahDetail() {
                     />
                 </View>
             </Animated.View>
+
+            {/* Resume Reading Banner — floating overlay below sticky header */}
+            <AnimatePresence>
+                {showResumeBanner && savedPosition && (
+                    <MotiView
+                        from={{ opacity: 0, translateY: -10 }}
+                        animate={{ opacity: 1, translateY: 0 }}
+                        exit={{ opacity: 0, translateY: -10 }}
+                        transition={{ type: 'spring', damping: 20 }}
+                        style={[
+                            styles.resumeBannerFloating,
+                            {
+                                top: insets.top + 56 + 8,
+                                backgroundColor: theme.colors.surface,
+                                borderColor: `${ACCENT_GOLD}40`,
+                            },
+                            Shadows.md,
+                        ]}
+                    >
+                        <Pressable
+                            onPress={handleResumeBannerPress}
+                            style={styles.resumeBannerContent}
+                        >
+                            <View style={[styles.resumeIconCircle, { backgroundColor: `${ACCENT_GOLD}18` }]}>
+                                <Ionicons name="location" size={16} color={ACCENT_GOLD} />
+                            </View>
+                            <View style={styles.resumeTextCol}>
+                                <Text style={[styles.resumeBannerTitle, { color: theme.colors.onSurface }]}>
+                                    Continue Reading
+                                </Text>
+                                <Text style={[styles.resumeBannerSubtitle, { color: theme.colors.onSurfaceVariant }]}>
+                                    Ayah {savedPosition.verse} · Tap to resume & play
+                                </Text>
+                            </View>
+                            <Ionicons name="play-circle" size={28} color={ACCENT_GOLD} />
+                        </Pressable>
+                        <Pressable
+                            onPress={() => setShowResumeBanner(false)}
+                            hitSlop={12}
+                            style={styles.resumeDismiss}
+                        >
+                            <Ionicons name="close" size={18} color={theme.colors.onSurfaceVariant} />
+                        </Pressable>
+                    </MotiView>
+                )}
+            </AnimatePresence>
 
             {/* Bars Container - AnimatePresence ensures smooth entry/exit */}
             <AnimatePresence>
@@ -488,6 +949,128 @@ export default function SurahDetail() {
             />
 
             {/* Follow Along is now accessible via the header icon buttons */}
+
+            {/* Return to Audio — floating pill when user scrolls away from playing verse */}
+            <AnimatePresence>
+                {showReturnToAudio && playingVerse && (
+                    <MotiView
+                        from={{ opacity: 0, translateY: 20 }}
+                        animate={{ opacity: 1, translateY: 0 }}
+                        exit={{ opacity: 0, translateY: 20 }}
+                        transition={{ type: 'spring', damping: 18 }}
+                        style={[
+                            styles.returnToAudioContainer,
+                            { bottom: insets.bottom + 160 },
+                        ]}
+                    >
+                        <Pressable
+                            onPress={handleReturnToAudio}
+                            style={({ pressed }) => [
+                                styles.returnToAudioPill,
+                                { backgroundColor: ACCENT_GOLD, opacity: pressed ? 0.85 : 1 },
+                                Shadows.md,
+                            ]}
+                        >
+                            <Ionicons name="arrow-up" size={14} color="#FFF" />
+                            <Text style={styles.returnToAudioText}>
+                                Return
+                            </Text>
+                        </Pressable>
+                    </MotiView>
+                )}
+            </AnimatePresence>
+
+            {/* Premium Share Sheet */}
+            {shareVerseData && (
+                <PremiumShareSheet
+                    visible={showShareSheet}
+                    onDismiss={() => {
+                        setShowShareSheet(false);
+                        setShareVerseData(null);
+                    }}
+                    data={shareVerseData}
+                />
+            )}
+
+            {/* Tafsir Bottom Sheet */}
+            <TafsirBottomSheet
+                visible={showTafsir}
+                onDismiss={() => {
+                    setShowTafsir(false);
+                    setTafsirData(null);
+                }}
+                data={tafsirData}
+            />
+
+            {/* Highlight Color Picker Modal */}
+            <Modal
+                visible={selectedVerseForHighlight !== null}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setSelectedVerseForHighlight(null)}
+            >
+                <Pressable
+                    style={highlightStyles.overlay}
+                    onPress={() => setSelectedVerseForHighlight(null)}
+                >
+                    <View style={[
+                        highlightStyles.pickerCard,
+                        { backgroundColor: theme.colors.surface },
+                        Shadows.lg,
+                    ]}>
+                        <Text style={[highlightStyles.pickerTitle, { color: theme.colors.onSurface }]}>
+                            Highlight Verse {selectedVerseForHighlight}
+                        </Text>
+                        <View style={highlightStyles.colorRow}>
+                            {HIGHLIGHT_COLORS.map(({ name, color }) => {
+                                const isActive = surah && selectedVerseForHighlight
+                                    ? getHighlight(surah.number, selectedVerseForHighlight)?.color === color
+                                    : false;
+                                return (
+                                    <Pressable
+                                        key={name}
+                                        onPress={() => {
+                                            if (surah && selectedVerseForHighlight) {
+                                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                                highlightVerse(surah.number, selectedVerseForHighlight, color);
+                                                setSelectedVerseForHighlight(null);
+                                            }
+                                        }}
+                                        style={[
+                                            highlightStyles.colorCircle,
+                                            { backgroundColor: color },
+                                            isActive && highlightStyles.colorCircleActive,
+                                        ]}
+                                    />
+                                );
+                            })}
+                        </View>
+                        {surah && selectedVerseForHighlight && getHighlight(surah.number, selectedVerseForHighlight) && (
+                            <Pressable
+                                onPress={() => {
+                                    if (surah && selectedVerseForHighlight) {
+                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                        unhighlightVerse(surah.number, selectedVerseForHighlight);
+                                        setSelectedVerseForHighlight(null);
+                                    }
+                                }}
+                                style={[highlightStyles.removeButton, { borderColor: theme.colors.outline }]}
+                            >
+                                <Text style={{ color: theme.colors.error, fontWeight: '600', fontSize: 13 }}>
+                                    Remove Highlight
+                                </Text>
+                            </Pressable>
+                        )}
+                    </View>
+                </Pressable>
+            </Modal>
+
+
+
+
+
+
+
         </View>
     );
 }
@@ -619,5 +1202,109 @@ const styles = StyleSheet.create({
         right: Spacing.sm,
         borderRadius: BorderRadius.full,
         opacity: 0.9,
+    },
+    resumeBannerFloating: {
+        position: 'absolute',
+        left: Spacing.md,
+        right: Spacing.md,
+        zIndex: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 14,
+        borderRadius: BorderRadius.lg,
+        borderWidth: 1,
+    },
+    resumeBannerContent: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    resumeIconCircle: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    resumeTextCol: {
+        flex: 1,
+    },
+    resumeBannerTitle: {
+        fontSize: 15,
+        fontWeight: '700',
+    },
+    resumeBannerSubtitle: {
+        fontSize: 12,
+        fontWeight: '500',
+        marginTop: 1,
+    },
+    resumeDismiss: {
+        padding: 6,
+        marginLeft: 4,
+    },
+    returnToAudioContainer: {
+        position: 'absolute',
+        alignSelf: 'center',
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        zIndex: 30,
+    },
+    returnToAudioPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 18,
+        borderRadius: 24,
+        gap: 8,
+    },
+    returnToAudioText: {
+        color: '#FFF',
+        fontSize: 14,
+        fontWeight: '700',
+    },
+});
+
+const highlightStyles = StyleSheet.create({
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.45)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    pickerCard: {
+        borderRadius: BorderRadius.xl,
+        padding: Spacing.lg,
+        width: 280,
+        alignItems: 'center',
+    },
+    pickerTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        marginBottom: Spacing.md,
+    },
+    colorRow: {
+        flexDirection: 'row',
+        gap: 12,
+        marginBottom: Spacing.md,
+    },
+    colorCircle: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+    },
+    colorCircleActive: {
+        borderWidth: 3,
+        borderColor: '#333',
+        transform: [{ scale: 1.15 }],
+    },
+    removeButton: {
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: BorderRadius.md,
+        borderWidth: 1,
+        marginTop: 4,
     },
 });

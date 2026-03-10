@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Pressable, Dimensions } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { Text, useTheme, Button } from 'react-native-paper';
-import { LinearGradient } from 'expo-linear-gradient';
+import { WaveBackground } from '../../src/core/components/animated/WaveBackground';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useOnboarding } from '../../src/infrastructure/onboarding/OnboardingContext';
+import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
 import {
     Spacing,
     BorderRadius,
     Shadows,
     Gradients,
-} from '../../src/presentation/theme/DesignSystem';
+} from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
-const { width } = Dimensions.get('window');
+
 
 const LIBRARY_TABS = [
     {
@@ -56,9 +56,7 @@ export default function OnboardingLibraryTour() {
     };
 
     return (
-        <LinearGradient
-            colors={theme.dark ? (['#0F1419', '#1A1F26'] as const) : Gradients.sereneSky}
-            style={styles.container}>
+        <WaveBackground variant="spiritual" intensity="subtle">
             <SafeAreaView style={styles.safeArea}>
                 {/* Progress Indicator */}
                 <View style={styles.progressContainer}>
@@ -85,7 +83,7 @@ export default function OnboardingLibraryTour() {
                     transition={{ type: 'timing', duration: 400 }}
                     style={styles.header}>
                     <View style={[styles.coachBubble, { backgroundColor: theme.colors.primary }]}>
-                        <Text style={styles.coachText}>📚 Your Library - All in one place</Text>
+                        <Text style={styles.coachText}>Your Library - All in one place</Text>
                     </View>
                 </MotiView>
 
@@ -359,7 +357,7 @@ export default function OnboardingLibraryTour() {
                     transition={{ type: 'timing', delay: 600 }}
                     style={styles.hintContainer}>
                     <Text style={[styles.hintText, { color: theme.colors.onSurfaceVariant }]}>
-                        👆 Tap the tabs above to explore
+                        Tap the tabs above to explore
                     </Text>
                 </MotiView>
 
@@ -380,7 +378,7 @@ export default function OnboardingLibraryTour() {
                     </Pressable>
                 </View>
             </SafeAreaView>
-        </LinearGradient>
+        </WaveBackground>
     );
 }
 
