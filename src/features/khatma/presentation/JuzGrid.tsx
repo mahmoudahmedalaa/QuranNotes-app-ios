@@ -46,12 +46,14 @@ export const JuzGrid: React.FC<JuzGridProps> = ({ completedJuz, currentJuz, sele
     const theme = useTheme();
     const [expanded, setExpanded] = useState(false);
 
-    // ── Cell state: current FIRST so it always wins over completed ──
+    // ── Cell state ──
     type CellState = 'completed' | 'current' | 'future';
+    const isKhatmaComplete = completedJuz.length >= 30;
 
     const getCellState = (juzNumber: number): CellState => {
-        if (juzNumber === currentJuz) return 'current';
+        // When khatma is fully complete, everything (including currentJuz) is completed
         if (completedJuz.includes(juzNumber)) return 'completed';
+        if (juzNumber === currentJuz) return 'current';
         return 'future';
     };
 
@@ -83,6 +85,12 @@ export const JuzGrid: React.FC<JuzGridProps> = ({ completedJuz, currentJuz, sele
 
     const previewJuz = useMemo(() => {
         const completedCount = completedJuz.length;
+
+        // When all 30 are complete, show the last batch (25-30)
+        if (completedCount >= 30) {
+            return [25, 26, 27, 28, 29, 30];
+        }
+
         const recentlyDone = completedCount % PREVIEW_COUNT;
         const batchStart = currentJuz - recentlyDone;
 

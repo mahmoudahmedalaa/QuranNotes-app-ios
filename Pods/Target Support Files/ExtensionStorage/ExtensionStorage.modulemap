@@ -1,0 +1,6 @@
+module ExtensionStorage {
+  umbrella header "ExtensionStorage-umbrella.h"
+
+  export *
+  module * { export * }
+}

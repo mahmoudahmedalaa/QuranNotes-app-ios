@@ -1,0 +1,95 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper Functions ───────────────────────────────────────────
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function incomingData() {
+      return request.resource.data;
+    }
+
+    function existingData() {
+      return resource.data;
+    }
+
+    // ─── Notes Collection ───────────────────────────────────────────
+    match /notes/{noteId} {
+      // Only the note owner can read their own notes
+      allow read: if isAuthenticated() && existingData().userId == request.auth.uid;
+
+      // Creating a note: must be authenticated and the userId field must match auth uid
+      allow create: if isAuthenticated()
+        && incomingData().userId == request.auth.uid
+        && incomingData().keys().hasAll(['id', 'userId'])
+        && incomingData().userId is string
+        && incomingData().id is string;
+
+      // Updating a note: must own it and can't change the userId
+      allow update: if isAuthenticated()
+        && existingData().userId == request.auth.uid
+        && incomingData().userId == request.auth.uid;
+
+      // Deleting a note: must own it
+      allow delete: if isAuthenticated() && existingData().userId == request.auth.uid;
+    }
+
+    // ─── Recordings Collection ──────────────────────────────────────
+    match /recordings/{recordingId} {
+      allow read: if isAuthenticated() && existingData().userId == request.auth.uid;
+
+      allow create: if isAuthenticated()
+        && incomingData().userId == request.auth.uid
+        && incomingData().keys().hasAll(['id', 'userId'])
+        && incomingData().userId is string;
+
+      allow update: if isAuthenticated()
+        && existingData().userId == request.auth.uid
+        && incomingData().userId == request.auth.uid;
+
+      allow delete: if isAuthenticated() && existingData().userId == request.auth.uid;
+    }
+
+    // ─── Folders Collection ─────────────────────────────────────────
+    match /folders/{folderId} {
+      allow read: if isAuthenticated() && existingData().userId == request.auth.uid;
+
+      allow create: if isAuthenticated()
+        && incomingData().userId == request.auth.uid
+        && incomingData().keys().hasAll(['id', 'userId'])
+        && incomingData().userId is string;
+
+      allow update: if isAuthenticated()
+        && existingData().userId == request.auth.uid
+        && incomingData().userId == request.auth.uid;
+
+      allow delete: if isAuthenticated() && existingData().userId == request.auth.uid;
+    }
+
+
+    // ─── User Sync Data (Cloud Sync — Pro feature) ──────────────────
+    // Each user's synced data lives under users/{userId}/sync/{docId}
+    match /users/{userId}/sync/{docId} {
+      // Only the authenticated user can read their own sync data
+      allow read: if isOwner(userId);
+
+      // Only the authenticated user can create/update their sync docs
+      allow create, update: if isOwner(userId);
+
+      // Allow deletion so user can clear sync data
+      allow delete: if isOwner(userId);
+    }
+
+    // ─── Default: Deny everything else ──────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

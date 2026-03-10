@@ -87,7 +87,7 @@ export const useRecordingPlayback = () => {
                 soundRef.current = sound;
                 setPlaybackState(prev => ({ ...prev, isPlaying: true, isLoading: false }));
             } catch (error) {
-                console.error('Failed to play recording:', error);
+                if (__DEV__) console.error('Failed to play recording:', error);
                 setPlaybackState(prev => ({ ...prev, isLoading: false, isPlaying: false }));
             }
         },

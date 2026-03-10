@@ -31,7 +31,7 @@ export class LocalFolderRepository {
 
             return folders;
         } catch (error) {
-            console.error('Failed to get folders from local storage:', error);
+            if (__DEV__) console.error('Failed to get folders from local storage:', error);
             return [DEFAULT_FOLDER];
         }
     }

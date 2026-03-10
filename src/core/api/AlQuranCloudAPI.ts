@@ -63,7 +63,7 @@ export class AlQuranCloudAPI {
                 verses: [],
             }));
         } catch (error) {
-            console.error('Error fetching surah list:', error);
+            if (__DEV__) console.error('Error fetching surah list:', error);
             throw error;
         }
     }
@@ -113,7 +113,7 @@ export class AlQuranCloudAPI {
                 verses,
             };
         } catch (error) {
-            console.error(`Error fetching surah ${surahNumber}:`, error);
+            if (__DEV__) console.error(`Error fetching surah ${surahNumber}:`, error);
             throw error;
         }
     }
@@ -135,7 +135,7 @@ export class AlQuranCloudAPI {
                 page: 0,
             }));
         } catch (error) {
-            console.error('Search failed:', error);
+            if (__DEV__) console.error('Search failed:', error);
             return [];
         }
     }
@@ -163,7 +163,7 @@ export class AlQuranCloudAPI {
                 page: arabic.page,
             };
         } catch (error) {
-            console.error('Random verse failed:', error);
+            if (__DEV__) console.error('Random verse failed:', error);
             throw error;
         }
     }

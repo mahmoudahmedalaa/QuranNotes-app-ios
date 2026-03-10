@@ -9,6 +9,7 @@ import { MoodType, MoodVerse, MoodEntry } from '../../../core/domain/entities/Mo
 import { usePro } from '../../auth/infrastructure/ProContext';
 import { useAuth } from '../../auth/infrastructure/AuthContext';
 import { useStreaks } from '../../auth/infrastructure/StreakContext';
+import { CloudSyncEvents } from '../../../core/application/services/CloudSyncEvents';
 import moodVerses from '../data/moodVerses.json';
 
 /** Build user-scoped storage keys */
@@ -129,11 +130,38 @@ export const MoodProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setTodayVerses([]);
                 }
             } catch (e) {
-                console.error('[MoodContext] Error loading state:', e);
+                if (__DEV__) console.error('[MoodContext] Error loading state:', e);
             } finally {
                 setLoading(false);
             }
         })();
+    }, [uid]);
+
+    // Re-read when cloud sync pulls remote data
+    useEffect(() => {
+        return CloudSyncEvents.onPull(() => {
+            const keys = storageKeys(uid);
+            (async () => {
+                try {
+                    const [historyJson, freeUsesJson, todayJson] = await Promise.all([
+                        AsyncStorage.getItem(keys.HISTORY),
+                        AsyncStorage.getItem(keys.FREE_USES),
+                        AsyncStorage.getItem(keys.TODAY_MOOD),
+                    ]);
+                    if (historyJson) setMoodHistory(JSON.parse(historyJson));
+                    if (freeUsesJson !== null) setFreeUsesRemaining(parseInt(freeUsesJson, 10));
+                    if (todayJson) {
+                        const parsed = JSON.parse(todayJson);
+                        if (parsed.date === todayKey()) {
+                            setTodayMood(parsed.mood);
+                            setTodayVerses(parsed.verses || []);
+                        }
+                    }
+                } catch (e) {
+                    if (__DEV__) console.warn('[MoodContext] Cloud sync reload error:', e);
+                }
+            })();
+        });
     }, [uid]);
 
     const canCheckIn = useMemo(() => {
@@ -185,7 +213,7 @@ export const MoodProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             return selected;
         } catch (e) {
-            console.error('[MoodContext] Error during check-in:', e);
+            if (__DEV__) console.error('[MoodContext] Error during check-in:', e);
             return null;
         }
     }, [canCheckIn, isPro, freeUsesRemaining, moodHistory, uid, recordActivity]);

@@ -61,7 +61,7 @@ export default function RecordingsScreen() {
             const sessions = await repository.getAllSessions();
             setFollowAlongSessions(sessions);
         } catch (error) {
-            console.error('Failed to load follow along sessions:', error);
+            if (__DEV__) console.error('Failed to load follow along sessions:', error);
         }
     };
 
@@ -207,13 +207,13 @@ export default function RecordingsScreen() {
                     {isLoading && isCurrentPlaying ? (
                         <Ionicons
                             name="hourglass"
-                            size={20}
+                            size={22}
                             color={isItemPlaying ? '#FFF' : theme.colors.primary}
                         />
                     ) : (
                         <Ionicons
                             name={isItemPlaying ? 'pause' : 'play'}
-                            size={20}
+                            size={22}
                             color={isItemPlaying ? '#FFF' : theme.colors.primary}
                         />
                     )}
@@ -346,7 +346,7 @@ export default function RecordingsScreen() {
                         setFollowAlongSessions(prev => prev.filter(s => s.id !== sessionId));
                         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                     } catch (error) {
-                        console.error('Failed to delete session:', error);
+                        if (__DEV__) console.error('Failed to delete session:', error);
                     }
                 },
             },
@@ -586,8 +586,8 @@ const styles = StyleSheet.create({
         transform: [{ scale: 0.99 }],
     },
     playButton: {
-        width: 44,
-        height: 44,
+        width: 48,
+        height: 48,
         borderRadius: BorderRadius.full,
         justifyContent: 'center',
         alignItems: 'center',
@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
     },
     cardContent: { flex: 1 },
     recordingName: {
-        fontSize: 15,
+        fontSize: 17,
         fontWeight: '600',
         marginBottom: 4,
     },
@@ -610,12 +610,12 @@ const styles = StyleSheet.create({
         paddingVertical: 2,
         borderRadius: BorderRadius.sm,
     },
-    folderText: { fontSize: 11, fontWeight: '600' },
-    duration: { fontSize: 11 },
-    date: { fontSize: 11 },
+    folderText: { fontSize: 13, fontWeight: '600' },
+    duration: { fontSize: 13 },
+    date: { fontSize: 13 },
     empty: { alignItems: 'center', paddingTop: Spacing.xxl },
-    emptyTitle: { fontSize: 18, fontWeight: '600', marginTop: Spacing.sm },
-    emptyText: { fontSize: 14, textAlign: 'center', marginTop: Spacing.xs },
+    emptyTitle: { fontSize: 20, fontWeight: '600', marginTop: Spacing.sm },
+    emptyText: { fontSize: 16, textAlign: 'center', marginTop: Spacing.xs },
     recordingTimer: {
         position: 'absolute',
         bottom: Platform.OS === 'ios' ? 210 : 190,

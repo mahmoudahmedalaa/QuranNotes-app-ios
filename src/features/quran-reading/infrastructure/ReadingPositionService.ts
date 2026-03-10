@@ -26,7 +26,7 @@ export const ReadingPositionService = {
                 await AsyncStorage.multiRemove(readingKeys);
             }
         } catch (e) {
-            console.warn('[ReadingPositionService] clearAll failed', e);
+            if (__DEV__) console.warn('[ReadingPositionService] clearAll failed', e);
         }
     },
 
@@ -43,7 +43,7 @@ export const ReadingPositionService = {
             // Also update global "most recent" position
             await AsyncStorage.setItem(GLOBAL_KEY, JSON.stringify(pos));
         } catch (e) {
-            console.warn('[ReadingPositionService] save failed', e);
+            if (__DEV__) console.warn('[ReadingPositionService] save failed', e);
         }
     },
 
@@ -72,7 +72,7 @@ export const ReadingPositionService = {
         try {
             await AsyncStorage.removeItem(`${PREFIX}${surahId}`);
         } catch (e) {
-            console.warn('[ReadingPositionService] clear failed', e);
+            if (__DEV__) console.warn('[ReadingPositionService] clear failed', e);
         }
     },
 

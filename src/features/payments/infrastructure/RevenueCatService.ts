@@ -30,7 +30,7 @@ class RevenueCatService {
 
         const apiKey = Platform.OS === 'ios' ? API_KEYS.ios : API_KEYS.android;
         if (!apiKey) {
-            console.warn('RevenueCat API key not found');
+            if (__DEV__) console.warn('RevenueCat API key not found');
             return;
         }
 
@@ -44,14 +44,14 @@ class RevenueCatService {
 
     async getOfferings(): Promise<PurchasesOffering | null> {
         if (!this.isInitialized) {
-            console.warn('[RevenueCat] Not initialized, attempting to initialize...');
+            if (__DEV__) console.warn('[RevenueCat] Not initialized, attempting to initialize...');
             await this.initialize();
         }
 
         try {
             const offerings = await Purchases.getOfferings();
             if (!offerings.current) {
-                console.warn('[RevenueCat] No current offering found. Check RevenueCat dashboard.');
+                if (__DEV__) console.warn('[RevenueCat] No current offering found. Check RevenueCat dashboard.');
             }
             return offerings.current;
         } catch (e: unknown) {
@@ -103,19 +103,59 @@ class RevenueCatService {
             const customerInfo = await Purchases.restorePurchases();
             return this.isPro(customerInfo);
         } catch (e) {
-            console.warn('Restore error:', e);
+            if (__DEV__) console.warn('Restore error:', e);
             return false;
         }
     }
 
     async getCustomerInfo(): Promise<CustomerInfo> {
+        if (!this.isInitialized) {
+            if (__DEV__) console.warn('[RevenueCat] Not initialized, attempting to initialize before getCustomerInfo...');
+            await this.initialize();
+        }
         return await Purchases.getCustomerInfo();
     }
 
+    /**
+     * Sync RevenueCat user identity with app auth state.
+     * Must be called on every login/signup so entitlements are user-scoped.
+     */
+    async loginUser(appUserId: string): Promise<CustomerInfo | null> {
+        if (!this.isInitialized) {
+            await this.initialize();
+        }
+        try {
+            const { customerInfo } = await Purchases.logIn(appUserId);
+            if (__DEV__) console.log('[RevenueCat] logIn success for:', appUserId, 'isPro:', this.isPro(customerInfo));
+            return customerInfo;
+        } catch (e) {
+            if (__DEV__) console.warn('[RevenueCat] logIn error:', e);
+            return null;
+        }
+    }
+
+    /**
+     * Reset RevenueCat to anonymous user. Must be called on sign-out
+     * to prevent entitlement leaking to the next account.
+     */
+    async logoutUser(): Promise<void> {
+        if (!this.isInitialized) return;
+        try {
+            const customerInfo = await Purchases.logOut();
+            if (__DEV__) console.log('[RevenueCat] logOut success, isPro:', this.isPro(customerInfo));
+        } catch (e) {
+            if (__DEV__) console.warn('[RevenueCat] logOut error:', e);
+        }
+    }
+
     isPro(customerInfo: CustomerInfo): boolean {
-        // Replace 'pro_access' with your actual entitlement identifier from RevenueCat dashboard
         const entitlement = customerInfo.entitlements.active['pro_access'];
-        return !!entitlement;
+        const result = !!entitlement;
+        if (__DEV__) {
+            if (__DEV__) console.log('[RevenueCat] isPro check:', result,
+                'activeEntitlements:', Object.keys(customerInfo.entitlements.active));
+        }
+        return result;
     }
 }
 

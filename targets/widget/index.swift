@@ -5,6 +5,7 @@ import SwiftUI
 struct QuranNotesWidgetBundle: WidgetBundle {
     var body: some Widget {
         DailyVerseWidget()
+        DailyHadithWidget()
         PrayerWidget()
         KhatmaWidget()
     }

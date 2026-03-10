@@ -2,7 +2,7 @@
  * KhatmaCelebrationModal — Premium full-screen celebration when Khatma is complete
  * Gradient background, staggered animations, share-as-image, English + Arabic text.
  */
-import React, { useRef, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     View,
     Text,
@@ -11,15 +11,15 @@ import {
     Dimensions,
     Modal,
     Platform,
-    Alert,
     DimensionValue,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import ViewShot from 'react-native-view-shot';
-import * as Sharing from 'expo-sharing';
+import { ReviewService } from '../../../core/services/ReviewService';
+import { PremiumShareSheet } from '../../sharing/presentation/PremiumShareSheet';
+import { ShareCardData } from '../../sharing/domain/ShareTemplateTypes';
 
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -89,7 +89,7 @@ export const KhatmaCelebrationModal: React.FC<KhatmaCelebrationModalProps> = ({
     completedJuzCount = 30,
     streakDays = 0,
 }) => {
-    const viewShotRef = useRef<ViewShot>(null);
+    const [showShareSheet, setShowShareSheet] = useState(false);
 
     const getEnglishHeadline = () => {
         if (currentRound > 1) return `${currentRound} Khatmas Complete!`;
@@ -107,229 +107,228 @@ export const KhatmaCelebrationModal: React.FC<KhatmaCelebrationModalProps> = ({
         return 'تمت الختمة';
     };
 
-    const handleShare = useCallback(async () => {
-        try {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const shareData: ShareCardData = {
+        type: 'khatma',
+        arabicText: getArabicText(),
+        englishText: getEnglishHeadline(),
+        khatmaRound: currentRound,
+        stats: [
+            { label: 'Pages', value: totalPagesRead },
+            { label: 'Juz', value: completedJuzCount },
+            { label: 'Streak', value: streakDays },
+        ],
+    };
 
-            if (!viewShotRef.current?.capture) {
-                Alert.alert('Error', 'Unable to capture image');
-                return;
-            }
-
-            const uri = await viewShotRef.current.capture();
-
-            const isAvailable = await Sharing.isAvailableAsync();
-            if (!isAvailable) {
-                Alert.alert('Sharing unavailable', 'Sharing is not available on this device.');
-                return;
-            }
-
-            await Sharing.shareAsync(uri, {
-                mimeType: 'image/png',
-                dialogTitle: 'Share your Khatma achievement',
-                UTI: 'public.png',
-            });
-        } catch (e) {
-            console.warn('Share failed:', e);
-        }
+    const handleShare = useCallback(() => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setShowShareSheet(true);
     }, []);
 
     return (
-        <Modal
-            visible={visible}
-            transparent
-            animationType="fade"
-            onRequestClose={onDismiss}
-            statusBarTranslucent
-        >
-            <View style={styles.backdrop}>
-                {/* Full-screen gradient background */}
-                <LinearGradient
-                    colors={[COLORS.gradientStart, COLORS.gradientMid, COLORS.gradientEnd]}
-                    style={StyleSheet.absoluteFillObject}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                />
-
-                {/* Sparkles */}
-                {SPARKLES.map((sparkle, i) => (
-                    <MotiView
-                        key={i}
-                        from={{ opacity: 0, scale: 0 }}
-                        animate={{ opacity: [0, 1, 0.5, 1, 0.3], scale: [0, 1, 0.8, 1.1, 0.9] }}
-                        transition={{
-                            type: 'timing',
-                            duration: 2000,
-                            delay: sparkle.delay + 500,
-                            loop: true,
-                        }}
-                        style={[
-                            styles.sparkle,
-                            {
-                                top: sparkle.top as DimensionValue,
-                                left: sparkle.left as DimensionValue,
-                                right: sparkle.right as DimensionValue,
-                                width: sparkle.size,
-                                height: sparkle.size,
-                                borderRadius: sparkle.size / 2,
-                            },
-                        ]}
-                    />
-                ))}
-
-                {/* ── Shareable Card Content (captured by ViewShot) ── */}
-                <ViewShot
-                    ref={viewShotRef}
-                    options={{ format: 'png', quality: 1.0 }}
-                    style={styles.viewShotContainer}
-                >
+        <>
+            <Modal
+                visible={visible}
+                transparent
+                animationType="fade"
+                onRequestClose={onDismiss}
+                statusBarTranslucent
+            >
+                <View style={styles.backdrop}>
+                    {/* Full-screen gradient background */}
                     <LinearGradient
                         colors={[COLORS.gradientStart, COLORS.gradientMid, COLORS.gradientEnd]}
-                        style={styles.shareableCard}
+                        style={StyleSheet.absoluteFillObject}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
-                    >
-                        {/* Sparkles in shareable card */}
-                        {SPARKLES.slice(0, 5).map((sparkle, i) => (
-                            <View
-                                key={i}
-                                style={[
-                                    styles.sparkleStatic,
-                                    {
-                                        top: sparkle.top as DimensionValue,
-                                        left: sparkle.left as DimensionValue,
-                                        right: sparkle.right as DimensionValue,
-                                        width: sparkle.size,
-                                        height: sparkle.size,
-                                        borderRadius: sparkle.size / 2,
-                                    },
-                                ]}
-                            />
-                        ))}
+                    />
 
-                        {/* Crescent Moon */}
-                        <View style={styles.moonContainer}>
-                            <View style={styles.moonGlow} />
-                            <MaterialCommunityIcons
-                                name="moon-waning-crescent"
-                                size={64}
-                                color={COLORS.gold}
-                            />
-                        </View>
-
-                        {/* Arabic Title */}
-                        <Text style={styles.arabicTitle}>{getArabicText()}</Text>
-
-                        {/* English Headline */}
-                        <Text style={styles.englishHeadline}>{getEnglishHeadline()}</Text>
-
-                        {/* Subtitle */}
-                        <Text style={styles.subtitle}>{getSubtitle()}</Text>
-
-                        {/* ── Stats Row ── */}
-                        <View style={styles.statsRow}>
-                            <View style={styles.statItem}>
-                                <Text style={styles.statNumber}>{totalPagesRead}</Text>
-                                <Text style={styles.statLabel}>Pages</Text>
-                            </View>
-                            <View style={styles.statDivider} />
-                            <View style={styles.statItem}>
-                                <Text style={styles.statNumber}>{completedJuzCount}</Text>
-                                <Text style={styles.statLabel}>Juz</Text>
-                            </View>
-                            <View style={styles.statDivider} />
-                            <View style={styles.statItem}>
-                                <Text style={styles.statNumber}>{streakDays}</Text>
-                                <Text style={styles.statLabel}>Streak</Text>
-                            </View>
-                        </View>
-
-                        {/* Round Badge */}
-                        <View style={styles.roundBadge}>
-                            <MaterialCommunityIcons name="check-decagram" size={18} color={COLORS.badgeText} />
-                            <Text style={styles.roundBadgeText}>
-                                {currentRound === 1 ? '1st Khatma' : `${currentRound} Khatmas`}
-                            </Text>
-                        </View>
-
-                        {/* App branding for share */}
-                        <View style={styles.brandingRow}>
-                            <MaterialCommunityIcons name="bookshelf" size={14} color={COLORS.caption} />
-                            <Text style={styles.branding}>QuranNotes App · Ramadan {new Date().getFullYear()}</Text>
-                        </View>
-                    </LinearGradient>
-                </ViewShot>
-
-                {/* ── Animated content overlay (buttons, not captured in share) ── */}
-                <View style={styles.buttonsContainer}>
-                    {/* Share Button */}
-                    <MotiView
-                        from={{ opacity: 0, translateY: 20 }}
-                        animate={{ opacity: 1, translateY: 0 }}
-                        transition={{ type: 'timing', duration: 400, delay: 800 }}
-                    >
-                        <Pressable
-                            onPress={handleShare}
-                            style={({ pressed }) => [
-                                pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
+                    {/* Sparkles */}
+                    {SPARKLES.map((sparkle, i) => (
+                        <MotiView
+                            key={i}
+                            from={{ opacity: 0, scale: 0 }}
+                            animate={{ opacity: [0, 1, 0.5, 1, 0.3], scale: [0, 1, 0.8, 1.1, 0.9] }}
+                            transition={{
+                                type: 'timing',
+                                duration: 2000,
+                                delay: sparkle.delay + 500,
+                                loop: true,
+                            }}
+                            style={[
+                                styles.sparkle,
+                                {
+                                    top: sparkle.top as DimensionValue,
+                                    left: sparkle.left as DimensionValue,
+                                    right: sparkle.right as DimensionValue,
+                                    width: sparkle.size,
+                                    height: sparkle.size,
+                                    borderRadius: sparkle.size / 2,
+                                },
                             ]}
-                        >
-                            <LinearGradient
-                                colors={[COLORS.shareStart, COLORS.shareEnd]}
-                                style={styles.shareButton}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 0 }}
-                            >
-                                <MaterialCommunityIcons name="share-variant" size={20} color="#FFF" />
-                                <Text style={styles.shareButtonText}>Share Your Achievement</Text>
-                            </LinearGradient>
-                        </Pressable>
-                    </MotiView>
+                        />
+                    ))}
 
-                    {/* Start Next Round */}
-                    {onStartNextRound && (
+                    {/* ── Shareable Card Content ── */}
+                    <View style={styles.viewShotContainer}>
+                        <LinearGradient
+                            colors={[COLORS.gradientStart, COLORS.gradientMid, COLORS.gradientEnd]}
+                            style={styles.shareableCard}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                        >
+                            {/* Sparkles in shareable card */}
+                            {SPARKLES.slice(0, 5).map((sparkle, i) => (
+                                <View
+                                    key={i}
+                                    style={[
+                                        styles.sparkleStatic,
+                                        {
+                                            top: sparkle.top as DimensionValue,
+                                            left: sparkle.left as DimensionValue,
+                                            right: sparkle.right as DimensionValue,
+                                            width: sparkle.size,
+                                            height: sparkle.size,
+                                            borderRadius: sparkle.size / 2,
+                                        },
+                                    ]}
+                                />
+                            ))}
+
+                            {/* Crescent Moon */}
+                            <View style={styles.moonContainer}>
+                                <View style={styles.moonGlow} />
+                                <MaterialCommunityIcons
+                                    name="moon-waning-crescent"
+                                    size={64}
+                                    color={COLORS.gold}
+                                />
+                            </View>
+
+                            {/* Arabic Title */}
+                            <Text style={styles.arabicTitle}>{getArabicText()}</Text>
+
+                            {/* English Headline */}
+                            <Text style={styles.englishHeadline}>{getEnglishHeadline()}</Text>
+
+                            {/* Subtitle */}
+                            <Text style={styles.subtitle}>{getSubtitle()}</Text>
+
+                            {/* ── Stats Row ── */}
+                            <View style={styles.statsRow}>
+                                <View style={styles.statItem}>
+                                    <Text style={styles.statNumber}>{totalPagesRead}</Text>
+                                    <Text style={styles.statLabel}>Pages</Text>
+                                </View>
+                                <View style={styles.statDivider} />
+                                <View style={styles.statItem}>
+                                    <Text style={styles.statNumber}>{completedJuzCount}</Text>
+                                    <Text style={styles.statLabel}>Juz</Text>
+                                </View>
+                                <View style={styles.statDivider} />
+                                <View style={styles.statItem}>
+                                    <Text style={styles.statNumber}>{streakDays}</Text>
+                                    <Text style={styles.statLabel}>Streak</Text>
+                                </View>
+                            </View>
+
+                            {/* Round Badge */}
+                            <View style={styles.roundBadge}>
+                                <MaterialCommunityIcons name="check-decagram" size={18} color={COLORS.badgeText} />
+                                <Text style={styles.roundBadgeText}>
+                                    {currentRound === 1 ? '1st Khatma' : `${currentRound} Khatmas`}
+                                </Text>
+                            </View>
+
+                            {/* App branding for share */}
+                            <View style={styles.brandingRow}>
+                                <MaterialCommunityIcons name="bookshelf" size={14} color={COLORS.caption} />
+                                <Text style={styles.branding}>QuranNotes App · Ramadan {new Date().getFullYear()}</Text>
+                            </View>
+                        </LinearGradient>
+                    </View>
+
+                    {/* ── Animated content overlay (buttons, not captured in share) ── */}
+                    <View style={styles.buttonsContainer}>
+                        {/* Share Button */}
                         <MotiView
                             from={{ opacity: 0, translateY: 20 }}
                             animate={{ opacity: 1, translateY: 0 }}
-                            transition={{ type: 'timing', duration: 400, delay: 900 }}
+                            transition={{ type: 'timing', duration: 400, delay: 800 }}
+                        >
+                            <Pressable
+                                onPress={handleShare}
+                                style={({ pressed }) => [
+                                    pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
+                                ]}
+                            >
+                                <LinearGradient
+                                    colors={[COLORS.shareStart, COLORS.shareEnd]}
+                                    style={styles.shareButton}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                >
+                                    <MaterialCommunityIcons name="share-variant" size={20} color="#FFF" />
+                                    <Text style={styles.shareButtonText}>Share Your Achievement</Text>
+                                </LinearGradient>
+                            </Pressable>
+                        </MotiView>
+
+                        {/* Start Next Round */}
+                        {onStartNextRound && (
+                            <MotiView
+                                from={{ opacity: 0, translateY: 20 }}
+                                animate={{ opacity: 1, translateY: 0 }}
+                                transition={{ type: 'timing', duration: 400, delay: 900 }}
+                            >
+                                <Pressable
+                                    onPress={() => {
+                                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                                        onStartNextRound();
+                                    }}
+                                    style={({ pressed }) => [
+                                        styles.nextRoundButton,
+                                        pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
+                                    ]}
+                                >
+                                    <MaterialCommunityIcons name="restart" size={18} color={COLORS.primary} />
+                                    <Text style={styles.nextRoundButtonText}>
+                                        Start Round {currentRound + 1}
+                                    </Text>
+                                </Pressable>
+                            </MotiView>
+                        )}
+
+                        {/* Close */}
+                        <MotiView
+                            from={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ type: 'timing', duration: 400, delay: 1000 }}
                         >
                             <Pressable
                                 onPress={() => {
-                                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                                    onStartNextRound();
+                                    onDismiss();
+                                    // Highest-delight moment — user just completed the Quran!
+                                    ReviewService.onKhatmaComplete();
                                 }}
                                 style={({ pressed }) => [
-                                    styles.nextRoundButton,
-                                    pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
+                                    styles.closeButton,
+                                    pressed && { opacity: 0.6 },
                                 ]}
                             >
-                                <MaterialCommunityIcons name="restart" size={18} color={COLORS.primary} />
-                                <Text style={styles.nextRoundButtonText}>
-                                    Start Round {currentRound + 1}
-                                </Text>
+                                <Text style={styles.closeButtonText}>Close</Text>
                             </Pressable>
                         </MotiView>
-                    )}
-
-                    {/* Close */}
-                    <MotiView
-                        from={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ type: 'timing', duration: 400, delay: 1000 }}
-                    >
-                        <Pressable
-                            onPress={onDismiss}
-                            style={({ pressed }) => [
-                                styles.closeButton,
-                                pressed && { opacity: 0.6 },
-                            ]}
-                        >
-                            <Text style={styles.closeButtonText}>Close</Text>
-                        </Pressable>
-                    </MotiView>
+                    </View>
                 </View>
-            </View>
-        </Modal>
+            </Modal>
+
+            {/* Premium Share Sheet */}
+            <PremiumShareSheet
+                visible={showShareSheet}
+                onDismiss={() => setShowShareSheet(false)}
+                data={shareData}
+            />
+        </>
     );
 };
 

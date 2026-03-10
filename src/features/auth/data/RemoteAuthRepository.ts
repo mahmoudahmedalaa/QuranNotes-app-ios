@@ -45,7 +45,7 @@ export class RemoteAuthRepository implements IAuthRepository {
             const idToken = response.data?.idToken;
 
             if (!idToken) {
-                console.error('[Google Sign-In] No ID token in response:', JSON.stringify(response));
+                if (__DEV__) console.error('[Google Sign-In] No ID token in response:', JSON.stringify(response));
                 throw new Error('No ID token received from Google');
             }
 

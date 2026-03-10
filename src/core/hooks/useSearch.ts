@@ -15,7 +15,7 @@ export const useSearch = () => {
             const data = await api.search(query);
             setResults(data);
         } catch (error) {
-            console.error(error);
+            if (__DEV__) console.error(error);
             setResults([]);
         } finally {
             setLoading(false);

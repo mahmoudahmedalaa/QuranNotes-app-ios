@@ -1,0 +1,6 @@
+module WidgetBridge {
+  umbrella header "WidgetBridge-umbrella.h"
+
+  export *
+  module * { export * }
+}

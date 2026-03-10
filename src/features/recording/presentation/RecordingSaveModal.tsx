@@ -62,7 +62,7 @@ export const RecordingSaveModal = ({
             });
             onSaveComplete();
         } catch (error) {
-            console.error('Failed to save recording:', error);
+            if (__DEV__) console.error('Failed to save recording:', error);
         } finally {
             setIsSaving(false);
         }

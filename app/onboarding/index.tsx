@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, useTheme, Button } from 'react-native-paper';
-import { LinearGradient } from 'expo-linear-gradient';
+import { WaveBackground } from '../../src/core/components/animated/WaveBackground';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,11 +24,7 @@ export default function OnboardingWelcome() {
     };
 
     return (
-        <LinearGradient
-            colors={Gradients.primary}
-            style={styles.container}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}>
+        <WaveBackground variant="spiritual" intensity="subtle">
             <SafeAreaView style={styles.safeArea}>
                 <View style={styles.content}>
                     {/* Logo/Icon */}
@@ -84,13 +80,13 @@ export default function OnboardingWelcome() {
                         onPress={handleBegin}
                         style={styles.ctaButton}
                         labelStyle={styles.ctaLabel}
-                        buttonColor="#FFFFFF"
-                        textColor={BrandTokens.light.accentPrimary}>
+                        buttonColor={BrandTokens.light.accentPrimary}
+                        textColor="#FFFFFF">
                         Begin
                     </Button>
                 </MotiView>
             </SafeAreaView>
-        </LinearGradient>
+        </WaveBackground>
     );
 }
 
@@ -100,7 +96,7 @@ const FeatureItem = ({ icon, text }: { icon: string; text: string }) => {
 
     return (
         <View style={styles.featureItem}>
-            <Ionicons name={icon as any} size={24} color="rgba(255,255,255,0.9)" />
+            <Ionicons name={icon as any} size={24} color={BrandTokens.light.accentPrimary} />
             <View style={{ alignItems: 'center' }}>
                 {words.map((word, index) => (
                     <Text key={index} style={styles.featureText}>
@@ -133,7 +129,7 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 50,
-        backgroundColor: 'rgba(255,255,255,0.95)',
+        backgroundColor: 'rgba(255,255,255,0.9)',
         justifyContent: 'center',
         alignItems: 'center',
         shadowColor: '#000',
@@ -143,9 +139,9 @@ const styles = StyleSheet.create({
         elevation: 10,
     },
     title: {
-        fontSize: 32, // Slightly smaller to prevent wrapping issues on small screens
+        fontSize: 32,
         fontWeight: '800',
-        color: '#FFFFFF',
+        color: '#1E1B4B',
         textAlign: 'center',
         letterSpacing: -0.5,
         lineHeight: 40,
@@ -153,7 +149,7 @@ const styles = StyleSheet.create({
     },
     subtitle: {
         fontSize: 16,
-        color: 'rgba(255,255,255,0.85)',
+        color: '#4C3D7A',
         textAlign: 'center',
         lineHeight: 24,
         paddingHorizontal: Spacing.xl, // Prevent edge touching
@@ -171,8 +167,8 @@ const styles = StyleSheet.create({
         minWidth: 80, // Ensure even spacing
     },
     featureText: {
-        fontSize: 13, // Slightly larger
-        color: 'rgba(255,255,255,0.9)', // Higher contrast
+        fontSize: 13,
+        color: '#4C3D7A',
         fontWeight: '600',
         textAlign: 'center',
     },

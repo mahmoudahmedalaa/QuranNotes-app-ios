@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { Text, useTheme, Button } from 'react-native-paper';
-import { LinearGradient } from 'expo-linear-gradient';
+import { WaveBackground } from '../../src/core/components/animated/WaveBackground';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
@@ -43,9 +43,7 @@ export default function OnboardingPrayerTimes() {
     ];
 
     return (
-        <LinearGradient
-            colors={theme.dark ? (['#0F1419', '#1A1F26'] as const) : Gradients.sereneSky}
-            style={styles.container}>
+        <WaveBackground variant="spiritual" intensity="subtle">
             <SafeAreaView style={styles.safeArea}>
                 {/* Progress Indicator */}
                 <View style={styles.progressContainer}>
@@ -153,7 +151,7 @@ export default function OnboardingPrayerTimes() {
                     </Pressable>
                 </MotiView>
             </SafeAreaView>
-        </LinearGradient>
+        </WaveBackground>
     );
 }
 

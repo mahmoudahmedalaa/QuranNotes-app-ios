@@ -13,7 +13,7 @@ export class LocalQuranRepository {
         try {
             data = await AsyncStorage.getItem(key);
         } catch (e) {
-            console.error('Error reading local surah', e);
+            if (__DEV__) console.error('Error reading local surah', e);
             throw e;
         }
 
@@ -28,7 +28,7 @@ export class LocalQuranRepository {
         try {
             await AsyncStorage.setItem(key, JSON.stringify(surah));
         } catch (e) {
-            console.error('Error saving local surah', e);
+            if (__DEV__) console.error('Error saving local surah', e);
         }
     }
 
@@ -37,7 +37,7 @@ export class LocalQuranRepository {
             const data = await AsyncStorage.getItem(this.LIST_KEY);
             return data ? JSON.parse(data) : [];
         } catch (e) {
-            console.error('Error reading local surah list', e);
+            if (__DEV__) console.error('Error reading local surah list', e);
             return [];
         }
     }
@@ -46,7 +46,7 @@ export class LocalQuranRepository {
         try {
             await AsyncStorage.setItem(this.LIST_KEY, JSON.stringify(surahs));
         } catch (e) {
-            console.error('Error saving local surah list', e);
+            if (__DEV__) console.error('Error saving local surah list', e);
         }
     }
 }

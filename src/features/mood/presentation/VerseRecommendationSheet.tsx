@@ -30,12 +30,14 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import ViewShot from 'react-native-view-shot';
-import * as Sharing from 'expo-sharing';
 import { MoodType, MoodVerse, MOOD_CONFIGS } from '../../../core/domain/entities/Mood';
+import { PremiumShareSheet } from '../../sharing/presentation/PremiumShareSheet';
+import { ShareCardData } from '../../sharing/domain/ShareTemplateTypes';
 import { useAudio } from '../../audio-player/infrastructure/AudioContext';
 import { useQuran } from '../../../core/hooks/useQuran';
 import { Spacing, BorderRadius, Shadows, Typography, Springs } from '../../../core/theme/DesignSystem';
+import { getQuranFontFamily } from '../../../core/theme/QuranFonts';
+import { useSettings } from '../../settings/infrastructure/SettingsContext';
 
 // ── Layout constants (avoids magic numbers throughout) ──────────────────
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -131,6 +133,8 @@ export default function VerseRecommendationSheet({
     const theme = useTheme();
     const insets = useSafeAreaInsets();
     const router = useRouter();
+    const { settings } = useSettings();
+    const quranFontFamily = getQuranFontFamily(settings.quranFont);
     const { playVerse, pause, isPlaying, playingVerse, stop } = useAudio();
     const { loadSurah } = useQuran();
     const [loadingVerse, setLoadingVerse] = useState<string | null>(null);
@@ -143,8 +147,8 @@ export default function VerseRecommendationSheet({
     const [, setLoadingText] = useState(false);
 
     // For sharing
-    const viewShotRefs = useRef<(ViewShot | null)[]>([]);
-    const [capturingVerseKey, setCapturingVerseKey] = useState<string | null>(null);
+    const [showShareSheet, setShowShareSheet] = useState(false);
+    const [shareVerseData, setShareVerseData] = useState<ShareCardData | null>(null);
 
     // Cache to avoid re-fetching surahs we've already loaded
     const surahCacheRef = useRef<Map<number, { text: string; translation: string }[]>>(new Map());
@@ -254,29 +258,18 @@ export default function VerseRecommendationSheet({
         router.push(`/surah/${surah}?verse=${verse}&autoplay=true`);
     }, [onDismiss, router, stop]);
 
-    const handleShareVerse = async (verseKey: string, idx: number) => {
-        const ref = viewShotRefs.current[idx];
-        if (!ref) return;
-
+    const handleShareVerse = useCallback((verse: MoodVerse) => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        setCapturingVerseKey(verseKey);
-
-        setTimeout(async () => {
-            try {
-                const uri = await ref.capture?.();
-                if (uri) {
-                    await Sharing.shareAsync(uri, {
-                        dialogTitle: 'Share Verse',
-                        mimeType: 'image/png'
-                    });
-                }
-            } catch (err) {
-                if (__DEV__) console.error('Error sharing verse:', err);
-            } finally {
-                setCapturingVerseKey(null);
-            }
-        }, 150);
-    };
+        const data: ShareCardData = {
+            type: 'mood-verse',
+            arabicText: verse.arabicFull || verse.arabicSnippet,
+            englishText: verse.translationFull || verse.translation,
+            reference: `Surah ${verse.surah}:${verse.verse}`,
+            quranFontFamily,
+        };
+        setShareVerseData(data);
+        setShowShareSheet(true);
+    }, [quranFontFamily]);
 
     if (!mood || verses.length === 0) return null;
 
@@ -388,127 +381,118 @@ export default function VerseRecommendationSheet({
                                             delay: 200 + idx * 120,
                                         }}
                                     >
-                                        <ViewShot
-                                            ref={el => { viewShotRefs.current[idx] = el; }}
-                                            options={{ format: 'png', quality: 1.0 }}
-                                            style={capturingVerseKey === verseKey ? {
+                                        <View style={[
+                                            styles.verseCard,
+                                            {
                                                 backgroundColor: theme.colors.surface,
-                                                padding: Spacing.md,
-                                                borderRadius: BorderRadius.xl,
-                                            } : {}}
-                                        >
-                                            <View style={[
-                                                styles.verseCard,
-                                                {
-                                                    backgroundColor: theme.colors.surface,
-                                                    borderColor: accentColor,
-                                                },
-                                                Shadows.sm,
-                                            ]}>
-                                                {/* Arabic text */}
-                                                <Text style={[styles.arabicText, { color: theme.colors.onSurface }]}>
-                                                    {displayArabic}
-                                                </Text>
+                                                borderColor: accentColor,
+                                            },
+                                            Shadows.sm,
+                                        ]}>
+                                            {/* Arabic text */}
+                                            <Text style={[styles.arabicText, { color: theme.colors.onSurface, fontFamily: quranFontFamily }]}>
+                                                {displayArabic}
+                                            </Text>
 
-                                                {/* Decorative divider with mood accent */}
-                                                <View style={styles.dividerRow}>
-                                                    <View style={[styles.dividerLine, { backgroundColor: accentColor }]} />
-                                                    <View style={[styles.dividerDot, { backgroundColor: moodColor }]} />
-                                                    <View style={[styles.dividerLine, { backgroundColor: accentColor }]} />
-                                                </View>
-
-                                                {/* Translation */}
-                                                <Text style={[styles.translation, { color: theme.colors.onSurfaceVariant }]}>
-                                                    {displayTranslation}
-                                                </Text>
-
-                                                {/* Theme badge */}
-                                                <Text style={[styles.themeBadge, { color: moodColor }]}>
-                                                    {verse.theme}
-                                                </Text>
-
-                                                {/* Action buttons */}
-                                                <View style={styles.actionRow}>
-                                                    {/* Play */}
-                                                    <Pressable
-                                                        onPress={() => handlePlayVerse(verse.surah, verse.verse)}
-                                                        style={({ pressed }) => [
-                                                            styles.actionBtn,
-                                                            {
-                                                                backgroundColor: isCurrentlyPlaying && isPlaying
-                                                                    ? moodColor
-                                                                    : `${moodColor}15`,
-                                                            },
-                                                            pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
-                                                        ]}
-                                                    >
-                                                        {isLoading ? (
-                                                            <ActivityIndicator size="small" color={moodColor} />
-                                                        ) : (
-                                                            <MaterialCommunityIcons
-                                                                name={isCurrentlyPlaying && isPlaying ? 'pause' : 'play'}
-                                                                size={Spacing.md}
-                                                                color={isCurrentlyPlaying && isPlaying
-                                                                    ? theme.colors.onPrimary
-                                                                    : moodColor}
-                                                            />
-                                                        )}
-                                                    </Pressable>
-
-                                                    {/* Read in Surah */}
-                                                    <Pressable
-                                                        onPress={() => handleOpenSurah(verse.surah, verse.verse)}
-                                                        style={({ pressed }) => [
-                                                            styles.actionBtnWide,
-                                                            { backgroundColor: `${moodColor}15` },
-                                                            pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
-                                                        ]}
-                                                    >
-                                                        <MaterialCommunityIcons
-                                                            name="book-open-page-variant"
-                                                            size={14}
-                                                            color={moodColor}
-                                                        />
-                                                        <Text style={[styles.actionBtnText, { color: moodColor }]}>
-                                                            Read
-                                                        </Text>
-                                                    </Pressable>
-
-                                                    {/* Share */}
-                                                    <Pressable
-                                                        onPress={() => handleShareVerse(verseKey, idx)}
-                                                        style={({ pressed }) => [
-                                                            styles.actionBtn,
-                                                            { backgroundColor: `${moodColor}15` },
-                                                            pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
-                                                        ]}
-                                                    >
-                                                        <MaterialCommunityIcons
-                                                            name="share-variant"
-                                                            size={Spacing.md - 1}
-                                                            color={moodColor}
-                                                        />
-                                                    </Pressable>
-                                                </View>
-
-                                                {/* Watermark for sharing */}
-                                                {capturingVerseKey === verseKey && (
-                                                    <View style={[styles.watermarkContainer, {
-                                                        borderTopColor: `${theme.colors.outline}20`,
-                                                    }]}>
-                                                        <Text style={[styles.watermarkText, { color: theme.colors.onSurfaceVariant }]}>
-                                                            QuranNotes App
-                                                        </Text>
-                                                    </View>
-                                                )}
+                                            {/* Decorative divider with mood accent */}
+                                            <View style={styles.dividerRow}>
+                                                <View style={[styles.dividerLine, { backgroundColor: accentColor }]} />
+                                                <View style={[styles.dividerDot, { backgroundColor: moodColor }]} />
+                                                <View style={[styles.dividerLine, { backgroundColor: accentColor }]} />
                                             </View>
-                                        </ViewShot>
+
+                                            {/* Translation */}
+                                            <Text style={[styles.translation, { color: theme.colors.onSurfaceVariant }]}>
+                                                {displayTranslation}
+                                            </Text>
+
+                                            {/* Theme badge */}
+                                            <Text style={[styles.themeBadge, { color: moodColor }]}>
+                                                {verse.theme}
+                                            </Text>
+
+                                            {/* Action buttons */}
+                                            <View style={styles.actionRow}>
+                                                {/* Play */}
+                                                <Pressable
+                                                    onPress={() => handlePlayVerse(verse.surah, verse.verse)}
+                                                    style={({ pressed }) => [
+                                                        styles.actionBtn,
+                                                        {
+                                                            backgroundColor: isCurrentlyPlaying && isPlaying
+                                                                ? moodColor
+                                                                : `${moodColor}15`,
+                                                        },
+                                                        pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
+                                                    ]}
+                                                >
+                                                    {isLoading ? (
+                                                        <ActivityIndicator size="small" color={moodColor} />
+                                                    ) : (
+                                                        <MaterialCommunityIcons
+                                                            name={isCurrentlyPlaying && isPlaying ? 'pause' : 'play'}
+                                                            size={Spacing.md}
+                                                            color={isCurrentlyPlaying && isPlaying
+                                                                ? theme.colors.onPrimary
+                                                                : moodColor}
+                                                        />
+                                                    )}
+                                                </Pressable>
+
+                                                {/* Read in Surah */}
+                                                <Pressable
+                                                    onPress={() => handleOpenSurah(verse.surah, verse.verse)}
+                                                    style={({ pressed }) => [
+                                                        styles.actionBtnWide,
+                                                        { backgroundColor: `${moodColor}15` },
+                                                        pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
+                                                    ]}
+                                                >
+                                                    <MaterialCommunityIcons
+                                                        name="book-open-page-variant"
+                                                        size={14}
+                                                        color={moodColor}
+                                                    />
+                                                    <Text style={[styles.actionBtnText, { color: moodColor }]}>
+                                                        Read
+                                                    </Text>
+                                                </Pressable>
+
+                                                {/* Share */}
+                                                <Pressable
+                                                    onPress={() => handleShareVerse(verse)}
+                                                    style={({ pressed }) => [
+                                                        styles.actionBtn,
+                                                        { backgroundColor: `${moodColor}15` },
+                                                        pressed && { opacity: 0.8, transform: [{ scale: 0.95 }] },
+                                                    ]}
+                                                >
+                                                    <MaterialCommunityIcons
+                                                        name="share-variant"
+                                                        size={Spacing.md - 1}
+                                                        color={moodColor}
+                                                    />
+                                                </Pressable>
+                                            </View>
+                                        </View>
                                     </MotiView>
                                 );
                             })}
                         </View>
                     </View>
                 </ScrollView>
+
+                {/* Premium Share Sheet — INSIDE the main modal so it presents on top */}
+                {shareVerseData && (
+                    <PremiumShareSheet
+                        visible={showShareSheet}
+                        onDismiss={() => {
+                            setShowShareSheet(false);
+                            setShareVerseData(null);
+                        }}
+                        data={shareVerseData}
+                    />
+                )}
             </View>
         </Modal>
     );
@@ -592,7 +576,6 @@ const styles = StyleSheet.create({
         fontSize: ARABIC_FONT_SIZE,
         lineHeight: ARABIC_LINE_HEIGHT,
         textAlign: 'right',
-        fontFamily: 'System',
         marginBottom: Spacing.md,
     },
     dividerRow: {

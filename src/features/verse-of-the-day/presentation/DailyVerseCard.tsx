@@ -1,24 +1,29 @@
 /**
  * DailyVerseCard — Beautiful card showing today's curated verse.
- * Gradient shifts based on time of day. Supports share and tap-to-read.
+ * Premium surface-based card with brand accent. Supports share and tap-to-read.
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, AppState, AppStateStatus } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme, IconButton } from 'react-native-paper';
 import { Feather } from '@expo/vector-icons';
 import { MotiView } from 'moti';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QURAN_TOPICS, TopicVerse } from '../domain/QuranTopics';
 import { Spacing, BorderRadius, Shadows, Typography } from '../../../core/theme/DesignSystem';
+import { getQuranFontFamily } from '../../../core/theme/QuranFonts';
+import { useSettings } from '../../settings/infrastructure/SettingsContext';
 import * as Haptics from 'expo-haptics';
 import { WidgetBridge } from '../../../../modules/widget-bridge/src';
-import ViewShot from 'react-native-view-shot';
-import * as Sharing from 'expo-sharing';
+import { PremiumShareSheet } from '../../sharing/presentation/PremiumShareSheet';
+import { ShareCardData } from '../../sharing/domain/ShareTemplateTypes';
 
 const STORAGE_KEY = 'daily_verse_data';
 const HISTORY_KEY = 'daily_verse_history';
+
+/** Brand accent for the Verse card — consistent violet */
+const VERSE_ACCENT = '#6246EA';
 
 /** Sync verse data to iOS widget */
 function syncVerseToWidget(v: TopicVerse) {
@@ -35,19 +40,6 @@ function syncVerseToWidget(v: TopicVerse) {
 /** Get all verses from all topics as a flat array */
 function getAllVerses(): TopicVerse[] {
     return QURAN_TOPICS.flatMap(t => t.verses);
-}
-
-/** Get time-of-day gradient — different palettes for light vs dark */
-function getTimeGradient(hour: number): readonly [string, string, string] {
-    // The DailyVerseCard is a "Window to the Sky". We use these rich, atmospheric 
-    // gradients universally in both Light and Dark modes. All text inside the card 
-    // is permanently locked to White/Light-opacities to guarantee WCAG AA contrast.
-    if (hour >= 4 && hour < 6) return ['#3B1F50', '#7E4B8C', '#C481A7'] as const;   // Fajr: Dawn purple to soft pink
-    if (hour >= 6 && hour < 12) return ['#4CA1AF', '#73bdeb', '#A5D6F7'] as const;  // Morning: Airy sky blue
-    if (hour >= 12 && hour < 16) return ['#1E3A8A', '#2563EB', '#60A5FA'] as const; // Dhuhr: Vibrant daytime blue
-    if (hour >= 16 && hour < 18) return ['#9A3412', '#C2410C', '#EA580C'] as const; // Asr: Golden hour amber/orange
-    if (hour >= 18 && hour < 20) return ['#581C87', '#9D174D', '#BE123C'] as const; // Maghrib: Sunset crimson & purple
-    return ['#0F172A', '#1E293B', '#334155'] as const;                              // Isha: Deep midnight
 }
 
 async function pickNextVerse(): Promise<TopicVerse> {
@@ -89,26 +81,12 @@ function todayKey(): string {
 export const DailyVerseCard: React.FC = () => {
     const theme = useTheme();
     const router = useRouter();
+    const { settings } = useSettings();
+    const quranFontFamily = getQuranFontFamily(settings.quranFont);
     const [verse, setVerse] = useState<TopicVerse | null>(null);
     const [loading, setLoading] = useState(true);
     const [expanded, setExpanded] = useState(true);
-    const [currentHour, setCurrentHour] = useState(new Date().getHours());
-
-    // For sharing
-    const viewShotRef = React.useRef<ViewShot>(null);
-    const [isCapturing, setIsCapturing] = useState(false);
-
-    useEffect(() => {
-        const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
-            if (nextAppState === 'active') {
-                setCurrentHour(new Date().getHours());
-            }
-        });
-
-        return () => {
-            subscription.remove();
-        };
-    }, []);
+    const [showShareSheet, setShowShareSheet] = useState(false);
 
     const loadOrPickVerse = useCallback(async () => {
         try {
@@ -172,43 +150,26 @@ export const DailyVerseCard: React.FC = () => {
         router.push(`/surah/${verse.surah}?verse=${verse.verse}` as any);
     };
 
-    const handleShare = async () => {
-        if (!viewShotRef.current) return;
+    const handleShare = useCallback(() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-        // Temporarily expand and show watermark for the capture
-        const wasExpanded = expanded;
-        setExpanded(true);
-        setIsCapturing(true);
-
-        // Wait for state to apply and UI to render
-        setTimeout(async () => {
-            try {
-                const uri = await viewShotRef.current?.capture?.();
-                if (uri) {
-                    await Sharing.shareAsync(uri, {
-                        dialogTitle: 'Share Verse of the Day',
-                        mimeType: 'image/png'
-                    });
-                }
-            } catch (err) {
-                if (__DEV__) console.error('Error sharing verse:', err);
-            } finally {
-                setExpanded(wasExpanded);
-                setIsCapturing(false);
-            }
-        }, 150); // slight delay to ensure render
-    };
+        setShowShareSheet(true);
+    }, []);
 
     if (loading || !verse) return null;
 
-    // Render atmospheric gradient for the Sky window.
-    // Text is ALWAYS hard-locked to white/light-opacities to guarantee maximum contrast 
-    // against these rich, vibrant time-of-day backgrounds.
-    const gradientColors = getTimeGradient(currentHour);
-    const textColorPrimary = '#FFFFFF';
-    const textColorSecondary = 'rgba(255,255,255,0.85)';
-    const textColorTertiary = 'rgba(255,255,255,0.6)';
+    // Surface-based card: theme-aware text colors, no gradient background
+    const textColorPrimary = theme.colors.onSurface;
+    const textColorSecondary = theme.dark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)';
+    const textColorTertiary = theme.dark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.4)';
+
+    // Build share card data
+    const shareData: ShareCardData = {
+        type: 'verse',
+        arabicText: verse.arabicSnippet,
+        englishText: verse.translation,
+        reference: `${verse.surahName} ${verse.surah}:${verse.verse}`,
+        quranFontFamily,
+    };
 
     return (
         <MotiView
@@ -217,29 +178,33 @@ export const DailyVerseCard: React.FC = () => {
             transition={{ type: 'spring', damping: 18, delay: 120 }}
             style={{ paddingHorizontal: Spacing.md }}
         >
-            <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1.0 }} style={isCapturing ? { backgroundColor: theme.colors.background } : {}}>
-                <Pressable
-                    onPress={() => {
-                        if (isCapturing) return;
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        setExpanded(!expanded);
-                    }}
-                    style={({ pressed }) => [
-                        pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
-                    ]}
-                >
-                    <View style={[styles.card, Shadows.md]}>
-                        <LinearGradient
-                            colors={gradientColors}
-                            style={[styles.gradientOverlay, { borderRadius: BorderRadius.lg }]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                        />
+            <Pressable
+                onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setExpanded(!expanded);
+                }}
+                style={({ pressed }) => [
+                    pressed && { opacity: 0.95, transform: [{ scale: 0.98 }] },
+                ]}
+            >
+                <View style={[styles.card, Shadows.md, { backgroundColor: theme.colors.surface }]}>
+                    {/* Left accent bar — brand violet identity */}
+                    <View style={styles.accentBar} />
+
+                    {/* Subtle accent wash — faint violet tint bleeding from left */}
+                    <LinearGradient
+                        colors={['rgba(98,70,234,0.12)', 'rgba(98,70,234,0.03)', 'transparent']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={StyleSheet.absoluteFillObject}
+                    />
+
+                    <View style={styles.cardContent}>
 
                         {/* Header — always visible */}
                         <View style={styles.cardHeader}>
                             <View style={styles.labelRow}>
-                                <Text style={[styles.label, { color: '#D4A853' }]}>✦ Verse of the Day</Text>
+                                <Text style={[styles.label, { color: VERSE_ACCENT }]}>✦ Verse of the Day</Text>
                             </View>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                                 <IconButton
@@ -256,13 +221,11 @@ export const DailyVerseCard: React.FC = () => {
                                     iconColor={textColorSecondary}
                                     style={styles.actionButton}
                                 />
-                                {!isCapturing && (
-                                    <Feather
-                                        name={expanded ? 'chevron-up' : 'chevron-down'}
-                                        size={20}
-                                        color={textColorSecondary}
-                                    />
-                                )}
+                                <Feather
+                                    name={expanded ? 'chevron-up' : 'chevron-down'}
+                                    size={20}
+                                    color={textColorSecondary}
+                                />
                             </View>
                         </View>
 
@@ -286,7 +249,7 @@ export const DailyVerseCard: React.FC = () => {
                         {/* Expanded: Arabic + translation + reference */}
                         {expanded && (
                             <>
-                                <Text style={[styles.arabicText, { color: textColorPrimary }]}>
+                                <Text style={[styles.arabicText, { color: textColorPrimary, fontFamily: quranFontFamily }]}>
                                     {verse.arabicSnippet}
                                 </Text>
                                 <Text style={[styles.translationText, { color: textColorSecondary }]}>
@@ -311,16 +274,16 @@ export const DailyVerseCard: React.FC = () => {
                                 </Pressable>
                             </>
                         )}
+                    </View>{/* end cardContent */}
+                </View>{/* end card */}
+            </Pressable>
 
-                        {/* Watermark for sharing */}
-                        {isCapturing && (
-                            <View style={styles.watermarkContainer}>
-                                <Text style={styles.watermarkText}>QuranNotes App</Text>
-                            </View>
-                        )}
-                    </View>
-                </Pressable>
-            </ViewShot>
+            {/* Premium Share Sheet */}
+            <PremiumShareSheet
+                visible={showShareSheet}
+                onDismiss={() => setShowShareSheet(false)}
+                data={shareData}
+            />
         </MotiView>
     );
 };
@@ -328,12 +291,19 @@ export const DailyVerseCard: React.FC = () => {
 const styles = StyleSheet.create({
     card: {
         borderRadius: BorderRadius.lg,
-        padding: Spacing.lg,
         overflow: 'hidden',
+        flexDirection: 'row',
     },
-    gradientOverlay: {
-        ...StyleSheet.absoluteFillObject,
-        borderRadius: BorderRadius.lg,
+    accentBar: {
+        width: 4,
+        backgroundColor: VERSE_ACCENT,
+        borderTopLeftRadius: BorderRadius.lg,
+        borderBottomLeftRadius: BorderRadius.lg,
+        marginRight: Spacing.md,
+    },
+    cardContent: {
+        flex: 1,
+        padding: Spacing.lg,
     },
     cardHeader: {
         flexDirection: 'row',
@@ -358,7 +328,6 @@ const styles = StyleSheet.create({
         fontSize: 22,
         lineHeight: 44,
         textAlign: 'right',
-        fontWeight: '400',
         marginBottom: Spacing.md,
     },
     translationText: {
@@ -380,17 +349,4 @@ const styles = StyleSheet.create({
     actionButton: {
         margin: 0,
     },
-    watermarkContainer: {
-        marginTop: Spacing.lg,
-        alignItems: 'center',
-        paddingTop: Spacing.md,
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(255,255,255,0.15)',
-    },
-    watermarkText: {
-        ...Typography.labelMedium,
-        color: 'rgba(255,255,255,0.7)',
-        letterSpacing: 2,
-        textTransform: 'uppercase',
-    }
 });

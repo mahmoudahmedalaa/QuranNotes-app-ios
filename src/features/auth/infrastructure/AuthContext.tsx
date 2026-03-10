@@ -3,6 +3,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '../domain/User';
 import { RemoteAuthRepository } from '../data/RemoteAuthRepository';
 import { ReadingPositionService } from '../../quran-reading/infrastructure/ReadingPositionService';
+import { ReadingHistoryService } from '../../quran-reading/infrastructure/ReadingHistoryService';
+import { HadithBookmarkService } from '../../hadith/infrastructure/HadithBookmarkService';
+import { clearAllHadithData } from '../../hadith/infrastructure/HadithContext';
 
 interface AuthContextType {
     user: User | null;
@@ -56,10 +59,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(true);
         try {
             await ReadingPositionService.clearAll();
+            await ReadingHistoryService.clearHistory();
+            await clearAllHadithData();
+            await HadithBookmarkService.clearAll();
             const authUser = await authRepo.signInAnonymously();
             setUser(authUser);
         } catch (e) {
-            console.error('[AuthContext] loginAnonymously error:', e);
+            if (__DEV__) console.error('[AuthContext] loginAnonymously error:', e);
             throw e;
         } finally {
             setLoading(false);
@@ -70,10 +76,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(true);
         try {
             await ReadingPositionService.clearAll();
+            await ReadingHistoryService.clearHistory();
+            await clearAllHadithData();
+            await HadithBookmarkService.clearAll();
             const authUser = await authRepo.signInWithEmail(email, pass);
             setUser(authUser);
         } catch (e) {
-            console.error('[AuthContext] loginWithEmail error:', e);
+            if (__DEV__) console.error('[AuthContext] loginWithEmail error:', e);
             throw e;
         } finally {
             setLoading(false);
@@ -84,12 +93,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(true);
         try {
             await ReadingPositionService.clearAll();
+            await ReadingHistoryService.clearHistory();
+            await clearAllHadithData();
+            await HadithBookmarkService.clearAll();
             // Force sign out first to ensure clean state
             await authRepo.signOut();
             const authUser = await authRepo.signInWithGoogle();
             setUser(authUser);
         } catch (e) {
-            console.error('[AuthContext] loginWithGoogle error:', e);
+            if (__DEV__) console.error('[AuthContext] loginWithGoogle error:', e);
             throw e;
         } finally {
             setLoading(false);
@@ -100,12 +112,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(true);
         try {
             await ReadingPositionService.clearAll();
+            await ReadingHistoryService.clearHistory();
+            await clearAllHadithData();
+            await HadithBookmarkService.clearAll();
             // Force sign out first to ensure clean state
             await authRepo.signOut();
             const authUser = await authRepo.signInWithApple();
             setUser(authUser);
         } catch (e) {
-            console.error('[AuthContext] loginWithApple error:', e);
+            if (__DEV__) console.error('[AuthContext] loginWithApple error:', e);
             throw e;
         } finally {
             setLoading(false);
@@ -116,9 +131,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(true);
         try {
             await ReadingPositionService.clearAll();
+            await ReadingHistoryService.clearHistory();
+            await clearAllHadithData();
+            await HadithBookmarkService.clearAll();
             await authRepo.signUpWithEmail(email, pass);
         } catch (e) {
-            console.error('[AuthContext] registerWithEmail error:', e);
+            if (__DEV__) console.error('[AuthContext] registerWithEmail error:', e);
             throw e;
         } finally {
             setLoading(false);
@@ -129,7 +147,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             await authRepo.sendPasswordReset(email);
         } catch (e) {
-            console.error('[AuthContext] resetPassword error:', e);
+            if (__DEV__) console.error('[AuthContext] resetPassword error:', e);
             throw e;
         }
     };
@@ -138,6 +156,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(true);
         try {
             await ReadingPositionService.clearAll();
+            await ReadingHistoryService.clearHistory();
+            await clearAllHadithData();
+            await HadithBookmarkService.clearAll();
             await authRepo.signOut();
             setUser(null);
 
@@ -145,7 +166,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             await AsyncStorage.removeItem('hasSeenWelcome');
 
         } catch (e) {
-            console.error('[AuthContext] logout error:', e);
+            if (__DEV__) console.error('[AuthContext] logout error:', e);
             throw e;
         } finally {
             setLoading(false);
@@ -159,7 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(null);
             await AsyncStorage.clear();
         } catch (e) {
-            console.error('[AuthContext] deleteAccount error:', e);
+            if (__DEV__) console.error('[AuthContext] deleteAccount error:', e);
             throw e;
         } finally {
             setLoading(false);
@@ -173,7 +194,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(null);
             await AsyncStorage.clear();
         } catch (e) {
-            console.error('[AuthContext] deleteAccountWithPassword error:', e);
+            if (__DEV__) console.error('[AuthContext] deleteAccountWithPassword error:', e);
             throw e;
         } finally {
             setLoading(false);

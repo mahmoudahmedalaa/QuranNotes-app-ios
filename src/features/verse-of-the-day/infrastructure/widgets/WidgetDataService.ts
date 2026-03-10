@@ -39,6 +39,7 @@ async function getSharedPrefs(): Promise<{
     setItem: (key: string, value: string, group: string) => Promise<void>;
 } | null> {
     try {
+        // eslint-disable-next-line import/no-unresolved
         const mod = await import('react-native-shared-group-preferences');
         return mod.default || mod;
     } catch {

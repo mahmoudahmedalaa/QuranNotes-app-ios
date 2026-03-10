@@ -81,7 +81,7 @@ export const PrayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 status = result.status;
             } catch (permErr) {
                 // Native module not linked or unavailable
-                console.warn('[PrayerContext] Location module unavailable:', permErr);
+                if (__DEV__) console.warn('[PrayerContext] Location module unavailable:', permErr);
                 setLocationError('Location not available');
                 setLoading(false);
                 return;
@@ -103,7 +103,7 @@ export const PrayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 latitude = location.coords.latitude;
                 longitude = location.coords.longitude;
             } catch (locErr) {
-                console.warn('[PrayerContext] Failed to get position:', locErr);
+                if (__DEV__) console.warn('[PrayerContext] Failed to get position:', locErr);
                 setLocationError('Unable to determine location');
                 setLoading(false);
                 return;
@@ -139,7 +139,7 @@ export const PrayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 setSecondsToNext(secs);
             }
         } catch (err) {
-            console.warn('[PrayerContext] Error:', err);
+            if (__DEV__) console.warn('[PrayerContext] Error:', err);
             setLocationError('Unable to fetch prayer times');
         } finally {
             setLoading(false);

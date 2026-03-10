@@ -67,7 +67,7 @@ export default function RamadanPaywallScreen({ onPurchaseSuccess, onDismiss }: R
             const current = await revenueCatService.getOfferings();
             setOffering(current);
         } catch (e) {
-            console.warn('Failed to load offerings:', e);
+            if (__DEV__) console.warn('Failed to load offerings:', e);
         } finally {
             setLoading(false);
         }
@@ -107,7 +107,7 @@ export default function RamadanPaywallScreen({ onPurchaseSuccess, onDismiss }: R
                 Alert.alert('Purchase Failed', error || 'Could not complete purchase. Please try again.');
             }
         } catch (error) {
-            console.warn('Purchase failed:', error);
+            if (__DEV__) console.warn('Purchase failed:', error);
             Alert.alert('Error', 'Something went wrong. Please try again.');
         } finally {
             setPurchasing(false);

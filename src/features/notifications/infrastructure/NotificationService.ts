@@ -2,9 +2,18 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import * as Device from 'expo-device';
 
-export type NotificationType = 'daily' | 'streak' | 'khatma' | 'adhkar';
+export type NotificationType = 'daily' | 'streak' | 'khatma' | 'adhkar' | 'hadith';
 
 export class NotificationService {
+    // ── Date-seeded message picker (ensures a different message each day) ──
+    private static pickMessage<T>(pool: T[]): T {
+        const today = new Date();
+        const seed = today.getFullYear() * 10000
+            + (today.getMonth() + 1) * 100
+            + today.getDate();
+        return pool[seed % pool.length];
+    }
+
     // ── Daily gentle nudges ──────────────────────────────────────────
     private static DAILY_REMINDERS: { title: string; body: string }[] = [
         // Warm, natural nudges (no Quran verses, no em-dashes)
@@ -120,12 +129,25 @@ export class NotificationService {
     private static ADHKAR_EVENING_ID = 'adhkar-evening';
     private static ADHKAR_NIGHT_ID = 'adhkar-night';
 
+
+    // ── Hadith notification messages ─────────────────────────────────
+    private static HADITH_REMINDERS: { title: string; body: string }[] = [
+        { title: 'Hadith of the Day', body: 'A new hadith is waiting for you. Start your day with the Prophet\'s wisdom.' },
+        { title: 'Daily Wisdom', body: 'The Prophet (\u1d61) left guidance for every situation. Read today\'s hadith.' },
+        { title: 'Prophetic Guidance', body: 'A beautiful hadith is ready for you. Take a moment to reflect.' },
+        { title: 'Words of the Prophet', body: 'Let the Sunnah guide your day. Your daily hadith awaits.' },
+        { title: 'Today\'s Hadith', body: 'Small daily doses of prophetic wisdom can transform your character.' },
+        { title: 'Learn from the Best', body: 'The Prophet\'s words are timeless. Discover today\'s hadith.' },
+        { title: 'Daily Sunnah', body: 'A hadith a day keeps the heart aligned. Check today\'s selection.' },
+        { title: 'Wisdom Awaits', body: 'Every hadith carries a lesson. See what today\'s hadith teaches you.' },
+    ];
+
     // ── Slot 1: Daily Reminder ───────────────────────────────────────
     static async scheduleDailyReminder(hour: number, minute: number): Promise<void> {
         try {
             await this.cancelDailyReminder();
 
-            const reminder = this.DAILY_REMINDERS[Math.floor(Math.random() * this.DAILY_REMINDERS.length)];
+            const reminder = this.pickMessage(this.DAILY_REMINDERS);
 
             await Notifications.scheduleNotificationAsync({
                 content: {
@@ -164,13 +186,14 @@ export class NotificationService {
             streak: number;
             khatmaEnabled: boolean;
             streakEnabled: boolean;
+            hadithEnabled: boolean;
             hour?: number;
             minute?: number;
         },
     ): Promise<void> {
         await this.cancelContextualNudge();
 
-        const { juzRemaining, streak, khatmaEnabled, streakEnabled } = options;
+        const { juzRemaining, streak, khatmaEnabled, streakEnabled, hadithEnabled } = options;
         const hour = options.hour ?? 14;
         const minute = options.minute ?? 0;
 
@@ -178,17 +201,21 @@ export class NotificationService {
 
         // Priority 1: Khatma nudge
         if (khatmaEnabled && juzRemaining > 0 && juzRemaining < 30) {
-            const msg = this.KHATMA_MESSAGES[Math.floor(Math.random() * this.KHATMA_MESSAGES.length)];
+            const msg = this.pickMessage(this.KHATMA_MESSAGES);
             content = { title: msg.title, body: msg.body(juzRemaining) };
         }
         // Priority 2: Streak reminder
         else if (streakEnabled && streak >= 2) {
-            const msg = this.STREAK_MESSAGES[Math.floor(Math.random() * this.STREAK_MESSAGES.length)];
+            const msg = this.pickMessage(this.STREAK_MESSAGES);
             content = { title: msg.title, body: msg.body(streak) };
         }
-        // Priority 3: Re-engagement
+        // Priority 3: Hadith wisdom
+        else if (hadithEnabled) {
+            content = this.pickMessage(this.HADITH_REMINDERS);
+        }
+        // Priority 4: Re-engagement
         else {
-            content = this.RE_ENGAGEMENT_REMINDERS[Math.floor(Math.random() * this.RE_ENGAGEMENT_REMINDERS.length)];
+            content = this.pickMessage(this.RE_ENGAGEMENT_REMINDERS);
         }
 
         await Notifications.scheduleNotificationAsync({
@@ -230,7 +257,7 @@ export class NotificationService {
             : period === 'evening'
                 ? this.ADHKAR_EVENING
                 : this.ADHKAR_NIGHT;
-        const msg = pool[Math.floor(Math.random() * pool.length)];
+        const msg = this.pickMessage(pool);
 
         await Notifications.scheduleNotificationAsync({
             content: {
@@ -254,6 +281,8 @@ export class NotificationService {
             Notifications.cancelScheduledNotificationAsync(this.ADHKAR_NIGHT_ID).catch(() => { }),
         ]);
     }
+
+
 
     // ── Cancel All ───────────────────────────────────────────────────
     static async cancelAllReminders(): Promise<void> {

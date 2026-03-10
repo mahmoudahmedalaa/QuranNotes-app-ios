@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Text, useTheme, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,12 +18,24 @@ import { useKhatma } from '../../src/features/khatma/infrastructure/KhatmaContex
 export default function InsightsScreen() {
     const theme = useTheme();
     const router = useRouter();
-    const { isPro } = usePro();
+    const { isPro, loading: proLoading } = usePro();
     const [breakdownTimeframe, setBreakdownTimeframe] = useState<TimeframePeriod>('all');
     const { completedJuz, currentRound } = useKhatma();
 
     // Pass timeframe to hook so breakdown data updates dynamically
     const { dailyActivity, heatmapData, topicBreakdown, filteredTotalTime, stats } = useInsightsData(breakdownTimeframe);
+
+    if (proLoading) {
+        return (
+            <LinearGradient
+                colors={theme.dark ? (['#0F1419', '#1A1F26'] as const) : Gradients.sereneSky}
+                style={styles.container}>
+                <SafeAreaView style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
+                    <ActivityIndicator size="large" color={theme.colors.primary} />
+                </SafeAreaView>
+            </LinearGradient>
+        );
+    }
 
     if (!isPro) {
         return (

@@ -25,7 +25,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         // Log to console in dev, could send to a crash reporter in prod
-        console.error('[GlobalErrorBoundary] Uncaught error:', error, errorInfo);
+        if (__DEV__) console.error('[GlobalErrorBoundary] Uncaught error:', error, errorInfo);
     }
 
     handleRestart = () => {

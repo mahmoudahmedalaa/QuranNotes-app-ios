@@ -1,29 +1,25 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Modal, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from 'react-native-paper';
 import { MotiView } from 'moti';
-import { BlurView } from 'expo-blur';
 import Svg, { Circle } from 'react-native-svg';
 
 import { NoorMascot } from '../../src/core/components/mascot/NoorMascot';
 import { Spacing, BorderRadius, Shadows, Gradients } from '../../src/core/theme/DesignSystem';
 import { StatusBar } from 'expo-status-bar';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { StreakCounter } from '../../src/features/user-stats/presentation/StreakCounter';
 import MoodCheckInCard from '../../src/features/mood/presentation/MoodCheckInCard';
 import { PrayerTimesCard } from '../../src/features/prayer/presentation/PrayerTimesCard';
 import { usePrayer } from '../../src/features/prayer/infrastructure/PrayerContext';
 import { DailyVerseCard } from '../../src/features/verse-of-the-day/presentation/DailyVerseCard';
-import { ReadingPositionService, ReadingPosition } from '../../src/features/quran-reading/infrastructure/ReadingPositionService';
+import { DailyHadithCard } from '../../src/features/hadith/presentation/DailyHadithCard';
 import { useKhatma } from '../../src/features/khatma/infrastructure/KhatmaContext';
-import { useAudio } from '../../src/features/audio-player/infrastructure/AudioContext';
 import { useAdhkar } from '../../src/features/adhkar/infrastructure/AdhkarContext';
 import { AdhkarScreen } from '../../src/core/presentation/screens/AdhkarScreen';
-import { useQuran } from '../../src/core/hooks/useQuran';
-import { useSettings } from '../../src/features/settings/infrastructure/SettingsContext';
 
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -39,16 +35,9 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 export default function DashboardScreen() {
     const router = useRouter();
     const theme = useTheme();
-    const { playingVerse, playFromVerse } = useAudio();
-    const { completedSurahs, completedJuz } = useKhatma();
+    const { completedJuz } = useKhatma();
     const { nextPrayer } = usePrayer();
-    const [globalPosition, setGlobalPosition] = useState<ReadingPosition | null>(null);
-    const { settings } = useSettings();
-    const { surah: continueSurah, loadSurah } = useQuran();
     const [showAdhkar, setShowAdhkar] = useState(false);
-    const insets = useSafeAreaInsets();
-    // Reliable bottom offset: Math.max(insets.bottom, 16) + 8 (tab margin) + 64 (strict tab height) + 8 (gap) = 80
-    const pillBottom = Math.max(insets.bottom, 16) + 80;
     const { getCompletionPercentage } = useAdhkar();
 
     // Smart Adhkar timing:
@@ -74,61 +63,19 @@ export default function DashboardScreen() {
     const adhkarPeriod = getAdhkarPeriod();
     const adhkarPct = getCompletionPercentage(adhkarPeriod as any);
 
-    // Adhkar tile gradient & text — sunrise / sunset / night sky
+    // Adhkar tile gradient & text — atmospheric, time-of-day tones (no purple)
     const adhkarGradient: readonly [string, string, ...string[]] = adhkarPeriod === 'morning'
-        ? ['#FEF3C7', '#FDE68A', '#FBC95C', '#F59E0B']      // golden sunrise — warm peach → rich gold
+        ? ['#F0F9FF', '#E0F2FE', '#BAE6FD']      // soft sky blue — calm dawn
         : adhkarPeriod === 'evening'
-            ? ['#FDDCB5', '#F4A983', '#E07B6D', '#C66A8A']   // sunset — peach → coral → rose → dusky mauve
-            : ['#0F172A', '#1E293B', '#1A2540', '#0D1B2A'];  // deep navy → dark slate
-    const adhkarTextColor = adhkarPeriod === 'morning' ? '#92400E'
-        : adhkarPeriod === 'evening' ? '#9A3412'
-            : '#E2E8F0';
+            ? ['#0F172A', '#1E293B', '#334155']   // deep slate navy — restful dusk
+            : ['#020617', '#0F172A', '#1E293B'];  // near-black navy — still night
+    const adhkarTextColor = adhkarPeriod === 'morning' ? '#0C4A6E'  // deep sky on light bg
+        : '#CBD5E1';  // soft slate on dark bg (both evening & night)
 
     // Khatma progress
     const completedCount = completedJuz?.length || 0;
     const progress = completedCount / 30;
     const strokeDashoffset = CIRCUMFERENCE * (1 - progress);
-
-    // Reload reading position whenever the screen comes into focus
-    // (e.g. returning from the surah detail screen which updates the position)
-    useFocusEffect(
-        useCallback(() => {
-            ReadingPositionService.getGlobal().then(pos => {
-                if (pos && pos.verse > 1) {
-                    setGlobalPosition(pos);
-                } else {
-                    setGlobalPosition(null);
-                }
-            }).catch(() => { /* silent — position is non-critical */ });
-        }, []) // No deps — always reload fresh on every focus
-    );
-
-    // Separately: when audio STOPS playing, immediately restore the pill.
-    // We cannot rely on useFocusEffect for this because it only fires on focus events,
-    // not on dependency changes while the screen is already focused.
-    useEffect(() => {
-        if (!playingVerse) {
-            // Audio stopped — reload so the pill reappears
-            ReadingPositionService.getGlobal().then(pos => {
-                if (pos && pos.verse > 1) setGlobalPosition(pos);
-                else setGlobalPosition(null);
-            }).catch(() => { /* silent */ });
-        }
-        // When playingVerse is set, showContinueReading already hides the pill
-        // via !isPlaying — no need to clear globalPosition.
-    }, [playingVerse]);
-
-    // When the reading position changes, silently pre-load the surah
-    // so the play button can trigger in-place audio without navigating
-    useFocusEffect(
-        useCallback(() => {
-            if (!globalPosition) return;
-            loadSurah(globalPosition.surah, settings.translationEdition);
-            // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, [globalPosition?.surah, settings.translationEdition])
-    );
-
-    const showContinueReading = globalPosition && !playingVerse && !completedSurahs.includes(globalPosition.surah);
 
 
     const gradientColors: readonly [string, string, ...string[]] = theme.dark
@@ -208,6 +155,17 @@ export default function DashboardScreen() {
                                 pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                             ]}
                         >
+                            {/* Subtle gradient wash — faint primary tint from top-left */}
+                            <LinearGradient
+                                colors={[
+                                    theme.dark ? 'rgba(99,102,241,0.18)' : 'rgba(99,102,241,0.10)',
+                                    theme.dark ? 'rgba(99,102,241,0.06)' : 'rgba(99,102,241,0.03)',
+                                    'transparent',
+                                ]}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={[StyleSheet.absoluteFillObject, { borderRadius: BorderRadius.lg }]}
+                            />
                             {/* Ring */}
                             <View style={styles.tileRingWrap}>
                                 <Svg width={RING_SIZE} height={RING_SIZE}>
@@ -249,8 +207,21 @@ export default function DashboardScreen() {
                                 pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                             ]}
                         >
+                            {/* Base atmospheric gradient */}
                             <LinearGradient
                                 colors={adhkarGradient}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={[StyleSheet.absoluteFillObject, { borderRadius: BorderRadius.lg }]}
+                            />
+                            {/* Subtle shimmer wash — top-left glow for depth */}
+                            <LinearGradient
+                                colors={[
+                                    adhkarPeriod === 'morning'
+                                        ? 'rgba(186,230,253,0.55)'
+                                        : 'rgba(148,163,184,0.15)',
+                                    'transparent',
+                                ]}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 1 }}
                                 style={[StyleSheet.absoluteFillObject, { borderRadius: BorderRadius.lg }]}
@@ -310,73 +281,13 @@ export default function DashboardScreen() {
                     {/* ── 4. Daily Verse (full width, collapsible) ── */}
                     <DailyVerseCard />
 
-                    {/* Bottom padding — extra when floating pill is visible */}
-                    <View style={{ height: showContinueReading ? 176 : 120 }} />
+                    {/* ── 5. Daily Hadith (full width, collapsible) ── */}
+                    <DailyHadithCard />
+
+                    {/* Bottom padding */}
+                    <View style={{ height: 120 }} />
                 </ScrollView>
             </SafeAreaView>
-
-            {/* ── Floating Continue Reading pill — Apple Music / Spotify pattern ── */}
-            {showContinueReading && globalPosition && (
-                <MotiView
-                    from={{ opacity: 0, translateY: 20 }}
-                    animate={{ opacity: 1, translateY: 0 }}
-                    transition={{ type: 'spring', damping: 18 }}
-                    style={[styles.floatingPillWrap, { bottom: pillBottom }]}
-                >
-                    <BlurView
-                        intensity={60}
-                        tint={theme.dark ? 'dark' : 'light'}
-                        style={[
-                            styles.floatingPillBlur,
-                            {
-                                borderColor: theme.dark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-                                borderWidth: 1,
-                            }
-                        ]}
-                    />
-
-                    {/* Body — tapping navigates to reading position */}
-                    <Pressable
-                        onPress={() => {
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                            router.push(`/surah/${globalPosition.surah}?verse=${globalPosition.verse}`);
-                        }}
-                        style={({ pressed }) => [
-                            styles.floatingPillInner,
-                            pressed && { opacity: 0.85 },
-                        ]}
-                    >
-                        <Feather name="book-open" size={18} color={theme.colors.surface} />
-                        <View style={{ flex: 1 }}>
-                            <Text style={[styles.continueTitle, { color: theme.colors.onSurface }]} numberOfLines={1}>
-                                Continue Reading
-                            </Text>
-                            <Text style={[styles.continueSubtitle, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
-                                {globalPosition.surahName || `Surah ${globalPosition.surah}`} · Verse {globalPosition.verse}
-                            </Text>
-                        </View>
-                    </Pressable>
-                    {/* Play button */}
-                    <Pressable
-                        onPress={async () => {
-                            try {
-                                if (!continueSurah) {
-                                    router.push(`/surah/${globalPosition.surah}?verse=${globalPosition.verse}&autoplay=true`);
-                                    return;
-                                }
-                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                                await playFromVerse(continueSurah, globalPosition.verse);
-                            } catch (e) {
-                                if (__DEV__) console.error('[Dashboard] Error playing:', e);
-                            }
-                        }}
-                        hitSlop={8}
-                        style={({ pressed }) => [styles.playCircleWrap, pressed && { opacity: 0.7 }]}
-                    >
-                        <Feather name="play-circle" size={24} color={theme.colors.surface} />
-                    </Pressable>
-                </MotiView>
-            )}
 
             {/* Adhkar fullscreen modal */}
             <Modal
@@ -419,48 +330,6 @@ const styles = StyleSheet.create({
         alignItems: 'center', justifyContent: 'center',
     },
 
-    // ── Floating Continue Reading pill ──
-    floatingPillWrap: {
-        position: 'absolute',
-        alignSelf: 'center',
-        width: '85%',
-        height: 52,
-        zIndex: 100,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 10,
-        elevation: 8,
-    },
-    floatingPillBlur: {
-        ...StyleSheet.absoluteFillObject,
-        borderRadius: 26,
-        overflow: 'hidden',
-    },
-    floatingPillInner: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        paddingLeft: 16,
-        paddingRight: 4,
-        height: 52,
-    },
-    playCircleWrap: {
-        width: 48,
-        height: 52,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingRight: 8,
-        position: 'absolute',
-        right: 0,
-    },
-    continueTitle: {
-        fontSize: 14, fontWeight: '700',
-    },
-    continueSubtitle: {
-        fontSize: 12, marginTop: -2,
-    },
 
     // ── 2-Column Grid ──
     gridRow: {
@@ -499,7 +368,6 @@ const styles = StyleSheet.create({
         alignItems: 'center', justifyContent: 'center',
         marginBottom: 8,
     },
-    tileEmoji: { fontSize: 28 },
 
     // ── Tile text ──
     tileLabel: { fontSize: 17, fontWeight: '700', marginBottom: 2 },

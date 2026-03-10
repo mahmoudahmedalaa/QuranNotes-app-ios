@@ -2,8 +2,8 @@
  * AudioKhatmaBridge — Updates global reading position during audio playback
  * AND auto-completes surahs when the audio finishes playing all verses.
  *
- * Always updates the GLOBAL ReadingPositionService so that the home screen
- * "Continue Reading" and the Khatma "Continue Reading" features work correctly.
+ * Always updates the GLOBAL ReadingPositionService so that
+ * the Khatma "Continue Reading" feature works correctly.
  */
 import React, { useEffect, useRef } from 'react';
 import { useAudio } from '../../audio-player/infrastructure/AudioContext';
@@ -50,7 +50,7 @@ export const AudioKhatmaBridge: React.FC = () => {
         markSurahComplete(lastCompletedPlayback.surah);
 
         if (__DEV__) {
-            console.log(`[AudioKhatmaBridge] Auto-completed surah ${lastCompletedPlayback.surah}`);
+            if (__DEV__) console.log(`[AudioKhatmaBridge] Auto-completed surah ${lastCompletedPlayback.surah}`);
         }
     }, [lastCompletedPlayback, markSurahComplete]);
 

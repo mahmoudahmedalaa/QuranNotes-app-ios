@@ -40,7 +40,7 @@
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="qurannotes"/>
         <data android:scheme="com.googleusercontent.apps.825913576002-cj4sli54hrmo1om3g34vo54mvc03oavk"/>
-        <data android:scheme="exp+quran-notes"/>
+        <data android:scheme="exp+qurannotes-app"/>
       </intent-filter>
     </activity>
   </application>

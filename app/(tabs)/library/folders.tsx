@@ -85,7 +85,7 @@ export default function FoldersScreen() {
                 <LinearGradient
                     colors={[item.color + '15', item.color + '05']}
                     style={styles.iconContainer}>
-                    <Ionicons name="folder" size={24} color={item.color} />
+                    <Ionicons name="folder" size={28} color={item.color} />
                 </LinearGradient>
 
                 <View style={styles.cardContent}>
@@ -183,8 +183,8 @@ const styles = StyleSheet.create({
         paddingVertical: Spacing.md,
     },
     headerText: {
-        fontSize: 14,
-        lineHeight: 20,
+        fontSize: 16,
+        lineHeight: 22,
     },
     list: {
         paddingHorizontal: Spacing.md,
@@ -216,12 +216,12 @@ const styles = StyleSheet.create({
     },
     cardContent: { flex: 1 },
     folderName: {
-        fontSize: 17, // Slightly larger
+        fontSize: 19,
         fontWeight: '700',
         letterSpacing: -0.3,
     },
     defaultBadge: {
-        fontSize: 11,
+        fontSize: 13,
         fontWeight: '600',
         textTransform: 'uppercase',
         letterSpacing: 0.5,
@@ -232,8 +232,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     empty: { alignItems: 'center', paddingTop: Spacing.xxl },
-    emptyTitle: { fontSize: 18, fontWeight: '600', marginTop: Spacing.sm },
-    emptyText: { fontSize: 14, textAlign: 'center', marginTop: Spacing.xs },
+    emptyTitle: { fontSize: 20, fontWeight: '600', marginTop: Spacing.sm },
+    emptyText: { fontSize: 16, textAlign: 'center', marginTop: Spacing.xs },
     fab: {
         position: 'absolute',
         right: Spacing.lg,

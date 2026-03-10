@@ -1,434 +1,531 @@
-import React, { useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+/**
+ * ShareCardGenerator — Template-driven share card renderer.
+ *
+ * All templates use gradient backgrounds for a clean, premium look.
+ * Adaptive font sizing + adjustsFontSizeToFit prevent overflow on long verses.
+ *
+ * Used inside PremiumShareSheet's ViewShot to capture the final share image.
+ */
+import React from 'react';
+import { View, Text, StyleSheet, Dimensions, DimensionValue } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import ViewShot from 'react-native-view-shot';
-import { Spacing, BorderRadius } from '../../../core/theme/DesignSystem';
-import { ShareService } from '../infrastructure/ShareService';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { ShareCardData } from '../domain/ShareTemplateTypes';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = SCREEN_WIDTH - Spacing.xl * 2;
-const CARD_PADDING = Spacing.xl;
+const SCREEN_WIDTH = Dimensions.get('window').width;
+const CARD_WIDTH = SCREEN_WIDTH - 48;
+const CARD_ASPECT = 4 / 5;
+const CARD_HEIGHT = CARD_WIDTH * CARD_ASPECT;
 
-// ── Types ────────────────────────────────────────────────────────────
-export interface VerseShareData {
-    surahName: string;
-    surahNameArabic: string;
-    verseNumber: number;
-    arabicText: string;
-    englishText?: string;
-}
-
-export interface KhatmaShareData {
-    completedDate: string;
-    totalDays: number;
-}
-
-export interface StreakShareData {
-    streakCount: number;
-}
-
-export type ShareCardType = 'verse' | 'khatma' | 'streak';
-
-// ── Ref handle ───────────────────────────────────────────────────────
-export interface ShareCardHandle {
-    capture: () => Promise<void>;
-}
-
-// ── Component ────────────────────────────────────────────────────────
 interface ShareCardGeneratorProps {
-    type: ShareCardType;
-    verseData?: VerseShareData;
-    khatmaData?: KhatmaShareData;
-    streakData?: StreakShareData;
+    templateId: string;
+    data: ShareCardData;
 }
 
-export const ShareCardGenerator = forwardRef<ShareCardHandle, ShareCardGeneratorProps>(
-    ({ type, verseData, khatmaData, streakData }, ref) => {
-        const viewShotRef = useRef<ViewShot>(null);
+// ═══════════════════════════════════════════════════════════════════════════
+// ADAPTIVE TEXT SIZING
+// ═══════════════════════════════════════════════════════════════════════════
 
-        const capture = useCallback(async () => {
-            if (!viewShotRef.current) return;
-            try {
-                const uri = await (viewShotRef.current as any).capture();
-                if (uri) {
-                    await ShareService.shareImage(uri, 'Shared from QuranNotes');
-                }
-            } catch (error) {
-                console.error('Share card capture failed:', error);
-            }
-        }, []);
+const getArabicSizing = (text: string | undefined) => {
+    const len = text?.length ?? 0;
+    if (len <= 30) return { fontSize: 26, lineHeight: 44 };
+    if (len <= 60) return { fontSize: 24, lineHeight: 40 };
+    if (len <= 100) return { fontSize: 21, lineHeight: 36 };
+    if (len <= 160) return { fontSize: 19, lineHeight: 32 };
+    return { fontSize: 17, lineHeight: 28 };
+};
 
-        useImperativeHandle(ref, () => ({ capture }), [capture]);
+const getEnglishSizing = (text: string | undefined) => {
+    const len = text?.length ?? 0;
+    if (len <= 50) return { fontSize: 15, lineHeight: 22 };
+    if (len <= 100) return { fontSize: 14, lineHeight: 20 };
+    if (len <= 180) return { fontSize: 13, lineHeight: 19 };
+    return { fontSize: 12, lineHeight: 18 };
+};
 
-        return (
-            <View style={styles.offscreen}>
-                <ViewShot
-                    ref={viewShotRef}
-                    options={{ format: 'png', quality: 1 }}
-                    style={styles.shotContainer}
+// ═══════════════════════════════════════════════════════════════════════════
+// BRANDING WATERMARK
+// ═══════════════════════════════════════════════════════════════════════════
+
+const CONTENT_LABEL: Record<string, string> = {
+    hadith: 'Hadith of the Day',
+    verse: 'Verse of the Day',
+    'mood-verse': 'Verse for You',
+};
+
+const Watermark: React.FC<{ color: string; contentType?: string }> = ({ color, contentType }) => (
+    <View style={styles.watermark}>
+        {contentType && CONTENT_LABEL[contentType] ? (
+            <Text style={[styles.contentLabel, { color }]}>{CONTENT_LABEL[contentType]}</Text>
+        ) : null}
+        <View style={styles.watermarkRow}>
+            <MaterialCommunityIcons name="book-open-page-variant" size={10} color={color} />
+            <Text style={[styles.watermarkText, { color }]}>QuranNotes</Text>
+        </View>
+    </View>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SHARED CONTENT RENDERER — DRY across all templates
+// ═══════════════════════════════════════════════════════════════════════════
+
+interface ContentProps {
+    data: ShareCardData;
+    arabicColor: string;
+    englishColor: string;
+    refColor: string;
+    dividerColor: string;
+    statsTextColor: string;
+    statsAccentColor: string;
+    statsBgColor: string;
+}
+
+const CardContent: React.FC<ContentProps> = ({
+    data, arabicColor, englishColor, refColor, dividerColor,
+    statsTextColor, statsAccentColor, statsBgColor,
+}) => {
+    const isVerseOnly = data.type === 'verse' || data.type === 'mood-verse';
+    const arSz = getArabicSizing(data.arabicText);
+    const enSz = getEnglishSizing(data.englishText);
+    const arabicFontStyle = data.quranFontFamily
+        ? { fontFamily: data.quranFontFamily }
+        : { fontWeight: '700' as const };
+    return (
+        <View style={styles.contentArea}>
+            {data.arabicText ? (
+                <Text
+                    style={[
+                        styles.arabic,
+                        {
+                            color: arabicColor,
+                            fontSize: isVerseOnly ? Math.min(arSz.fontSize + 4, 32) : arSz.fontSize,
+                            lineHeight: isVerseOnly ? Math.min(arSz.lineHeight + 8, 56) : arSz.lineHeight,
+                        },
+                        arabicFontStyle,
+                    ]}
+                    adjustsFontSizeToFit
+                    numberOfLines={isVerseOnly ? 12 : 8}
                 >
-                    {type === 'verse' && verseData && <VerseCard data={verseData} />}
-                    {type === 'khatma' && khatmaData && <KhatmaCard data={khatmaData} />}
-                    {type === 'streak' && streakData && <StreakCard data={streakData} />}
-                </ViewShot>
-            </View>
-        );
-    },
-);
+                    {data.arabicText}
+                </Text>
+            ) : null}
 
-ShareCardGenerator.displayName = 'ShareCardGenerator';
+            <View style={[styles.thinDivider, { backgroundColor: dividerColor }]} />
 
-// ═══════════════════════════════════════════════════════════════════════
-// Verse Card
-// ═══════════════════════════════════════════════════════════════════════
-const VerseCard = ({ data }: { data: VerseShareData }) => (
-    <LinearGradient
-        colors={['#0F172A', '#1E293B', '#1A1340']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.card}
-    >
-        {/* Decorative top gold accent */}
-        <LinearGradient
-            colors={['#C9983A', '#E8C872', '#C9983A']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.goldStripe}
+            {!isVerseOnly && data.englishText ? (
+                <Text
+                    style={[styles.english, { color: englishColor, fontSize: enSz.fontSize, lineHeight: enSz.lineHeight }]}
+                    adjustsFontSizeToFit
+                    numberOfLines={6}
+                >
+                    {data.englishText}
+                </Text>
+            ) : null}
+
+            {renderReference(data, refColor)}
+
+            {data.type === 'khatma' && data.stats ? (
+                <StatsRow stats={data.stats} textColor={statsTextColor} accentColor={statsAccentColor} bgColor={statsBgColor} />
+            ) : null}
+        </View>
+    );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TEMPLATES — All gradient-based, no ornament lines
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── 1. Minimal Light — soft warm gradient ───────────────────────────────
+
+const MinimalLight: React.FC<{ data: ShareCardData }> = ({ data }) => (
+    <LinearGradient colors={['#FAF8FF', '#F0ECFF', '#EDE5FF']} style={styles.card} start={{ x: 0, y: 0 }} end={{ x: 0.3, y: 1 }}>
+        <CardContent
+            data={data}
+            arabicColor="#1C1033"
+            englishColor="#3D3356"
+            refColor="#6246EA"
+            dividerColor="rgba(98, 70, 234, 0.15)"
+            statsTextColor="#1C1033"
+            statsAccentColor="#6246EA"
+            statsBgColor="rgba(98, 70, 234, 0.06)"
         />
-
-        {/* Corner ornaments */}
-        <Text style={styles.cornerOrnamentLeft}>✦</Text>
-        <Text style={styles.cornerOrnamentRight}>✦</Text>
-
-        {/* Bismillah */}
-        <Text style={styles.ornament}>﷽</Text>
-
-        {/* Surah name */}
-        <Text style={styles.surahArabic}>{data.surahNameArabic}</Text>
-        <Text style={styles.surahEnglish}>
-            {data.surahName.toUpperCase()} · VERSE {data.verseNumber}
-        </Text>
-
-        {/* Arabic verse — glassmorphic container */}
-        <View style={styles.verseContainer}>
-            <View style={styles.verseInnerBorder}>
-                <Text style={styles.arabicVerse}>{data.arabicText}</Text>
-            </View>
-        </View>
-
-        {/* English translation */}
-        {data.englishText && (
-            <Text style={styles.englishTranslation} numberOfLines={6}>
-                &quot;{data.englishText}&quot;
-            </Text>
-        )}
-
-        {/* Decorative divider */}
-        <View style={styles.decorativeDivider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerStar}>✦</Text>
-            <View style={styles.dividerLine} />
-        </View>
-
-        {/* Branding — prominent with tagline */}
-        <View style={styles.brandRow}>
-            <View style={styles.brandDot} />
-            <Text style={styles.brandText}>QuranNotes</Text>
-        </View>
-        <Text style={styles.brandTagline}>Read · Reflect · Remember</Text>
+        <Watermark color="#94A3B8" contentType={data.type} />
     </LinearGradient>
 );
 
-// ═══════════════════════════════════════════════════════════════════════
-// Khatma Completion Card
-// ═══════════════════════════════════════════════════════════════════════
-const KhatmaCard = ({ data }: { data: KhatmaShareData }) => (
-    <LinearGradient
-        colors={['#1A2421', '#2C4035', '#1B3022']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.card}
-    >
-        <LinearGradient
-            colors={['#4CAF50', '#81C784', '#4CAF50']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.goldStripe}
+// ── 2. Minimal Dark — deep ink gradient ─────────────────────────────────
+
+const MinimalDark: React.FC<{ data: ShareCardData }> = ({ data }) => (
+    <LinearGradient colors={['#09090B', '#111115', '#18181D']} style={styles.card} start={{ x: 0, y: 0 }} end={{ x: 0.5, y: 1 }}>
+        <CardContent
+            data={data}
+            arabicColor="#FAFAFA"
+            englishColor="#D4D4D8"
+            refColor="#A78BFA"
+            dividerColor="rgba(167, 139, 250, 0.2)"
+            statsTextColor="#FAFAFA"
+            statsAccentColor="#A78BFA"
+            statsBgColor="rgba(167, 139, 250, 0.08)"
         />
-
-        <Ionicons name="trophy-outline" size={56} color="#FFFFFF" style={{ marginTop: Spacing.lg, marginBottom: Spacing.md }} />
-        <Text style={styles.achievementTitle}>Khatma Complete!</Text>
-        <Text style={styles.achievementSubtitle}>
-            Completed the entire Quran
-        </Text>
-
-        <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{data.totalDays}</Text>
-                <Text style={styles.statLabel}>Days</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-                <Text style={styles.statNumber}>30</Text>
-                <Text style={styles.statLabel}>Juz</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-                <Text style={styles.statNumber}>114</Text>
-                <Text style={styles.statLabel}>Surahs</Text>
-            </View>
-        </View>
-
-        <Text style={styles.achievementDate}>{data.completedDate}</Text>
-
-        <View style={styles.brandRow}>
-            <View style={[styles.brandDot, { backgroundColor: '#4CAF50' }]} />
-            <Text style={styles.brandText}>QuranNotes</Text>
-        </View>
+        <Watermark color="#52525B" contentType={data.type} />
     </LinearGradient>
 );
 
-// ═══════════════════════════════════════════════════════════════════════
-// Streak Milestone Card
-// ═══════════════════════════════════════════════════════════════════════
-const StreakCard = ({ data }: { data: StreakShareData }) => (
-    <LinearGradient
-        colors={['#2E1610', '#4A2518', '#381A12']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.card}
-    >
-        <LinearGradient
-            colors={['#FF6347', '#FF8C69', '#FF6347']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.goldStripe}
+// ── 3. Classic Gold — warm amber gradient ───────────────────────────────
+
+const ClassicGold: React.FC<{ data: ShareCardData }> = ({ data }) => (
+    <LinearGradient colors={['#422006', '#78350F', '#92400E']} style={styles.card} start={{ x: 0, y: 0 }} end={{ x: 0.5, y: 1 }}>
+        <CardContent
+            data={data}
+            arabicColor="#FEF3C7"
+            englishColor="#FDE68A"
+            refColor="#FBBF24"
+            dividerColor="rgba(251, 191, 36, 0.25)"
+            statsTextColor="#FEF3C7"
+            statsAccentColor="#FBBF24"
+            statsBgColor="rgba(251, 191, 36, 0.1)"
         />
-
-        <Ionicons name="flame-outline" size={56} color="#FF6347" style={{ marginTop: Spacing.lg, marginBottom: Spacing.md }} />
-        <Text style={styles.achievementTitle}>
-            {data.streakCount} Day Streak!
-        </Text>
-        <Text style={styles.achievementSubtitle}>
-            {data.streakCount >= 30
-                ? 'A month of consistent Quran reading!'
-                : data.streakCount >= 7
-                    ? 'A full week of daily Quran reading!'
-                    : 'Building a beautiful habit with the Quran'}
-        </Text>
-
-        <Text style={[styles.streakBigNumber, { color: '#FF8C69' }]}>
-            {data.streakCount}
-        </Text>
-        <Text style={styles.streakLabel}>consecutive days</Text>
-
-        <View style={styles.brandRow}>
-            <View style={[styles.brandDot, { backgroundColor: '#FF6347' }]} />
-            <Text style={styles.brandText}>QuranNotes</Text>
-        </View>
+        <Watermark color="rgba(254, 243, 199, 0.5)" contentType={data.type} />
     </LinearGradient>
 );
 
-// ═══════════════════════════════════════════════════════════════════════
-// Styles
-// ═══════════════════════════════════════════════════════════════════════
+// ── 4. Cosmic Night (Premium) — deep indigo with stars ──────────────────
+
+const CosmicNight: React.FC<{ data: ShareCardData }> = ({ data }) => (
+    <LinearGradient colors={['#0F0A2A', '#1E1A2E', '#2D1F6E']} style={styles.card} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+        {STAR_POSITIONS.map((star, i) => (
+            <View
+                key={i}
+                style={[styles.starDot, {
+                    top: star.top as DimensionValue,
+                    left: star.left as DimensionValue,
+                    width: star.size,
+                    height: star.size,
+                    borderRadius: star.size / 2,
+                    opacity: star.opacity,
+                }]}
+            />
+        ))}
+        <CardContent
+            data={data}
+            arabicColor="#E9D5FF"
+            englishColor="#C4B5FD"
+            refColor="#A78BFA"
+            dividerColor="rgba(167, 139, 250, 0.25)"
+            statsTextColor="#E9D5FF"
+            statsAccentColor="#A78BFA"
+            statsBgColor="rgba(167, 139, 250, 0.1)"
+        />
+        <Watermark color="rgba(167, 139, 250, 0.5)" contentType={data.type} />
+    </LinearGradient>
+);
+
+const STAR_POSITIONS = [
+    { top: '8%', left: '12%', size: 3, opacity: 0.6 },
+    { top: '15%', left: '78%', size: 2, opacity: 0.4 },
+    { top: '22%', left: '45%', size: 2.5, opacity: 0.5 },
+    { top: '35%', left: '88%', size: 2, opacity: 0.3 },
+    { top: '5%', left: '55%', size: 3, opacity: 0.5 },
+    { top: '12%', left: '30%', size: 2, opacity: 0.4 },
+    { top: '42%', left: '8%', size: 2.5, opacity: 0.3 },
+    { top: '50%', left: '72%', size: 2, opacity: 0.5 },
+];
+
+// ── 5. Emerald Serenity (Premium) — deep forest gradient ────────────────
+
+const EmeraldSerenity: React.FC<{ data: ShareCardData }> = ({ data }) => (
+    <LinearGradient colors={['#022C22', '#064E3B', '#065F46']} style={styles.card} start={{ x: 0, y: 0 }} end={{ x: 0.5, y: 1 }}>
+        <View style={[styles.cornerAccent, styles.cornerTopRight, { borderColor: 'rgba(52, 211, 153, 0.15)' }]} />
+        <View style={[styles.cornerAccent, styles.cornerBottomLeft, { borderColor: 'rgba(52, 211, 153, 0.15)' }]} />
+        <CardContent
+            data={data}
+            arabicColor="#D1FAE5"
+            englishColor="#A7F3D0"
+            refColor="#34D399"
+            dividerColor="rgba(52, 211, 153, 0.25)"
+            statsTextColor="#D1FAE5"
+            statsAccentColor="#34D399"
+            statsBgColor="rgba(52, 211, 153, 0.1)"
+        />
+        <Watermark color="rgba(167, 243, 208, 0.45)" contentType={data.type} />
+    </LinearGradient>
+);
+
+// ── 6. Royal Calligraphy (Premium) — indigo-gold with frame ─────────────
+
+const RoyalCalligraphy: React.FC<{ data: ShareCardData }> = ({ data }) => (
+    <LinearGradient colors={['#0F0B2A', '#1A1340', '#251E50']} style={styles.card} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+        <View style={styles.royalFrame}>
+            <CardContent
+                data={data}
+                arabicColor="#FFFFFF"
+                englishColor="#E2E8F0"
+                refColor="#F5C542"
+                dividerColor="rgba(245, 197, 66, 0.2)"
+                statsTextColor="#FFFFFF"
+                statsAccentColor="#F5C542"
+                statsBgColor="rgba(245, 197, 66, 0.08)"
+            />
+        </View>
+        <Watermark color="rgba(245, 197, 66, 0.45)" contentType={data.type} />
+    </LinearGradient>
+);
+
+// ── 7. Sunset Warmth (Premium) — deep terracotta gradient ───────────────
+
+const SunsetWarmth: React.FC<{ data: ShareCardData }> = ({ data }) => (
+    <LinearGradient colors={['#431407', '#7C2D12', '#9A3412']} style={styles.card} start={{ x: 0, y: 0 }} end={{ x: 0.3, y: 1 }}>
+        <View style={styles.sunGlow} />
+        <CardContent
+            data={data}
+            arabicColor="#FFF7ED"
+            englishColor="#FFEDD5"
+            refColor="#FBBF24"
+            dividerColor="rgba(251, 191, 36, 0.25)"
+            statsTextColor="#FFF7ED"
+            statsAccentColor="#FBBF24"
+            statsBgColor="rgba(251, 191, 36, 0.1)"
+        />
+        <Watermark color="rgba(254, 215, 170, 0.45)" contentType={data.type} />
+    </LinearGradient>
+);
+
+// ── 8. Lavender Dreams (Premium) — rich purple gradient ─────────────────
+
+const LavenderDreams: React.FC<{ data: ShareCardData }> = ({ data }) => (
+    <LinearGradient colors={['#4C1D95', '#6D28D9', '#7C3AED']} style={styles.card} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+        <View style={[styles.dreamCircle, { top: '5%', left: '10%', backgroundColor: 'rgba(255, 255, 255, 0.06)' }]} />
+        <View style={[styles.dreamCircle, { top: '55%', right: '-5%', backgroundColor: 'rgba(255, 255, 255, 0.04)', width: 120, height: 120, borderRadius: 60 }]} />
+        <CardContent
+            data={data}
+            arabicColor="#FFFFFF"
+            englishColor="#EDE9FE"
+            refColor="#DDD6FE"
+            dividerColor="rgba(255, 255, 255, 0.2)"
+            statsTextColor="#FFFFFF"
+            statsAccentColor="#DDD6FE"
+            statsBgColor="rgba(255, 255, 255, 0.08)"
+        />
+        <Watermark color="rgba(255, 255, 255, 0.5)" contentType={data.type} />
+    </LinearGradient>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SHARED SUB-COMPONENTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+const renderReference = (data: ShareCardData, color: string) => {
+    const ref = data.reference || data.hadithSource;
+    if (!ref) return null;
+    return (
+        <View style={styles.refContainer}>
+            {data.narrator ? (
+                <Text style={[styles.narrator, { color, opacity: 0.7 }]} numberOfLines={1}>{data.narrator}</Text>
+            ) : null}
+            <Text style={[styles.reference, { color }]} numberOfLines={1}>{ref}</Text>
+        </View>
+    );
+};
+
+const StatsRow: React.FC<{
+    stats: { label: string; value: string | number }[];
+    textColor: string;
+    accentColor: string;
+    bgColor: string;
+}> = ({ stats, textColor, accentColor, bgColor }) => (
+    <View style={[styles.statsRow, { backgroundColor: bgColor }]}>
+        {stats.map((stat, i) => (
+            <React.Fragment key={stat.label}>
+                {i > 0 && <View style={[styles.statDivider, { backgroundColor: accentColor, opacity: 0.3 }]} />}
+                <View style={styles.statItem}>
+                    <Text style={[styles.statValue, { color: accentColor }]}>{stat.value}</Text>
+                    <Text style={[styles.statLabel, { color: textColor, opacity: 0.7 }]}>{stat.label}</Text>
+                </View>
+            </React.Fragment>
+        ))}
+    </View>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TEMPLATE MAP & MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
+
+const TEMPLATE_MAP: Record<string, React.FC<{ data: ShareCardData }>> = {
+    'minimal-light': MinimalLight,
+    'minimal-dark': MinimalDark,
+    'classic-gold': ClassicGold,
+    'cosmic-night': CosmicNight,
+    'emerald-serenity': EmeraldSerenity,
+    'royal-calligraphy': RoyalCalligraphy,
+    'sunset-warmth': SunsetWarmth,
+    'lavender-dreams': LavenderDreams,
+};
+
+export const ShareCardGenerator: React.FC<ShareCardGeneratorProps> = ({ templateId, data }) => {
+    const TemplateComponent = TEMPLATE_MAP[templateId] ?? MinimalLight;
+    return <TemplateComponent data={data} />;
+};
+
+export default ShareCardGenerator;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SHARED STYLES
+// ═══════════════════════════════════════════════════════════════════════════
+
 const styles = StyleSheet.create({
-    offscreen: {
-        position: 'absolute',
-        left: -9999,
-        top: -9999,
-        opacity: 0,
-    },
-    shotContainer: {
-        width: CARD_WIDTH,
-    },
     card: {
         width: CARD_WIDTH,
-        borderRadius: BorderRadius.xl,
-        padding: CARD_PADDING,
-        alignItems: 'center',
+        height: CARD_HEIGHT,
+        borderRadius: 24,
         overflow: 'hidden',
-    },
-    goldStripe: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: 4,
-    },
-    ornament: {
-        fontSize: 32,
-        color: '#D4A853',
-        marginTop: Spacing.md,
-        marginBottom: Spacing.xs,
-    },
-    surahArabic: {
-        fontSize: 28,
-        color: '#FFFFFF',
-        fontWeight: '600',
-        marginBottom: Spacing.xs,
-    },
-    surahEnglish: {
-        fontSize: 14,
-        color: '#A8B2D1',
-        letterSpacing: 1,
-        textTransform: 'uppercase',
-        marginBottom: Spacing.lg,
-    },
-    verseContainer: {
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        borderRadius: BorderRadius.lg,
-        padding: Spacing.lg,
-        width: '100%',
-        marginBottom: Spacing.md,
-    },
-    arabicVerse: {
-        fontSize: 26,
-        color: '#FFFFFF',
-        textAlign: 'right',
-        lineHeight: 48,
-    },
-    englishTranslation: {
-        fontSize: 15,
-        color: '#8892B0',
-        textAlign: 'center',
-        fontStyle: 'italic',
-        lineHeight: 24,
-        paddingHorizontal: Spacing.sm,
-        marginBottom: Spacing.lg,
-    },
-    brandRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: Spacing.lg,
-        paddingTop: Spacing.md,
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(255,255,255,0.1)',
-        width: '100%',
         justifyContent: 'center',
-    },
-    brandDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: '#D4A853',
-        marginRight: Spacing.xs,
-    },
-    brandText: {
-        fontSize: 13,
-        color: '#8892B0',
-        letterSpacing: 2,
-        textTransform: 'uppercase',
-        fontWeight: '600',
-    },
-    brandTagline: {
-        fontSize: 11,
-        color: '#5B7FFF',
-        letterSpacing: 1,
-        fontWeight: '500',
-        marginTop: 4,
-    },
-    cornerOrnamentLeft: {
-        position: 'absolute',
-        top: 16,
-        left: 16,
-        fontSize: 12,
-        color: '#C9983A',
-        opacity: 0.5,
-    },
-    cornerOrnamentRight: {
-        position: 'absolute',
-        top: 16,
-        right: 16,
-        fontSize: 12,
-        color: '#C9983A',
-        opacity: 0.5,
-    },
-    verseInnerBorder: {
-        borderWidth: 1,
-        borderColor: 'rgba(201,152,58,0.2)',
-        borderRadius: BorderRadius.md,
-        padding: Spacing.lg,
-    },
-    decorativeDivider: {
-        flexDirection: 'row',
         alignItems: 'center',
-        width: '100%',
-        marginTop: Spacing.md,
     },
-    dividerLine: {
+
+    // Content area — paddingBottom reserves space for the watermark
+    contentArea: {
         flex: 1,
-        height: 1,
-        backgroundColor: 'rgba(255,255,255,0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 28,
+        paddingTop: 24,
+        paddingBottom: 40,
     },
-    dividerStar: {
-        fontSize: 10,
-        color: '#C9983A',
-        marginHorizontal: Spacing.sm,
-        opacity: 0.6,
-    },
-    achievementEmoji: {
-        fontSize: 56,
-        marginTop: Spacing.lg,
-        marginBottom: Spacing.md,
-    },
-    achievementTitle: {
-        fontSize: 28,
-        color: '#FFFFFF',
-        fontWeight: '800',
+
+    // Text
+    arabic: {
         textAlign: 'center',
-        marginBottom: Spacing.xs,
+        marginBottom: 8,
+        writingDirection: 'rtl',
     },
-    achievementSubtitle: {
-        fontSize: 15,
-        color: '#A8B2D1',
+    english: {
+        fontSize: 14,
+        lineHeight: 20,
         textAlign: 'center',
-        lineHeight: 22,
-        marginBottom: Spacing.xl,
+        fontWeight: '500',
+        marginBottom: 8,
     },
+
+    // Reference
+    refContainer: {
+        alignItems: 'center',
+        marginTop: 6,
+    },
+    reference: {
+        fontSize: 12,
+        fontWeight: '700',
+        letterSpacing: 0.5,
+        textAlign: 'center',
+    },
+    narrator: {
+        fontSize: 11,
+        fontWeight: '500',
+        marginBottom: 2,
+        textAlign: 'center',
+    },
+
+    // Stats
     statsRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: Spacing.lg,
+        borderRadius: 14,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        marginTop: 12,
+        gap: 0,
     },
-    statItem: {
-        alignItems: 'center',
-        paddingHorizontal: Spacing.lg,
-    },
-    statNumber: {
-        fontSize: 32,
-        color: '#FFFFFF',
-        fontWeight: '800',
-    },
+    statItem: { flex: 1, alignItems: 'center' },
+    statValue: { fontSize: 18, fontWeight: '800' },
     statLabel: {
-        fontSize: 12,
-        color: '#8892B0',
+        fontSize: 9,
+        fontWeight: '600',
+        marginTop: 2,
         textTransform: 'uppercase',
         letterSpacing: 1,
-        marginTop: Spacing.xs,
     },
-    statDivider: {
-        width: 1,
-        height: 40,
-        backgroundColor: 'rgba(255,255,255,0.15)',
+    statDivider: { width: 1, height: 20 },
+
+    // Divider
+    thinDivider: {
+        width: 40,
+        height: 2,
+        borderRadius: 1,
+        marginVertical: 10,
     },
-    achievementDate: {
-        fontSize: 13,
-        color: '#8892B0',
-        marginBottom: Spacing.sm,
+
+    // Royal frame (used by Royal Calligraphy only)
+    royalFrame: {
+        flex: 1,
+        width: '100%',
+        borderWidth: 1,
+        borderColor: 'rgba(245, 197, 66, 0.15)',
+        borderRadius: 20,
+        margin: 10,
     },
-    streakBigNumber: {
-        fontSize: 72,
-        fontWeight: '900',
-        marginBottom: Spacing.xs,
+
+    // Decorative elements
+    starDot: {
+        position: 'absolute',
+        backgroundColor: '#A78BFA',
     },
-    streakLabel: {
-        fontSize: 14,
-        color: '#A8B2D1',
+    cornerAccent: {
+        position: 'absolute',
+        width: 50,
+        height: 50,
+        borderWidth: 1,
+    },
+    cornerTopRight: {
+        top: 16,
+        right: 16,
+        borderBottomWidth: 0,
+        borderLeftWidth: 0,
+        borderTopRightRadius: 12,
+    },
+    cornerBottomLeft: {
+        bottom: 16,
+        left: 16,
+        borderTopWidth: 0,
+        borderRightWidth: 0,
+        borderBottomLeftRadius: 12,
+    },
+    sunGlow: {
+        position: 'absolute',
+        top: '-15%',
+        right: '-10%',
+        width: 140,
+        height: 140,
+        borderRadius: 70,
+        backgroundColor: 'rgba(251, 191, 36, 0.1)',
+    },
+    dreamCircle: {
+        position: 'absolute',
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+    },
+
+    // Watermark — positioned in the reserved paddingBottom zone
+    watermark: {
+        position: 'absolute',
+        bottom: 10,
+        alignItems: 'center',
+        gap: 2,
+    },
+    contentLabel: {
+        fontSize: 9,
+        fontWeight: '700',
+        letterSpacing: 1.2,
         textTransform: 'uppercase',
-        letterSpacing: 2,
-        marginBottom: Spacing.lg,
+        opacity: 0.7,
+    },
+    watermarkRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    watermarkText: {
+        fontSize: 10,
+        fontWeight: '600',
+        letterSpacing: 0.5,
     },
 });

@@ -18,6 +18,7 @@ interface NoteContextType {
     loading: boolean;
     saveNote: (note: Note) => Promise<void>;
     deleteNote: (id: string) => Promise<void>;
+    togglePin: (id: string) => Promise<void>;
     getNoteForVerse: (surah: number, verse: number) => Promise<Note | null>;
     getNoteById: (id: string) => Promise<Note | null>;
     refreshNotes: () => Promise<void>;
@@ -93,6 +94,14 @@ export function NoteProvider({ children }: { children: React.ReactNode }) {
         return await getByIdUseCase.execute(id);
     };
 
+    const togglePin = async (id: string) => {
+        const note = notes.find(n => n.id === id);
+        if (!note) return;
+        const updated = { ...note, isPinned: !note.isPinned, updatedAt: new Date() };
+        await saveUseCase.execute(updated);
+        await refreshNotes();
+    };
+
     return (
         <NoteContext.Provider
             value={{
@@ -100,6 +109,7 @@ export function NoteProvider({ children }: { children: React.ReactNode }) {
                 loading,
                 saveNote,
                 deleteNote,
+                togglePin,
                 getNoteForVerse,
                 getNoteById,
                 refreshNotes,

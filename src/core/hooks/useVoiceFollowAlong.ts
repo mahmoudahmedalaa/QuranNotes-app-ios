@@ -87,7 +87,7 @@ export function useVoiceFollowAlong(
                 setSessionsUsedToday(parseInt(stored, 10));
             }
         } catch (error) {
-            console.error('Failed to load sessions:', error);
+            if (__DEV__) console.error('Failed to load sessions:', error);
         }
     };
 
@@ -100,7 +100,7 @@ export function useVoiceFollowAlong(
             await AsyncStorage.setItem(key, newCount.toString());
             setSessionsUsedToday(newCount);
         } catch (error) {
-            console.error('Failed to increment sessions:', error);
+            if (__DEV__) console.error('Failed to increment sessions:', error);
         }
     };
 
@@ -157,7 +157,7 @@ export function useVoiceFollowAlong(
     }, [verses, matchedVerseId]);
 
     const handleError = useCallback((error: string) => {
-        console.warn('Voice recognition error:', error);
+        if (__DEV__) console.warn('Voice recognition error:', error);
         // Don't show alert for "not available" — expected on simulator
         if (!error.includes('not available')) {
             Alert.alert('Recognition Error', error);
@@ -224,7 +224,7 @@ export function useVoiceFollowAlong(
             try {
                 await repository.current.saveSession(session);
             } catch (error) {
-                console.error('Failed to save session:', error);
+                if (__DEV__) console.error('Failed to save session:', error);
             }
         }
 

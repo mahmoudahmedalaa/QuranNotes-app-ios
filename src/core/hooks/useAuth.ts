@@ -28,7 +28,7 @@ export const useAuth = () => {
         try {
             await signInAnon.execute();
         } catch (e) {
-            console.error(e);
+            if (__DEV__) console.error(e);
         }
     };
 
