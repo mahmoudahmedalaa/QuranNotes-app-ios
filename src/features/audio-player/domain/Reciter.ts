@@ -113,6 +113,28 @@ export const RECITERS: Reciter[] = [
         cdnFolder: 'Ali_Jaber_64kbps',
         // No quranComId — falls back to per-verse everyayah.com
     },
+    // ── New reciters added from Quran.com API (full-surah gapless available) ──
+    {
+        id: 'shatri',
+        name: 'Abu Bakr Al-Shatri',
+        subfolder: 'ar.shatri',
+        cdnFolder: 'Abu_Bakr_Ash-Shaatree_128kbps',
+        quranComId: 4,
+    },
+    {
+        id: 'rifai',
+        name: 'Hani Ar-Rifai',
+        subfolder: 'ar.rifai',
+        cdnFolder: 'Hani_Rifai_192kbps',
+        quranComId: 5,
+    },
+    {
+        id: 'tablawi',
+        name: 'Mohamed Al-Tablawi',
+        subfolder: 'ar.tablawi',
+        cdnFolder: 'Mohammad_al_Tablaway_128kbps',
+        quranComId: 11,
+    },
 ];
 
 export const DEFAULT_RECITER = RECITERS[0];

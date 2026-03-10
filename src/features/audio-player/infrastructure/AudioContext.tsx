@@ -108,8 +108,13 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         startVerseNum?: number,
     ): Promise<boolean> => {
         try {
+            console.log(`[AUDIO-DEBUG] Fetching chapter audio: reciterId=${quranComId}, surah=${surahNum}`);
             const chapterAudio = await getChapterAudio(quranComId, surahNum);
-            if (!chapterAudio) return false; // API failed — caller should fallback
+            if (!chapterAudio) {
+                console.log('[AUDIO-DEBUG] getChapterAudio returned NULL — API failed');
+                return false;
+            }
+            console.log(`[AUDIO-DEBUG] Got audio: url=${chapterAudio.audioUrl.substring(0, 60)}..., timestamps=${chapterAudio.timestamps.length}`);
 
             const startVerseKey = startVerseNum ? `${surahNum}:${startVerseNum}` : undefined;
             await player.loadFullSurah(
@@ -120,9 +125,10 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 surahName,
                 startVerseKey,
             );
+            console.log('[AUDIO-DEBUG] loadFullSurah completed successfully ✅');
             return true;
         } catch (e) {
-            if (__DEV__) console.warn('[AudioContext] Full-surah playback failed, will fallback:', e);
+            console.warn('[AUDIO-DEBUG] Full-surah playback EXCEPTION:', e);
             return false;
         }
     }, []);
@@ -189,7 +195,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // ── Listen to player events ──
     useEffect(() => {
-        const unsubscribe = player.addListener((status: PlaybackStatus) => {
+        const unsubscribe = player.addListener(async (status: PlaybackStatus) => {
             setIsPlaying(status.isPlaying);
 
             // Full-surah mode: verse detection via timestamp polling
@@ -222,8 +228,67 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 }
             }
 
-            // Queue ended — save completed playback info BEFORE clearing state
+            /**
+             * ════════════════════════════════════════════════════════════════
+             * BULLETPROOF GUARD: Queue completion — clear playback state
+             * ════════════════════════════════════════════════════════════════
+             *
+             * ⚠️  DO NOT REMOVE THIS GUARD  ⚠️
+             *
+             * This is the SECOND line of defense against premature state clearing.
+             * The FIRST line is in AudioPlayerService.ts (subscribeToEvents).
+             *
+             * Before clearing all playback state, we independently verify with
+             * the native RNTP player that playback is ACTUALLY finished:
+             *   1. Check activeTrackIndex is at or past the last track
+             *   2. Check playback state is NOT still Playing
+             *
+             * This prevents future regressions where AudioPlayerService might
+             * accidentally emit didJustFinish mid-queue due to:
+             *   - Native rebuild timing changes (March 2026 regression)
+             *   - RNTP version upgrades
+             *   - Code modifications by future developers or AI
+             *
+             * If the guard rejects the didJustFinish, it logs a warning
+             * and resumes playback instead of clearing state.
+             * ════════════════════════════════════════════════════════════════
+             */
             if (status.didJustFinish) {
+                // ── SAFETY CHECK: independently verify with the native player ──
+                try {
+                    const TrackPlayer = require('react-native-track-player').default;
+                    const queue = await TrackPlayer.getQueue();
+                    const activeIdx = await TrackPlayer.getActiveTrackIndex();
+                    const tpState = await TrackPlayer.getPlaybackState();
+                    const { State: TPState } = require('react-native-track-player');
+
+                    const isStillPlaying = tpState?.state === TPState.Playing;
+                    const isAtEnd = activeIdx === undefined ||
+                        activeIdx === null ||
+                        queue.length === 0 ||
+                        activeIdx >= queue.length - 1;
+
+                    if (!isAtEnd || isStillPlaying) {
+                        // ⛔ BLOCKED: native player says queue is NOT exhausted.
+                        // This is a spurious didJustFinish — DO NOT clear state.
+                        if (__DEV__) {
+                            console.warn(
+                                `[AudioContext] BLOCKED spurious didJustFinish! ` +
+                                `activeIdx=${activeIdx}, queueLen=${queue.length}, ` +
+                                `state=${tpState?.state}. Resuming playback.`
+                            );
+                        }
+                        // Try to resume playback since we're mid-queue
+                        try { await TrackPlayer.play(); } catch { /* best effort */ }
+                        return; // ← EXIT: do NOT clear state
+                    }
+                } catch {
+                    // If we can't verify, fall through to normal handling.
+                    // This is conservative: better to clear state than leave
+                    // a zombie session.
+                }
+
+                // ── Verified: playback genuinely finished ──
                 const finishedSurah = currentSurahNumRef.current;
                 const finishedPlaylist = playlistRef.current;
                 const finishedName = currentSurahNameRef.current;
@@ -361,18 +426,25 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     setPlayingVerse({ surah: surah.number, verse: surah.verses[0].number });
                     const { cdnFolder, name, reciter } = getReciterInfo();
 
+                    console.log(`[AUDIO-DEBUG] playSurah: reciter=${reciter.id}, quranComId=${reciter.quranComId}, hasFullSurah=${hasFullSurahAudio(reciter)}`);
+
                     // Try full-surah gapless mode first
                     if (hasFullSurahAudio(reciter) && reciter.quranComId) {
+                        console.log('[AUDIO-DEBUG] Attempting full-surah gapless mode...');
                         const success = await startFullSurahPlayback(
                             surah.number,
                             sName,
                             reciter.quranComId,
                             name,
                         );
+                        console.log(`[AUDIO-DEBUG] Full-surah result: ${success ? 'SUCCESS ✅' : 'FAILED ❌ — falling back to per-verse'}`);
                         if (success) return;
+                    } else {
+                        console.log('[AUDIO-DEBUG] No quranComId — using per-verse mode directly');
                     }
 
                     // Fallback: per-verse mode
+                    console.log('[AUDIO-DEBUG] Loading per-verse playlist...');
                     await player.loadPlaylist(
                         surah.number,
                         surah.verses,
@@ -383,7 +455,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     );
                 }
             } catch (e) {
-                if (__DEV__) console.warn('[AudioContext] playSurah failed:', e);
+                console.warn('[AudioContext] playSurah failed:', e);
             }
         },
         [getReciterInfo, startFullSurahPlayback],

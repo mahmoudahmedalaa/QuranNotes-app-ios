@@ -4,6 +4,10 @@
  * This runs in the background even when the app is closed.
  * It responds to lock screen, Dynamic Island, Control Center,
  * and Bluetooth headset controls.
+ * 
+ * NOTE: RemoteNext and RemotePrevious are handled in AudioPlayerService
+ * with mode-aware logic (full-surah vs per-verse). They are NOT
+ * duplicated here to avoid conflicts.
  */
 import TrackPlayer, { Event } from 'react-native-track-player';
 
@@ -13,12 +17,6 @@ export const PlaybackService = async function () {
 
     // Lock screen / Control Center pause button
     TrackPlayer.addEventListener(Event.RemotePause, () => TrackPlayer.pause());
-
-    // Lock screen / Control Center next track button
-    TrackPlayer.addEventListener(Event.RemoteNext, () => TrackPlayer.skipToNext());
-
-    // Lock screen / Control Center previous track button
-    TrackPlayer.addEventListener(Event.RemotePrevious, () => TrackPlayer.skipToPrevious());
 
     // Lock screen seek bar
     TrackPlayer.addEventListener(Event.RemoteSeek, (event) => {
