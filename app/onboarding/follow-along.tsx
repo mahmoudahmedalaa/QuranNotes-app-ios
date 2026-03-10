@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, useTheme, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
+import { WaveBackground } from '../../src/core/components/animated/WaveBackground';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -89,9 +90,7 @@ export default function OnboardingFollowAlong() {
     );
 
     return (
-        <LinearGradient
-            colors={theme.dark ? (['#0F1419', '#1A1F26'] as const) : Gradients.sereneSky}
-            style={styles.container}>
+        <WaveBackground variant="spiritual" intensity="subtle">
             <SafeAreaView style={styles.safeArea}>
                 {/* Skip Button */}
                 <View style={styles.header}>
@@ -198,7 +197,7 @@ export default function OnboardingFollowAlong() {
                     </View>
                 </View>
             </SafeAreaView>
-        </LinearGradient>
+        </WaveBackground>
     );
 }
 

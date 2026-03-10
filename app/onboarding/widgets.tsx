@@ -12,6 +12,7 @@ import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, useTheme, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
+import { WaveBackground } from '../../src/core/components/animated/WaveBackground';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
@@ -52,7 +53,7 @@ export default function OnboardingWidgets() {
         : (['#F5F3FF', '#EDE9FE'] as const);
 
     return (
-        <LinearGradient colors={pageBg} style={styles.container}>
+        <WaveBackground variant="spiritual" intensity="subtle">
             <SafeAreaView style={styles.safeArea}>
 
                 {/* Progress dots */}
@@ -211,7 +212,7 @@ export default function OnboardingWidgets() {
                     </Text>
                 </View>
             </SafeAreaView>
-        </LinearGradient>
+        </WaveBackground>
     );
 }
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Pressable, Switch, Alert } from 'react-native';
 import { Text, useTheme, Button } from 'react-native-paper';
-import { LinearGradient } from 'expo-linear-gradient';
+import { WaveBackground } from '../../src/core/components/animated/WaveBackground';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -143,11 +143,7 @@ export default function OnboardingPremium() {
     const savings = isAnnual ? Math.round((1 - ANNUAL_PRICE / 12 / MONTHLY_PRICE) * 100) : 0;
 
     return (
-        <LinearGradient
-            colors={['#1A1340', '#312E81', '#1A1340']}
-            style={styles.container}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}>
+        <WaveBackground variant="spiritual" intensity="subtle">
             <SafeAreaView style={styles.safeArea}>
                 {/* Header */}
                 <MotiView
@@ -186,7 +182,7 @@ export default function OnboardingPremium() {
                                 <Text style={styles.featureTitle}>{feature.title}</Text>
                                 <Text style={styles.featureDescription}>{feature.description}</Text>
                             </View>
-                            <Ionicons name="checkmark-circle" size={22} color="#4ADE80" />
+                            <Ionicons name="checkmark-circle" size={22} color={BrandTokens.light.accentPrimary} />
                         </MotiView>
                     ))}
                 </MotiView>
@@ -251,7 +247,7 @@ export default function OnboardingPremium() {
                     </Pressable>
                 </MotiView>
             </SafeAreaView>
-        </LinearGradient>
+        </WaveBackground>
     );
 }
 
@@ -270,12 +266,12 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 32,
         fontWeight: '800',
-        color: '#FFFFFF',
+        color: '#1E1B4B',
         letterSpacing: -1,
     },
     subtitle: {
         fontSize: 16,
-        color: 'rgba(255,255,255,0.85)',
+        color: '#4C3D7A',
         marginTop: Spacing.xs,
     },
     featuresContainer: {
@@ -296,7 +292,7 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        backgroundColor: 'rgba(139, 92, 246, 0.15)',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: Spacing.md,
@@ -307,11 +303,11 @@ const styles = StyleSheet.create({
     featureTitle: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: '#1E1B4B',
     },
     featureDescription: {
         fontSize: 12,
-        color: 'rgba(255,255,255,0.7)',
+        color: '#6B5B95',
         marginTop: 1,
     },
     pricingContainer: {
@@ -325,7 +321,7 @@ const styles = StyleSheet.create({
     },
     toggleLabel: {
         fontSize: 14,
-        color: 'rgba(255,255,255,0.9)',
+        color: '#4C3D7A',
         fontWeight: '500',
     },
     annualLabel: {
@@ -334,7 +330,7 @@ const styles = StyleSheet.create({
         gap: Spacing.xs,
     },
     savingsBadge: {
-        backgroundColor: '#4ADE80',
+        backgroundColor: BrandTokens.light.accentPrimary,
         paddingHorizontal: 6,
         paddingVertical: 2,
         borderRadius: 4,
@@ -342,7 +338,7 @@ const styles = StyleSheet.create({
     savingsText: {
         fontSize: 10,
         fontWeight: '700',
-        color: '#065F46',
+        color: '#FFFFFF',
     },
     priceDisplay: {
         flexDirection: 'row',
@@ -352,16 +348,16 @@ const styles = StyleSheet.create({
     price: {
         fontSize: 48,
         fontWeight: '800',
-        color: '#FFFFFF',
+        color: '#1E1B4B',
     },
     priceUnit: {
         fontSize: 18,
-        color: 'rgba(255,255,255,0.8)',
+        color: '#6B5B95',
         marginLeft: 4,
     },
     priceNote: {
         fontSize: 14,
-        color: 'rgba(255,255,255,0.7)',
+        color: '#6B5B95',
         marginTop: Spacing.xs,
     },
     ctaContainer: {
@@ -384,7 +380,7 @@ const styles = StyleSheet.create({
     },
     secondaryText: {
         fontSize: 16,
-        color: 'rgba(255,255,255,0.8)',
+        color: '#6B5B95',
         fontWeight: '500',
     },
 });

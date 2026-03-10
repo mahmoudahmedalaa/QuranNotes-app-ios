@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Pressable, Dimensions } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
+import { WaveBackground } from '../../src/core/components/animated/WaveBackground';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
@@ -47,16 +48,7 @@ export default function OnboardingAiTafseer() {
     };
 
     return (
-        <View style={styles.container}>
-            {/* Deep dark gradient background */}
-            <LinearGradient
-                colors={
-                    theme.dark
-                        ? ['#0A0A14', '#12101F', '#1A1530']
-                        : ['#F8F5FF', '#EDE5FF', '#E0D4FF']
-                }
-                style={StyleSheet.absoluteFill}
-            />
+        <WaveBackground variant="spiritual" intensity="subtle">
 
             {/* Ambient floating sparkles */}
             {SPARKLES.map((s, i) => (
@@ -335,7 +327,7 @@ export default function OnboardingAiTafseer() {
                     </Pressable>
                 </MotiView>
             </SafeAreaView>
-        </View>
+        </WaveBackground>
     );
 }
 

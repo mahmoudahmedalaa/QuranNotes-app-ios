@@ -31,10 +31,10 @@ export const StreakCounter: React.FC = () => {
                             duration: 2000,
                             type: 'timing',
                         }}>
-                        <MaterialCommunityIcons name="fire" size={18} color="#FF9500" />
+                        <MaterialCommunityIcons name="fire" size={18} color={theme.colors.primary} />
                     </MotiView>
                     <View style={styles.textContainer}>
-                        <Text style={styles.count}>{streak.currentStreak}</Text>
+                        <Text style={[styles.count, { color: theme.colors.primary }]}>{streak.currentStreak}</Text>
                         <Text style={[styles.label, { color: theme.colors.primary }]}>Day Reflection Streak</Text>
                     </View>
                 </View>
@@ -65,7 +65,6 @@ const styles = StyleSheet.create({
     count: {
         fontWeight: '900',
         fontSize: 15,
-        color: '#FF9500',
         marginRight: 3,
     },
     label: {

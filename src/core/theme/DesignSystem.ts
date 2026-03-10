@@ -71,7 +71,7 @@ const lightColors = {
     heatmapHigh: '#6246EA',
 
     // Widgets (Stats) - Truly distinct accents
-    widgetOrange: '#F97316',   // Vivid orange (Streak flame)
+    widgetOrange: '#D946EF',   // Fuchsia-violet (Streak flame — brand-aligned)
     widgetBlue: '#3B82F6',     // Blue (Time)
     widgetPurple: '#6246EA',   // Brand purple (Pages)
     widgetEmerald: '#10B981',  // Emerald (Notes)
@@ -123,7 +123,7 @@ const darkColors = {
     heatmapHigh: '#A78BFA',
 
     // Widgets
-    widgetOrange: '#FB923C',   // Light orange
+    widgetOrange: '#E879F9',   // Light fuchsia-violet (Streak flame — brand-aligned)
     widgetBlue: '#60A5FA',     // Light blue
     widgetPurple: '#A78BFA',   // Light purple
     widgetEmerald: '#34D399',  // Light emerald
@@ -186,6 +186,71 @@ export const BrandTokens = {
         textSecondary: '#A1A1AA',
         accentPrimary: '#A78BFA',
         border: '#27272A',
+    },
+} as const;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VIOLET PALETTE — The extended 24-shade violet spectrum.
+// See: docs/brand-identity.md for full documentation.
+//
+// Every color on screen must be selectable from this palette. No exceptions.
+// ═══════════════════════════════════════════════════════════════════════════
+export const VioletPalette = {
+    // Light End (Backgrounds, Surfaces)
+    lavenderMist: '#F5F3FF',
+    softLavender: '#F8F5FF',
+    paleViolet: '#EDE9FE',
+    lightAmethyst: '#EDE5FF',
+    wisteria: '#DDD6FE',
+    softIris: '#D8B4FE',
+    // Mid-Range (Accents, Gradients)
+    orchid: '#C084FC',
+    mediumViolet: '#A78BFA',
+    amethyst: '#8B5CF6',
+    royalViolet: '#7C3AED',
+    brandViolet: '#6246EA',
+    deepViolet: '#5B21B6',
+    // Deep End (Rich Cards, Night States)
+    aubergine: '#4C1D95',
+    midnightViolet: '#3B0764',
+    darkPlum: '#2E1065',
+    cosmicIndigo: '#1E1B4B',
+    midnightIndigo: '#1A1040',
+    deepSpace: '#0F0A2A',
+    cosmicBlack: '#030014',
+    // Warm Violet (Pink Undertone)
+    roseQuartz: '#E9D5FF',
+    warmAmethyst: '#C084FC',
+    plum: '#9333EA',
+    berry: '#7E22CE',
+    deepBerry: '#6B21A8',
+    darkBerryPlum: '#581C87',
+} as const;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TIME GRADIENTS — Violet-spectrum gradients for time-aware cards.
+// See: docs/brand-identity.md §3 "The Violet Atmosphere"
+//
+// Three time states: Day (6am–6pm), Twilight (6–8pm), Night (8pm–6am)
+// ═══════════════════════════════════════════════════════════════════════════
+export const TimeGradients = {
+    /** Adhkar tile — shifts through violet day cycle alongside Khatma */
+    adhkar: {
+        morning: ['#EDE5FF', '#D8B4FE', '#C084FC'] as const,
+        evening: ['#7C3AED', '#6D28D9', '#5B21B6'] as const,
+        night: ['#2E1065', '#1E1B4B', '#0F0A2A'] as const,
+    },
+    /** Verse of the Day — cool violet (blue undertone = divine clarity) */
+    verse: {
+        day: ['#6246EA', '#7C3AED', '#8B5CF6'] as const,
+        twilight: ['#5B21B6', '#4C1D95', '#3B0764'] as const,
+        night: ['#1E1B4B', '#0F0A2A', '#030014'] as const,
+    },
+    /** Hadith of the Day — warm violet (pink undertone = prophetic warmth) */
+    hadith: {
+        day: ['#7C3AED', '#9333EA', '#A855F7'] as const,
+        twilight: ['#6B21A8', '#581C87', '#4A044E'] as const,
+        night: ['#1A1040', '#0F0A2A', '#030014'] as const,
     },
 } as const;
 

@@ -155,6 +155,17 @@ export default function DashboardScreen() {
                                 pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                             ]}
                         >
+                            {/* Subtle gradient wash — faint primary tint from top-left */}
+                            <LinearGradient
+                                colors={[
+                                    theme.dark ? 'rgba(99,102,241,0.18)' : 'rgba(99,102,241,0.10)',
+                                    theme.dark ? 'rgba(99,102,241,0.06)' : 'rgba(99,102,241,0.03)',
+                                    'transparent',
+                                ]}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={[StyleSheet.absoluteFillObject, { borderRadius: BorderRadius.lg }]}
+                            />
                             {/* Ring */}
                             <View style={styles.tileRingWrap}>
                                 <Svg width={RING_SIZE} height={RING_SIZE}>
@@ -196,8 +207,21 @@ export default function DashboardScreen() {
                                 pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                             ]}
                         >
+                            {/* Base atmospheric gradient */}
                             <LinearGradient
                                 colors={adhkarGradient}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={[StyleSheet.absoluteFillObject, { borderRadius: BorderRadius.lg }]}
+                            />
+                            {/* Subtle shimmer wash — top-left glow for depth */}
+                            <LinearGradient
+                                colors={[
+                                    adhkarPeriod === 'morning'
+                                        ? 'rgba(186,230,253,0.55)'
+                                        : 'rgba(148,163,184,0.15)',
+                                    'transparent',
+                                ]}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 1 }}
                                 style={[StyleSheet.absoluteFillObject, { borderRadius: BorderRadius.lg }]}

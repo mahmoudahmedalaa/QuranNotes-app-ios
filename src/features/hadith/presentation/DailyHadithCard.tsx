@@ -4,6 +4,7 @@
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, Pressable, AppState, AppStateStatus } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme, IconButton } from 'react-native-paper';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
@@ -108,6 +109,15 @@ export const DailyHadithCard: React.FC = () => {
                 <View style={[styles.card, Shadows.md, { backgroundColor: theme.colors.surface }]}>
                     {/* Left accent bar — amber for prophetic / sunnah identity */}
                     <View style={styles.accentBar} />
+
+                    {/* Subtle accent wash — faint amber tint bleeding from left */}
+                    <LinearGradient
+                        colors={['rgba(217,119,6,0.11)', 'rgba(217,119,6,0.03)', 'transparent']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={StyleSheet.absoluteFillObject}
+                    />
+
                     <View style={styles.cardContent}>
 
                         {/* Header */}
