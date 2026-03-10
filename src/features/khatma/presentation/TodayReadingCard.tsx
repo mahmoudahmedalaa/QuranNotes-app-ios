@@ -15,7 +15,7 @@ import { MotiView } from 'moti';
 import { useRouter, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { ReadingPositionService, ReadingPosition } from '../../quran-reading/infrastructure/ReadingPositionService';
-import { SurahMeta, getSurahMeta } from '../infrastructure/KhatmaContext';
+import { SurahMeta, getSurahMeta } from '../data/surahData';
 import { getSurahsInJuz } from '../data/khatmaData';
 import { Spacing, BorderRadius, Shadows, Typography, BrandTokens } from '../../../core/theme/DesignSystem';
 
