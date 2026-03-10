@@ -6,10 +6,10 @@ import SwiftUI
 // Home screen (.systemMedium) + Lock screen (.accessoryRectangular,
 // .accessoryInline)
 //
-// Earth-tone gradients complement the sky-themed DailyVerse widget
+// Warm-violet gradients (pink undertone) — prophetic warmth
 // ═══════════════════════════════════════════════════════════════════
 
-// ── Earth-tone Palette ────────────────────────────────────────────
+// ── Warm-Violet Palette ───────────────────────────────────────────
 
 struct HadithPalette {
     let top: Color
@@ -22,38 +22,27 @@ struct HadithPalette {
     var primaryText: Color  { .white }
     var secondaryText: Color { .white.opacity(0.85) }
 
+    // ── Brand-aligned warm violet palette ─────────────────────────
+    // Pink-violet undertone — prophetic wisdom, human warmth.
+    // 3 states: Day / Twilight / Night.
+
     static func forHour(_ hour: Int) -> HadithPalette {
         switch hour {
-        case 4..<6:   // Fajr: Deep indigo
+        case 6..<18:  // Day — warm, inviting, wise
             return HadithPalette(
-                top:    Color(hex: "1A1A2E"),
-                bottom: Color(hex: "0F3460"),
-                accent: Color(hex: "7B8CDE"))
-        case 6..<12:  // Morning: Warm stone
+                top:    Color(hex: "6B21A8"),  // deep berry
+                bottom: Color(hex: "9333EA"),  // plum
+                accent: Color(hex: "E9D5FF"))  // rose quartz
+        case 18..<20: // Twilight — deep plum, reflective
             return HadithPalette(
-                top:    Color(hex: "2D3436"),
-                bottom: Color(hex: "636E72"),
-                accent: Color(hex: "DFE6E9"))
-        case 12..<16: // Dhuhr: Forest green
+                top:    Color(hex: "581C87"),  // dark plum
+                bottom: Color(hex: "7E22CE"),  // berry
+                accent: Color(hex: "C084FC"))  // warm amethyst
+        default:      // Night (8pm–6am) — midnight, peaceful
             return HadithPalette(
-                top:    Color(hex: "1B4332"),
-                bottom: Color(hex: "40916C"),
-                accent: Color(hex: "95D5B2"))
-        case 16..<18: // Asr: Rich mahogany
-            return HadithPalette(
-                top:    Color(hex: "5C2D0E"),
-                bottom: Color(hex: "A0522D"),
-                accent: Color(hex: "DDB892"))
-        case 18..<20: // Maghrib: Deep burgundy
-            return HadithPalette(
-                top:    Color(hex: "3D0C11"),
-                bottom: Color(hex: "8B2252"),
-                accent: Color(hex: "F4ACB7"))
-        default:      // Isha: Midnight navy
-            return HadithPalette(
-                top:    Color(hex: "0D1B2A"),
-                bottom: Color(hex: "1B263B"),
-                accent: Color(hex: "D4A853"))
+                top:    Color(hex: "0F0A2A"),  // deep space
+                bottom: Color(hex: "1A1040"),  // midnight indigo
+                accent: Color(hex: "A78BFA"))  // medium violet
         }
     }
     static func current() -> HadithPalette {

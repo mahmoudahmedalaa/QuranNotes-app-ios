@@ -22,57 +22,36 @@ struct TimePalette {
     let top: Color
     let bottom: Color
     let accent: Color
-    let isDark: Bool
 
     var gradient: LinearGradient {
         LinearGradient(colors: [top, bottom], startPoint: .topLeading, endPoint: .bottomTrailing)
     }
-    // The iOS Widget is a "Window to the Sky". We use these rich, atmospheric 
-    // gradients universally. All text inside the widget is permanently locked 
-    // to White/Light-opacities to guarantee WCAG AA perfect contrast.
+    // All text on widget backgrounds is white for WCAG AA contrast.
     var primaryText: Color  { .white }
     var secondaryText: Color { .white.opacity(0.85) }
 
-    static func forHour(_ hour: Int) -> TimePalette {
-        let isDark = true // Force dark-mode behavior for rich backgrounds universally
+    // ── Brand-aligned violet palette ──────────────────────────────
+    // Cool-violet (blue undertone) — divine clarity.
+    // Used by DailyVerse, Prayer, and Khatma widgets.
+    // 3 states: Day / Twilight / Night.
 
+    static func forHour(_ hour: Int) -> TimePalette {
         switch hour {
-        case 4..<6:  // Fajr: Dawn purple to soft pink
+        case 6..<18:  // Day — confident, illuminated violet
             return TimePalette(
-                top:    Color(hex: "3B1F50"),
-                bottom: Color(hex: "7E4B8C"),
-                accent: Color(hex: "C481A7"), // Soft pink accent
-                isDark: isDark)
-        case 6..<12: // Morning: Airy sky blue
+                top:    Color(hex: "4C1D95"),  // aubergine
+                bottom: Color(hex: "7C3AED"),  // royal violet
+                accent: Color(hex: "DDD6FE"))  // wisteria
+        case 18..<20: // Twilight — deep, contemplative
             return TimePalette(
-                top:    Color(hex: "4CA1AF"),
-                bottom: Color(hex: "73BDEB"),
-                accent: Color(hex: "A5D6F7"), // Light blue accent
-                isDark: isDark)
-        case 12..<16: // Dhuhr: Vibrant daytime blue
+                top:    Color(hex: "3B0764"),  // midnight violet
+                bottom: Color(hex: "5B21B6"),  // deep violet
+                accent: Color(hex: "C084FC"))  // orchid
+        default:      // Night (8pm–6am) — serene, intimate
             return TimePalette(
-                top:    Color(hex: "1E3A8A"),
-                bottom: Color(hex: "2563EB"),
-                accent: Color(hex: "60A5FA"), // Bright blue accent
-                isDark: isDark)
-        case 16..<18: // Asr: Golden hour amber/orange
-            return TimePalette(
-                top:    Color(hex: "9A3412"),
-                bottom: Color(hex: "C2410C"),
-                accent: Color(hex: "FDE68A"), // Gold accent
-                isDark: isDark)
-        case 18..<20: // Maghrib: Sunset crimson & purple
-            return TimePalette(
-                top:    Color(hex: "581C87"),
-                bottom: Color(hex: "9D174D"),
-                accent: Color(hex: "FBCFE8"), // Soft pink/white accent
-                isDark: isDark)
-        default:     // Isha: Deep midnight
-            return TimePalette(
-                top:    Color(hex: "0F172A"),
-                bottom: Color(hex: "1E293B"),
-                accent: Color(hex: "D4A853"), // Premium Gold accent
-                isDark: isDark)
+                top:    Color(hex: "0F0A2A"),  // deep space
+                bottom: Color(hex: "1E1B4B"),  // cosmic indigo
+                accent: Color(hex: "A78BFA"))  // medium violet
         }
     }
     static func current() -> TimePalette {
