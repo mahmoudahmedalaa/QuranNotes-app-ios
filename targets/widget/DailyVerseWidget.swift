@@ -37,21 +37,21 @@ struct TimePalette {
 
     static func forHour(_ hour: Int) -> TimePalette {
         switch hour {
-        case 6..<18:  // Day — confident, illuminated violet
+        case 6..<18:  // Day — soft, airy, faded lavender
             return TimePalette(
-                top:    Color(hex: "4C1D95"),  // aubergine
-                bottom: Color(hex: "7C3AED"),  // royal violet
-                accent: Color(hex: "DDD6FE"))  // wisteria
-        case 18..<20: // Twilight — deep, contemplative
+                top:    Color(hex: "7C6FAE"),  // dusty violet
+                bottom: Color(hex: "9B8EC4"),  // faded amethyst
+                accent: Color(hex: "E8E0F5"))  // pale lavender
+        case 18..<20: // Twilight — muted plum, contemplative
             return TimePalette(
-                top:    Color(hex: "3B0764"),  // midnight violet
-                bottom: Color(hex: "5B21B6"),  // deep violet
-                accent: Color(hex: "C084FC"))  // orchid
-        default:      // Night (8pm–6am) — serene, intimate
+                top:    Color(hex: "5A4580"),  // soft aubergine
+                bottom: Color(hex: "7B6B9E"),  // dusty orchid
+                accent: Color(hex: "D4C8E8"))  // light wisteria
+        default:      // Night (8pm–6am) — soft cosmic, serene
             return TimePalette(
-                top:    Color(hex: "0F0A2A"),  // deep space
-                bottom: Color(hex: "1E1B4B"),  // cosmic indigo
-                accent: Color(hex: "A78BFA"))  // medium violet
+                top:    Color(hex: "1E1835"),  // muted deep space
+                bottom: Color(hex: "2E2650"),  // soft cosmic indigo
+                accent: Color(hex: "B8ADDA"))  // faded violet
         }
     }
     static func current() -> TimePalette {
