@@ -20,6 +20,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { PremiumTheme } from '../src/core/theme/DesignSystem';
 import { RepositoryProvider } from '../src/core/di/RepositoryContext';
+import { composeProviders } from '../src/core/utils/composeProviders';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '../src/core/components/feedback/toastConfig';
 import { initRamadanDates } from '../src/core/utils/ramadanUtils';
@@ -31,6 +32,28 @@ import { QURAN_FONTS } from '../src/core/theme/QuranFonts';
 // Keep native splash visible until providers are ready — prevents the
 // blank lavender + spinner flash between native splash and React UI.
 SplashScreen.preventAutoHideAsync();
+
+/**
+ * All feature providers in dependency order (first = outermost).
+ * This replaces the deeply nested "Provider Pyramid of Doom".
+ */
+const AppProviders = composeProviders([
+    RepositoryProvider,
+    AuthProvider,
+    ProProvider,
+    OnboardingProvider,
+    StreakProvider,
+    SettingsProvider,
+    AudioProvider,
+    KhatmaProvider,
+    MoodProvider,
+    PrayerProvider,
+    AdhkarProvider,
+    NoteProvider,
+    HighlightProvider,
+    HadithProvider,
+    FolderProvider,
+]);
 
 /** Hides the native splash once auth + onboarding data are resolved. */
 function SplashHider({ fontsLoaded }: { fontsLoaded: boolean }) {
@@ -68,70 +91,42 @@ export default function RootLayout() {
 
     return (
         <GlobalErrorBoundary>
-            <RepositoryProvider>
-                <AuthProvider>
-                    <ProProvider>
-                        <OnboardingProvider>
-                            <StreakProvider>
-                                <SettingsProvider>
-                                    <AudioProvider>
-                                        <KhatmaProvider>
-                                            <AudioKhatmaBridge />
-                                            <MoodProvider>
-                                                <PrayerProvider>
-                                                    <AdhkarProvider>
-                                                        <NoteProvider>
-                                                            <HighlightProvider>
-                                                                <HadithProvider>
-                                                                    <FolderProvider>
-                                                                        <SplashHider fontsLoaded={fontsLoaded} />
-                                                                        <SyncManager />
-                                                                        <NotificationScheduler />
-                                                                        <StatusBar style="dark" />
-                                                                        <Stack
-                                                                            screenOptions={{
-                                                                                headerShown: false,
-                                                                                contentStyle: {
-                                                                                    backgroundColor: PremiumTheme.colors.background,
-                                                                                },
-                                                                            }}>
-                                                                            <Stack.Screen name="index" />
-                                                                            <Stack.Screen name="welcome" options={{ headerShown: false }} />
-                                                                            <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-                                                                            <Stack.Screen name="search" />
-                                                                            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                                                                            <Stack.Screen
-                                                                                name="note/edit"
-                                                                                options={{ presentation: 'modal' }}
-                                                                            />
-                                                                            <Stack.Screen
-                                                                                name="paywall"
-                                                                                options={{ presentation: 'modal', headerShown: false }}
-                                                                            />
-                                                                            <Stack.Screen
-                                                                                name="ramadan-paywall"
-                                                                                options={{ presentation: 'modal', headerShown: false }}
-                                                                            />
-                                                                            <Stack.Screen
-                                                                                name="hadith-library"
-                                                                                options={{ headerShown: false }}
-                                                                            />
-                                                                        </Stack>
-                                                                    </FolderProvider>
-                                                                </HadithProvider>
-                                                            </HighlightProvider>
-                                                        </NoteProvider>
-                                                    </AdhkarProvider>
-                                                </PrayerProvider>
-                                            </MoodProvider>
-                                        </KhatmaProvider>
-                                    </AudioProvider>
-                                </SettingsProvider>
-                            </StreakProvider>
-                        </OnboardingProvider>
-                    </ProProvider>
-                </AuthProvider>
-            </RepositoryProvider>
+            <AppProviders>
+                <AudioKhatmaBridge />
+                <SplashHider fontsLoaded={fontsLoaded} />
+                <SyncManager />
+                <NotificationScheduler />
+                <StatusBar style="dark" />
+                <Stack
+                    screenOptions={{
+                        headerShown: false,
+                        contentStyle: {
+                            backgroundColor: PremiumTheme.colors.background,
+                        },
+                    }}>
+                    <Stack.Screen name="index" />
+                    <Stack.Screen name="welcome" options={{ headerShown: false }} />
+                    <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+                    <Stack.Screen name="search" />
+                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                    <Stack.Screen
+                        name="note/edit"
+                        options={{ presentation: 'modal' }}
+                    />
+                    <Stack.Screen
+                        name="paywall"
+                        options={{ presentation: 'modal', headerShown: false }}
+                    />
+                    <Stack.Screen
+                        name="ramadan-paywall"
+                        options={{ presentation: 'modal', headerShown: false }}
+                    />
+                    <Stack.Screen
+                        name="hadith-library"
+                        options={{ headerShown: false }}
+                    />
+                </Stack>
+            </AppProviders>
             <Toast
                 config={toastConfig}
                 topOffset={80}
