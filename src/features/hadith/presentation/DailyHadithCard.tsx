@@ -18,8 +18,8 @@ import { ShareCardData } from '../../sharing/domain/ShareTemplateTypes';
 
 const FREE_REFRESH_LIMIT = 3;
 
-/** Warm amber accent — prophetic warmth / sunnah identity */
-const HADITH_ACCENT = '#D97706';
+/** Warm rose-coral accent — warm, inviting, complementary to verse teal */
+const HADITH_ACCENT = '#E07856';
 
 export const DailyHadithCard: React.FC = () => {
     const theme = useTheme();
@@ -107,15 +107,27 @@ export const DailyHadithCard: React.FC = () => {
                 ]}
             >
                 <View style={[styles.card, Shadows.md, { backgroundColor: theme.colors.surface }]}>
-                    {/* Left accent bar — amber for prophetic / sunnah identity */}
-                    <View style={styles.accentBar} />
-
-                    {/* Subtle accent wash — faint amber tint bleeding from left */}
+                    {/* Rose-coral gradient — bold & warm */}
                     <LinearGradient
-                        colors={['rgba(217,119,6,0.11)', 'rgba(217,119,6,0.03)', 'transparent']}
+                        colors={
+                            theme.dark
+                                ? ['rgba(224,120,86,0.50)', 'rgba(224,120,86,0.22)', 'rgba(224,120,86,0.07)']
+                                : ['rgba(224,120,86,0.38)', 'rgba(224,120,86,0.16)', 'rgba(224,120,86,0.05)']
+                        }
                         start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={StyleSheet.absoluteFillObject}
+                        end={{ x: 1, y: 1 }}
+                        style={[StyleSheet.absoluteFillObject, { borderRadius: BorderRadius.lg }]}
+                    />
+                    {/* Secondary warm amber glow from bottom-right for depth */}
+                    <LinearGradient
+                        colors={
+                            theme.dark
+                                ? ['rgba(245,158,11,0.18)', 'rgba(245,158,11,0.05)', 'transparent']
+                                : ['rgba(245,158,11,0.12)', 'rgba(245,158,11,0.03)', 'transparent']
+                        }
+                        start={{ x: 1, y: 1 }}
+                        end={{ x: 0, y: 0 }}
+                        style={[StyleSheet.absoluteFillObject, { borderRadius: BorderRadius.lg }]}
                     />
 
                     <View style={styles.cardContent}>
@@ -124,7 +136,7 @@ export const DailyHadithCard: React.FC = () => {
                         <View style={styles.cardHeader}>
                             <View style={styles.labelRow}>
                                 <Text style={[styles.label, { color: HADITH_ACCENT }]}>
-                                    Hadith of the Day
+                                    ✦ Hadith of the Day
                                 </Text>
                             </View>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
@@ -238,14 +250,6 @@ const styles = StyleSheet.create({
     card: {
         borderRadius: BorderRadius.lg,
         overflow: 'hidden',
-        flexDirection: 'row',
-    },
-    accentBar: {
-        width: 4,
-        backgroundColor: HADITH_ACCENT,
-        borderTopLeftRadius: BorderRadius.lg,
-        borderBottomLeftRadius: BorderRadius.lg,
-        marginRight: Spacing.md,
     },
     cardContent: {
         flex: 1,

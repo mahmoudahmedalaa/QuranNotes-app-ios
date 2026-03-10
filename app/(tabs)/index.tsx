@@ -150,20 +150,29 @@ export default function DashboardScreen() {
                             }}
                             style={({ pressed }) => [
                                 styles.gridTile,
-                                { backgroundColor: theme.colors.primaryContainer },
                                 Shadows.sm,
                                 pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
                             ]}
                         >
-                            {/* Subtle gradient wash — faint primary tint from top-left */}
+                            {/* Full indigo-violet gradient background */}
                             <LinearGradient
-                                colors={[
-                                    theme.dark ? 'rgba(99,102,241,0.18)' : 'rgba(99,102,241,0.10)',
-                                    theme.dark ? 'rgba(99,102,241,0.06)' : 'rgba(99,102,241,0.03)',
-                                    'transparent',
-                                ]}
+                                colors={
+                                    theme.dark
+                                        ? ['#1e1b4b', '#312e81', '#3730a3'] as const
+                                        : ['#e0e7ff', '#c7d2fe', '#a5b4fc'] as const
+                                }
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 1 }}
+                                style={[StyleSheet.absoluteFillObject, { borderRadius: BorderRadius.lg }]}
+                            />
+                            {/* Secondary shimmer glow from bottom-right */}
+                            <LinearGradient
+                                colors={[
+                                    theme.dark ? 'rgba(139,92,246,0.35)' : 'rgba(129,140,248,0.30)',
+                                    'transparent',
+                                ]}
+                                start={{ x: 1, y: 1 }}
+                                end={{ x: 0, y: 0 }}
                                 style={[StyleSheet.absoluteFillObject, { borderRadius: BorderRadius.lg }]}
                             />
                             {/* Ring */}
@@ -171,12 +180,12 @@ export default function DashboardScreen() {
                                 <Svg width={RING_SIZE} height={RING_SIZE}>
                                     <Circle
                                         cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RADIUS}
-                                        stroke={theme.colors.primary} strokeOpacity={0.2}
+                                        stroke={theme.dark ? '#a5b4fc' : theme.colors.primary} strokeOpacity={0.2}
                                         strokeWidth={STROKE_WIDTH} fill="none"
                                     />
                                     <Circle
                                         cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RADIUS}
-                                        stroke={theme.colors.primary} strokeWidth={STROKE_WIDTH} fill="none"
+                                        stroke={theme.dark ? '#a5b4fc' : theme.colors.primary} strokeWidth={STROKE_WIDTH} fill="none"
                                         strokeLinecap="round"
                                         strokeDasharray={CIRCUMFERENCE}
                                         strokeDashoffset={strokeDashoffset}
@@ -185,12 +194,12 @@ export default function DashboardScreen() {
                                     />
                                 </Svg>
                                 <View style={styles.tileRingCenter}>
-                                    <Text style={[styles.tileRingNum, { color: theme.colors.primary }]}>{completedCount}</Text>
-                                    <Text style={[styles.tileRingDenom, { color: theme.colors.primary }]}>/30</Text>
+                                    <Text style={[styles.tileRingNum, { color: theme.dark ? '#e0e7ff' : theme.colors.primary }]}>{completedCount}</Text>
+                                    <Text style={[styles.tileRingDenom, { color: theme.dark ? '#c7d2fe' : theme.colors.primary }]}>/30</Text>
                                 </View>
                             </View>
-                            <Text style={[styles.tileLabel, { color: theme.colors.primary }]}>Khatma</Text>
-                            <Text style={[styles.tileSub, { color: theme.colors.primary, opacity: 0.8 }]}>
+                            <Text style={[styles.tileLabel, { color: theme.dark ? '#e0e7ff' : theme.colors.primary }]}>Khatma</Text>
+                            <Text style={[styles.tileSub, { color: theme.dark ? '#c7d2fe' : theme.colors.primary, opacity: 0.9 }]}>
                                 {completedCount === 0 ? 'Start journey' : `${30 - completedCount} remaining`}
                             </Text>
                         </Pressable>
@@ -214,16 +223,28 @@ export default function DashboardScreen() {
                                 end={{ x: 1, y: 1 }}
                                 style={[StyleSheet.absoluteFillObject, { borderRadius: BorderRadius.lg }]}
                             />
-                            {/* Subtle shimmer wash — top-left glow for depth */}
+                            {/* Bold shimmer wash — top-left glow for depth */}
                             <LinearGradient
                                 colors={[
                                     adhkarPeriod === 'morning'
-                                        ? 'rgba(186,230,253,0.55)'
-                                        : 'rgba(148,163,184,0.15)',
+                                        ? 'rgba(186,230,253,0.70)'
+                                        : 'rgba(148,163,184,0.28)',
                                     'transparent',
                                 ]}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 1 }}
+                                style={[StyleSheet.absoluteFillObject, { borderRadius: BorderRadius.lg }]}
+                            />
+                            {/* Secondary warmth from bottom-right */}
+                            <LinearGradient
+                                colors={[
+                                    adhkarPeriod === 'morning'
+                                        ? 'rgba(125,211,252,0.30)'
+                                        : 'rgba(100,116,139,0.18)',
+                                    'transparent',
+                                ]}
+                                start={{ x: 1, y: 1 }}
+                                end={{ x: 0, y: 0 }}
                                 style={[StyleSheet.absoluteFillObject, { borderRadius: BorderRadius.lg }]}
                             />
                             {/* Faint stars for night mode */}

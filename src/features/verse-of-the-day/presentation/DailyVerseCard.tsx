@@ -22,8 +22,8 @@ import { ShareCardData } from '../../sharing/domain/ShareTemplateTypes';
 const STORAGE_KEY = 'daily_verse_data';
 const HISTORY_KEY = 'daily_verse_history';
 
-/** Brand accent for the Verse card — consistent violet */
-const VERSE_ACCENT = '#6246EA';
+/** Brand accent for the Verse card — deep teal-emerald */
+const VERSE_ACCENT = '#0D9488';
 
 /** Sync verse data to iOS widget */
 function syncVerseToWidget(v: TopicVerse) {
@@ -188,15 +188,27 @@ export const DailyVerseCard: React.FC = () => {
                 ]}
             >
                 <View style={[styles.card, Shadows.md, { backgroundColor: theme.colors.surface }]}>
-                    {/* Left accent bar — brand violet identity */}
-                    <View style={styles.accentBar} />
-
-                    {/* Subtle accent wash — faint violet tint bleeding from left */}
+                    {/* Teal-emerald gradient — bold & vibrant */}
                     <LinearGradient
-                        colors={['rgba(98,70,234,0.12)', 'rgba(98,70,234,0.03)', 'transparent']}
+                        colors={
+                            theme.dark
+                                ? ['rgba(13,148,136,0.55)', 'rgba(13,148,136,0.25)', 'rgba(13,148,136,0.08)']
+                                : ['rgba(13,148,136,0.40)', 'rgba(13,148,136,0.18)', 'rgba(13,148,136,0.06)']
+                        }
                         start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={StyleSheet.absoluteFillObject}
+                        end={{ x: 1, y: 1 }}
+                        style={[StyleSheet.absoluteFillObject, { borderRadius: BorderRadius.lg }]}
+                    />
+                    {/* Secondary glow from bottom-right for depth */}
+                    <LinearGradient
+                        colors={
+                            theme.dark
+                                ? ['rgba(16,185,129,0.20)', 'rgba(16,185,129,0.06)', 'transparent']
+                                : ['rgba(16,185,129,0.14)', 'rgba(16,185,129,0.04)', 'transparent']
+                        }
+                        start={{ x: 1, y: 1 }}
+                        end={{ x: 0, y: 0 }}
+                        style={[StyleSheet.absoluteFillObject, { borderRadius: BorderRadius.lg }]}
                     />
 
                     <View style={styles.cardContent}>
@@ -292,14 +304,6 @@ const styles = StyleSheet.create({
     card: {
         borderRadius: BorderRadius.lg,
         overflow: 'hidden',
-        flexDirection: 'row',
-    },
-    accentBar: {
-        width: 4,
-        backgroundColor: VERSE_ACCENT,
-        borderTopLeftRadius: BorderRadius.lg,
-        borderBottomLeftRadius: BorderRadius.lg,
-        marginRight: Spacing.md,
     },
     cardContent: {
         flex: 1,
