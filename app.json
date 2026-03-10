@@ -73,7 +73,8 @@
           "speechRecognitionPermission": "Allow QuranNotes to use speech recognition for voice follow-along"
         }
       ],
-      "@bacons/apple-targets"
+      "@bacons/apple-targets",
+      "./plugins/widget-infoplist-fix"
     ],
     "scheme": [
       "qurannotes",
