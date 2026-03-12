@@ -19,8 +19,9 @@ import * as Haptics from 'expo-haptics';
 
 const ACCENT = {
     gold: '#F5A623',
+    goldDark: '#E8B86D', // softer amber for dark mode
     goldBgLight: '#F5A62315',
-    goldBgDark: '#3D2A0E',
+    goldBgDark: '#2E2210',
     goldBorder: '#F5A62350',
 };
 
@@ -95,14 +96,14 @@ export const VerseItem = ({
                 style={({ pressed }) => [
                     styles.container,
                     { backgroundColor: theme.colors.background },
-                    // Gold accent for currently-playing verse
+                    // Accent for currently-playing verse
                     isPlaying && [
                         styles.playingContainer,
                         {
                             backgroundColor: theme.dark
                                 ? ACCENT.goldBgDark
                                 : ACCENT.goldBgLight,
-                            borderLeftColor: ACCENT.gold,
+                            borderLeftColor: theme.dark ? ACCENT.goldDark : ACCENT.gold,
                         },
                     ],
                     // Persistent user highlight color
@@ -137,14 +138,14 @@ export const VerseItem = ({
                         style={[
                             styles.numberBadge,
                             { backgroundColor: theme.colors.surface },
-                            isPlaying && { backgroundColor: ACCENT.gold },
+                            isPlaying && { backgroundColor: theme.dark ? ACCENT.goldDark : ACCENT.gold },
                             Shadows.sm,
                         ]}>
                         <Text
                             style={[
                                 styles.numberText,
                                 { color: theme.colors.primary },
-                                isPlaying && { color: '#FFF' },
+                                isPlaying && { color: theme.dark ? '#1A1A1A' : '#FFF' },
                             ]}>
                             {verse.number}
                         </Text>
@@ -153,7 +154,7 @@ export const VerseItem = ({
                         {onPlay && (
                             <IconButton
                                 icon={isPlaying ? 'pause-circle' : 'play-circle-outline'}
-                                iconColor={isPlaying ? ACCENT.gold : theme.colors.onSurfaceVariant}
+                                iconColor={isPlaying ? (theme.dark ? ACCENT.goldDark : ACCENT.gold) : (theme.dark ? 'rgba(255,255,255,0.7)' : theme.colors.onSurfaceVariant)}
                                 size={22}
                                 onPress={handlePlay}
                                 style={styles.controlButton}
@@ -163,7 +164,7 @@ export const VerseItem = ({
                             <View>
                                 <IconButton
                                     icon={hasNote ? 'pencil' : 'pencil-outline'}
-                                    iconColor={theme.colors.onSurfaceVariant}
+                                    iconColor={theme.dark ? 'rgba(255,255,255,0.7)' : theme.colors.onSurfaceVariant}
                                     size={22}
                                     onPress={onNote}
                                     style={styles.controlButton}
@@ -181,7 +182,7 @@ export const VerseItem = ({
                         {onRecord && (
                             <IconButton
                                 icon="microphone-outline"
-                                iconColor={theme.colors.onSurfaceVariant}
+                                iconColor={theme.dark ? 'rgba(255,255,255,0.7)' : theme.colors.onSurfaceVariant}
                                 size={22}
                                 onPress={onRecord}
                                 style={styles.controlButton}
@@ -190,7 +191,7 @@ export const VerseItem = ({
                         {onShare && (
                             <IconButton
                                 icon="share-variant-outline"
-                                iconColor={theme.colors.onSurfaceVariant}
+                                iconColor={theme.dark ? 'rgba(255,255,255,0.7)' : theme.colors.onSurfaceVariant}
                                 size={22}
                                 onPress={() => {
                                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -217,7 +218,7 @@ export const VerseItem = ({
                                         loop: true,
                                     }}
                                 >
-                                    <Ionicons name="sparkles" size={20} color={ACCENT.gold} />
+                                    <Ionicons name="sparkles" size={20} color={theme.dark ? ACCENT.goldDark : ACCENT.gold} />
                                 </MotiView>
                             </Pressable>
                         )}

@@ -696,12 +696,12 @@ export default function SurahDetail() {
                                     <View
                                         style={[
                                             styles.metaBadge,
-                                            { backgroundColor: '#FFFFFF' },
+                                            { backgroundColor: theme.dark ? 'rgba(255,255,255,0.12)' : '#FFFFFF' },
                                         ]}>
                                         <Text
                                             style={[
                                                 styles.metaText,
-                                                { color: theme.colors.primary },
+                                                { color: theme.dark ? 'rgba(255,255,255,0.9)' : theme.colors.primary },
                                             ]}>
                                             {surah.revelationType}
                                         </Text>
@@ -709,12 +709,12 @@ export default function SurahDetail() {
                                     <View
                                         style={[
                                             styles.metaBadge,
-                                            { backgroundColor: '#FFFFFF' },
+                                            { backgroundColor: theme.dark ? 'rgba(255,255,255,0.12)' : '#FFFFFF' },
                                         ]}>
                                         <Text
                                             style={[
                                                 styles.metaText,
-                                                { color: theme.colors.primary },
+                                                { color: theme.dark ? 'rgba(255,255,255,0.9)' : theme.colors.primary },
                                             ]}>
                                             {surah.numberOfAyahs} Verses
                                         </Text>
@@ -740,16 +740,16 @@ export default function SurahDetail() {
                                     <IconButton
                                         icon="pencil-outline"
                                         mode="contained-tonal"
-                                        containerColor="#FFFFFF"
-                                        iconColor={theme.colors.primary}
+                                        containerColor={theme.dark ? 'rgba(255,255,255,0.12)' : '#FFFFFF'}
+                                        iconColor={theme.dark ? 'rgba(255,255,255,0.9)' : theme.colors.primary}
                                         size={22}
                                         onPress={handleNoteSurah}
                                     />
                                     <IconButton
                                         icon="microphone-outline"
                                         mode="contained-tonal"
-                                        containerColor="#FFFFFF"
-                                        iconColor={theme.colors.primary}
+                                        containerColor={theme.dark ? 'rgba(255,255,255,0.12)' : '#FFFFFF'}
+                                        iconColor={theme.dark ? 'rgba(255,255,255,0.9)' : theme.colors.primary}
                                         size={22}
                                         onPress={handleRecordSurah}
                                     />
@@ -760,9 +760,9 @@ export default function SurahDetail() {
                                         containerColor={
                                             isStudyMode
                                                 ? theme.colors.primaryContainer
-                                                : '#FFFFFF'
+                                                : (theme.dark ? 'rgba(255,255,255,0.12)' : '#FFFFFF')
                                         }
-                                        iconColor={theme.colors.primary}
+                                        iconColor={theme.dark ? 'rgba(255,255,255,0.9)' : theme.colors.primary}
                                         size={22}
                                         onPress={() => {
                                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
