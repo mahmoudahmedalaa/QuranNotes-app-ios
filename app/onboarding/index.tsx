@@ -1,13 +1,13 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, useTheme, Button } from 'react-native-paper';
-import { WaveBackground } from '../../src/core/components/animated/WaveBackground';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
-import { Spacing, BorderRadius, Gradients, BrandTokens } from '../../src/core/theme/DesignSystem';
+import { Spacing, BorderRadius, Gradients } from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 
@@ -24,7 +24,11 @@ export default function OnboardingWelcome() {
     };
 
     return (
-        <WaveBackground variant="spiritual" intensity="subtle">
+        <LinearGradient
+            colors={Gradients.primary}
+            style={styles.container}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}>
             <SafeAreaView style={styles.safeArea}>
                 <View style={styles.content}>
                     {/* Logo/Icon */}
@@ -34,7 +38,7 @@ export default function OnboardingWelcome() {
                         transition={{ type: 'spring', delay: 200 }}
                         style={styles.iconContainer}>
                         <View style={styles.iconCircle}>
-                            <Ionicons name="book" size={48} color={BrandTokens.light.accentPrimary} />
+                            <Ionicons name="book" size={48} color="#5B7FFF" />
                         </View>
                     </MotiView>
 
@@ -65,7 +69,6 @@ export default function OnboardingWelcome() {
                         <FeatureItem icon="mic" text="Voice Reflections" />
                         <FeatureItem icon="flame" text="Track Streaks" />
                         <FeatureItem icon="cloud" text="Cloud Sync" />
-                        {/* <FeatureItem icon="text-recognition" text="Follow Along" /> REMOVED */}
                     </MotiView>
                 </View>
 
@@ -80,13 +83,13 @@ export default function OnboardingWelcome() {
                         onPress={handleBegin}
                         style={styles.ctaButton}
                         labelStyle={styles.ctaLabel}
-                        buttonColor={BrandTokens.light.accentPrimary}
-                        textColor="#FFFFFF">
+                        buttonColor="#FFFFFF"
+                        textColor="#5B7FFF">
                         Begin
                     </Button>
                 </MotiView>
             </SafeAreaView>
-        </WaveBackground>
+        </LinearGradient>
     );
 }
 
@@ -96,7 +99,7 @@ const FeatureItem = ({ icon, text }: { icon: string; text: string }) => {
 
     return (
         <View style={styles.featureItem}>
-            <Ionicons name={icon as any} size={24} color={BrandTokens.light.accentPrimary} />
+            <Ionicons name={icon as any} size={24} color="rgba(255,255,255,0.9)" />
             <View style={{ alignItems: 'center' }}>
                 {words.map((word, index) => (
                     <Text key={index} style={styles.featureText}>
@@ -129,7 +132,7 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 50,
-        backgroundColor: 'rgba(255,255,255,0.9)',
+        backgroundColor: 'rgba(255,255,255,0.95)',
         justifyContent: 'center',
         alignItems: 'center',
         shadowColor: '#000',
@@ -141,7 +144,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 32,
         fontWeight: '800',
-        color: '#1E1B4B',
+        color: '#FFFFFF',
         textAlign: 'center',
         letterSpacing: -0.5,
         lineHeight: 40,
@@ -149,26 +152,26 @@ const styles = StyleSheet.create({
     },
     subtitle: {
         fontSize: 16,
-        color: '#4C3D7A',
+        color: 'rgba(255,255,255,0.85)',
         textAlign: 'center',
         lineHeight: 24,
-        paddingHorizontal: Spacing.xl, // Prevent edge touching
+        paddingHorizontal: Spacing.xl,
     },
     featuresContainer: {
         flexDirection: 'row',
         marginTop: Spacing.xxl,
         justifyContent: 'center',
-        gap: Spacing.xl, // Increased gap
+        gap: Spacing.xl,
         width: '100%',
     },
     featureItem: {
         alignItems: 'center',
         gap: Spacing.sm,
-        minWidth: 80, // Ensure even spacing
+        minWidth: 80,
     },
     featureText: {
         fontSize: 13,
-        color: '#4C3D7A',
+        color: 'rgba(255,255,255,0.9)',
         fontWeight: '600',
         textAlign: 'center',
     },

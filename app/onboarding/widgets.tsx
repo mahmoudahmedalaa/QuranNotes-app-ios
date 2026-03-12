@@ -12,13 +12,13 @@ import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text, useTheme, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
-import { WaveBackground } from '../../src/core/components/animated/WaveBackground';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useOnboarding } from '../../src/features/onboarding/infrastructure/OnboardingContext';
-import { Spacing, BorderRadius } from '../../src/core/theme/DesignSystem';
+import { Spacing, BorderRadius, Gradients } from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 const STEP = 4;
@@ -53,7 +53,7 @@ export default function OnboardingWidgets() {
         : (['#F5F3FF', '#EDE9FE'] as const);
 
     return (
-        <WaveBackground variant="spiritual" intensity="subtle">
+        <LinearGradient colors={theme.dark ? (['#0F1419', '#1A1F26'] as const) : Gradients.sereneSky} style={{ flex: 1 }}>
             <SafeAreaView style={styles.safeArea}>
 
                 {/* Progress dots */}
@@ -212,7 +212,7 @@ export default function OnboardingWidgets() {
                     </Text>
                 </View>
             </SafeAreaView>
-        </WaveBackground>
+        </LinearGradient>
     );
 }
 

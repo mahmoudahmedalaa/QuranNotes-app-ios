@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
-import { WaveBackground } from '../../src/core/components/animated/WaveBackground';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { useRouter } from 'expo-router';
@@ -43,7 +43,7 @@ export default function OnboardingPickSurah() {
     };
 
     return (
-        <WaveBackground variant="spiritual" intensity="subtle">
+        <LinearGradient colors={theme.dark ? (['#0F1419', '#1A1F26'] as const) : Gradients.sereneSky} style={{ flex: 1 }}>
             <SafeAreaView style={styles.safeArea}>
                 {/* Coach Mark Header */}
                 <MotiView
@@ -145,7 +145,7 @@ export default function OnboardingPickSurah() {
                     </Pressable>
                 </MotiView>
             </SafeAreaView>
-        </WaveBackground>
+        </LinearGradient>
     );
 }
 

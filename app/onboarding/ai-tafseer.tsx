@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Pressable, Dimensions } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
-import { WaveBackground } from '../../src/core/components/animated/WaveBackground';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import { useOnboarding } from '../../src/features/onboarding/infrastructure/Onbo
 import {
     Spacing,
     BorderRadius,
+    Gradients,
 } from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
@@ -48,7 +49,7 @@ export default function OnboardingAiTafseer() {
     };
 
     return (
-        <WaveBackground variant="spiritual" intensity="subtle">
+        <LinearGradient colors={theme.dark ? (['#0F1419', '#1A1F26'] as const) : Gradients.sereneSky} style={{ flex: 1 }}>
 
             {/* Ambient floating sparkles */}
             {SPARKLES.map((s, i) => (
@@ -327,7 +328,7 @@ export default function OnboardingAiTafseer() {
                     </Pressable>
                 </MotiView>
             </SafeAreaView>
-        </WaveBackground>
+        </LinearGradient>
     );
 }
 

@@ -18,8 +18,8 @@ import { useOnboarding } from '../../src/features/onboarding/infrastructure/Onbo
 import { useSettings } from '../../src/features/settings/infrastructure/SettingsContext';
 import { QURAN_FONT_OPTIONS, getQuranFontFamily } from '../../src/core/theme/QuranFonts';
 import type { QuranFontId } from '../../src/core/theme/QuranFonts';
-import { WaveBackground } from '../../src/core/components/animated/WaveBackground';
-import { Spacing, BorderRadius, Shadows, BrandTokens } from '../../src/core/theme/DesignSystem';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Spacing, BorderRadius, Shadows, BrandTokens, Gradients } from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
 const STEP = 3;
@@ -85,7 +85,7 @@ export default function OnboardingQuranFont() {
     };
 
     return (
-        <WaveBackground variant="spiritual" intensity="subtle">
+        <LinearGradient colors={theme.dark ? (['#0F1419', '#1A1F26'] as const) : Gradients.sereneSky} style={{ flex: 1 }}>
             <SafeAreaView style={styles.safeArea}>
                 {/* Progress dots */}
                 <View style={styles.progressBar}>
@@ -279,7 +279,7 @@ export default function OnboardingQuranFont() {
                     </Text>
                 </MotiView>
             </SafeAreaView>
-        </WaveBackground>
+        </LinearGradient>
     );
 }
 

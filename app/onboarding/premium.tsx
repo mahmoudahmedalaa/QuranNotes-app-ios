@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Pressable, Switch, Alert } from 'react-native';
 import { Text, useTheme, Button } from 'react-native-paper';
-import { WaveBackground } from '../../src/core/components/animated/WaveBackground';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MotiView } from 'moti';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import {
     Spacing,
     BorderRadius,
     BrandTokens,
+    Gradients,
 } from '../../src/core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 import { revenueCatService, PurchasesOffering } from '../../src/features/payments/infrastructure/RevenueCatService';
@@ -143,7 +144,7 @@ export default function OnboardingPremium() {
     const savings = isAnnual ? Math.round((1 - ANNUAL_PRICE / 12 / MONTHLY_PRICE) * 100) : 0;
 
     return (
-        <WaveBackground variant="spiritual" intensity="subtle">
+        <LinearGradient colors={Gradients.primary} style={{ flex: 1 }}>
             <SafeAreaView style={styles.safeArea}>
                 {/* Header */}
                 <MotiView
@@ -247,7 +248,7 @@ export default function OnboardingPremium() {
                     </Pressable>
                 </MotiView>
             </SafeAreaView>
-        </WaveBackground>
+        </LinearGradient>
     );
 }
 
