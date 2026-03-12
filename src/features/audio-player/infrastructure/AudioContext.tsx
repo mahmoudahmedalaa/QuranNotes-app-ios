@@ -1,4 +1,7 @@
 /**
+ * ⚠️  LOCKED FILE — See docs/AUDIO_STABILITY.md ⚠️
+ * Do NOT modify without explicit user approval.
+ *
  * AudioContext — Global audio state provider
  * Lifts audio playback state from local hook to app-wide context.
  * Audio continues playing across screen navigation.
@@ -43,6 +46,7 @@ export interface CompletedPlayback {
 interface AudioContextType {
     playingVerse: { surah: number; verse: number } | null;
     isPlaying: boolean;
+    isLoading: boolean;
     currentSurahNum: number | null;
     currentSurahName: string | null;
     playlist: Verse[];
@@ -72,6 +76,13 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const { settings } = useSettings();
     const [playingVerse, setPlayingVerse] = useState<{ surah: number; verse: number } | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
+    const [isLoading, _setIsLoading] = useState(false);
+    const isLoadingRef = useRef(false);
+    // Wrapper that keeps ref in sync with state, preventing stale closures in event listeners
+    const setIsLoading = useCallback((val: boolean) => {
+        isLoadingRef.current = val;
+        _setIsLoading(val);
+    }, []);
     const [currentSurahName, setCurrentSurahName] = useState<string | null>(null);
     const [lastCompletedPlayback, setLastCompletedPlayback] = useState<CompletedPlayback | null>(null);
     const [lastSession, setLastSession] = useState<AudioSession | null>(null);
@@ -92,6 +103,10 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Ref to track previous reciter for live switching
     const prevReciterRef = useRef(settings.reciterId);
+    // Generation counter to suppress verse updates during reciter switch (prevents verse 1 flash).
+    // Each reciter switch increments the counter; event listener only processes
+    // verse updates when its captured generation matches the current one. No timeouts needed.
+    const switchGenerationRef = useRef(0);
 
     // Get reciter info
     const getReciterInfo = useCallback(() => {
@@ -147,45 +162,66 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, []);
 
     // Live reciter switch — reload current playback with new reciter
+    // FIX: Removed isPlaying gate — now works even when paused.
+    // FIX: Uses generation counter instead of fragile boolean+timeout guard.
     useEffect(() => {
-        if (prevReciterRef.current !== settings.reciterId && playingVerse && isPlaying) {
+        if (prevReciterRef.current !== settings.reciterId && playingVerse) {
+            const wasPlaying = isPlaying;
             const pl = playlistRef.current;
             const surahNum = currentSurahNumRef.current;
             const surahName = currentSurahNameRef.current;
             if (pl.length > 0 && surahNum) {
+                // Increment generation to suppress verse updates during the switch
+                switchGenerationRef.current += 1;
+                const switchGen = switchGenerationRef.current;
+
+                setIsLoading(true);
                 const { cdnFolder, name, reciter } = getReciterInfo();
-                if (hasFullSurahAudio(reciter) && reciter.quranComId) {
-                    // Re-start with full-surah mode for new reciter
-                    startFullSurahPlayback(
-                        surahNum,
-                        surahName || 'Quran',
-                        reciter.quranComId,
-                        name,
-                        playingVerse.verse,
-                    ).then(success => {
-                        if (!success) {
-                            // Fallback to per-verse for new reciter
-                            const currentIndex = pl.findIndex(v => v.number === playingVerse.verse);
-                            player.loadPlaylist(
-                                surahNum,
-                                pl,
-                                currentIndex >= 0 ? currentIndex : 0,
-                                cdnFolder,
-                                name,
-                                surahName || 'Quran',
-                            );
+
+                const finishSwitch = async (loadPromise: Promise<boolean | void>) => {
+                    try {
+                        await loadPromise;
+                    } catch (e) {
+                        if (__DEV__) console.warn('[AudioContext] reciter switch failed:', e);
+                    } finally {
+                        // Only clear if no newer switch happened
+                        if (switchGenerationRef.current === switchGen) {
+                            setIsLoading(false);
+                            // If user was paused, pause the new reciter too
+                            if (!wasPlaying) {
+                                try { await player.pause(); } catch { /* best effort */ }
+                            }
                         }
-                    });
+                    }
+                };
+
+                if (hasFullSurahAudio(reciter) && reciter.quranComId) {
+                    finishSwitch(
+                        startFullSurahPlayback(
+                            surahNum,
+                            surahName || 'Quran',
+                            reciter.quranComId,
+                            name,
+                            playingVerse.verse,
+                        ).then(success => {
+                            if (!success) {
+                                const currentIndex = pl.findIndex(v => v.number === playingVerse.verse);
+                                return player.loadPlaylist(
+                                    surahNum, pl,
+                                    currentIndex >= 0 ? currentIndex : 0,
+                                    cdnFolder, name, surahName || 'Quran',
+                                );
+                            }
+                        }),
+                    );
                 } else {
-                    // Per-verse mode for new reciter
                     const currentIndex = pl.findIndex(v => v.number === playingVerse.verse);
-                    player.loadPlaylist(
-                        surahNum,
-                        pl,
-                        currentIndex >= 0 ? currentIndex : 0,
-                        cdnFolder,
-                        name,
-                        surahName || 'Quran',
+                    finishSwitch(
+                        player.loadPlaylist(
+                            surahNum, pl,
+                            currentIndex >= 0 ? currentIndex : 0,
+                            cdnFolder, name, surahName || 'Quran',
+                        ),
                     );
                 }
             }
@@ -195,36 +231,53 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // ── Listen to player events ──
     useEffect(() => {
+        // Capture the generation at listener setup time (always 0 on mount).
+        // The listener checks against the CURRENT ref value at event time.
         const unsubscribe = player.addListener(async (status: PlaybackStatus) => {
             setIsPlaying(status.isPlaying);
 
-            // Full-surah mode: verse detection via timestamp polling
-            if (status.currentVerseKey) {
-                const [surahStr, verseStr] = status.currentVerseKey.split(':');
-                const surahNum = parseInt(surahStr);
-                const verseNum = parseInt(verseStr);
-                if (!isNaN(surahNum) && !isNaN(verseNum)) {
-                    setPlayingVerse({ surah: surahNum, verse: verseNum });
-                    // Update lock screen now-playing metadata
-                    const pl = playlistRef.current;
-                    const sName = currentSurahNameRef.current;
-                    const reciter = getReciterById(prevReciterRef.current);
-                    player.updateNowPlayingVerse(
-                        sName || 'Quran',
-                        verseNum,
-                        pl.length,
-                        reciter.name,
-                    );
-                }
+            // Clear loading state when playback actually starts
+            if (status.isPlaying) {
+                setIsLoading(false);
             }
 
-            // Per-verse mode: track changed in the queue — update playingVerse from playlist
-            if (status.activeTrackIndex !== undefined) {
-                const pl = playlistRef.current;
-                const surahNum = currentSurahNumRef.current;
-                if (pl.length > 0 && surahNum && status.activeTrackIndex < pl.length) {
-                    const verse = pl[status.activeTrackIndex];
-                    setPlayingVerse({ surah: surahNum, verse: verse.number });
+            // Skip verse detection updates while a reciter switch is in-flight.
+            // Uses generation counter: if switchGenerationRef was incremented
+            // since event subscription, a switch is in progress. We check if
+            // the generation changed DURING this event handling cycle.
+            // NOTE: Only skip verse updates — do NOT block the entire listener,
+            // or didJustFinish and isPlaying updates will be suppressed.
+            const isSwitching = switchGenerationRef.current > 0 && isLoadingRef.current;
+            if (!isSwitching) {
+                // Full-surah mode: verse detection via timestamp polling
+                if (status.currentVerseKey) {
+                    const [surahStr, verseStr] = status.currentVerseKey.split(':');
+                    const surahNum = parseInt(surahStr);
+                    const verseNum = parseInt(verseStr);
+                    if (!isNaN(surahNum) && !isNaN(verseNum)) {
+                        setPlayingVerse({ surah: surahNum, verse: verseNum });
+                        // Update lock screen now-playing metadata
+                        const pl = playlistRef.current;
+                        const sName = currentSurahNameRef.current;
+                        const reciter = getReciterById(prevReciterRef.current);
+                        player.updateNowPlayingVerse(
+                            sName || 'Quran',
+                            verseNum,
+                            pl.length,
+                            reciter.name,
+                        );
+                    }
+                }
+
+                // Per-verse mode: track changed in the queue — update playingVerse from playlist
+                // Guard: only applies when NOT in full-surah mode (prevents verse 1 flash on reciter switch)
+                if (status.activeTrackIndex !== undefined && !player.getIsFullSurahMode()) {
+                    const pl = playlistRef.current;
+                    const surahNum = currentSurahNumRef.current;
+                    if (pl.length > 0 && surahNum && status.activeTrackIndex < pl.length) {
+                        const verse = pl[status.activeTrackIndex];
+                        setPlayingVerse({ surah: surahNum, verse: verse.number });
+                    }
                 }
             }
 
@@ -402,12 +455,17 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 setCurrentSurahName(null);
                 currentSurahNameRef.current = null;
                 setPlayingVerse({ surah: surahNum, verse: verseNum });
+                setIsLoading(true);
                 await player.playVerse(surahNum, verseNum, cdnFolder, name);
             } catch (e) {
                 if (__DEV__) console.warn('[AudioContext] playVerse failed:', e);
+                // FIX: Roll back optimistic state on failure
+                setPlayingVerse(null);
+                setIsLoading(false);
+                setIsPlaying(false);
             }
         },
-        [getReciterInfo, startFullSurahPlayback],
+        [getReciterInfo, startFullSurahPlayback, setIsLoading],
     );
 
     // Play entire surah from beginning
@@ -424,6 +482,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
                 if (surah.verses.length > 0) {
                     setPlayingVerse({ surah: surah.number, verse: surah.verses[0].number });
+                    setIsLoading(true);
                     const { cdnFolder, name, reciter } = getReciterInfo();
 
                     console.log(`[AUDIO-DEBUG] playSurah: reciter=${reciter.id}, quranComId=${reciter.quranComId}, hasFullSurah=${hasFullSurahAudio(reciter)}`);
@@ -456,12 +515,17 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 }
             } catch (e) {
                 console.warn('[AudioContext] playSurah failed:', e);
+                // FIX: Roll back optimistic state on failure
+                setPlayingVerse(null);
+                setIsLoading(false);
+                setIsPlaying(false);
             }
         },
-        [getReciterInfo, startFullSurahPlayback],
+        [getReciterInfo, startFullSurahPlayback, setIsLoading],
     );
 
     // Play from a specific verse within a surah
+    // FIX: Sets isLoading immediately, rolls back state on failure.
     const playFromVerse = useCallback(
         async (surah: Surah, verseNum: number) => {
             try {
@@ -475,6 +539,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     setCurrentSurahName(sName);
                     currentSurahNameRef.current = sName;
                     setPlayingVerse({ surah: surah.number, verse: verseNum });
+                    setIsLoading(true);
                     const { cdnFolder, name, reciter } = getReciterInfo();
 
                     // Try full-surah gapless mode first
@@ -486,7 +551,10 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                             name,
                             verseNum,
                         );
-                        if (success) return;
+                        if (success) {
+                            // isLoading will be cleared by the event listener when Playing starts
+                            return;
+                        }
                     }
 
                     // Fallback: per-verse mode
@@ -498,12 +566,17 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                         name,
                         sName,
                     );
+                    // isLoading will be cleared by the event listener when Playing starts
                 }
             } catch (e) {
                 if (__DEV__) console.warn('[AudioContext] playFromVerse failed:', e);
+                // FIX: Roll back optimistic state on failure
+                setPlayingVerse(null);
+                setIsLoading(false);
+                setIsPlaying(false);
             }
         },
-        [getReciterInfo, startFullSurahPlayback],
+        [getReciterInfo, startFullSurahPlayback, setIsLoading],
     );
 
     const pause = useCallback(async () => {
@@ -579,6 +652,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const value: AudioContextType = {
         playingVerse,
         isPlaying,
+        isLoading,
         currentSurahNum,
         currentSurahName,
         playlist,

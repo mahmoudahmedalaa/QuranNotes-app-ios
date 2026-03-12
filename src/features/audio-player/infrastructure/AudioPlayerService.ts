@@ -1,4 +1,7 @@
 /**
+ * ⚠️  LOCKED FILE — See docs/AUDIO_STABILITY.md ⚠️
+ * Do NOT modify without explicit user approval.
+ *
  * AudioPlayerService — Verse playback via react-native-track-player
  *
  * Supports TWO playback modes:
@@ -308,31 +311,48 @@ export class AudioPlayerService {
                 return;
             }
 
-            // ── Non-playing states: debounce 500ms to absorb transient states ──
-            if (this.playbackStateTimer) {
-                clearTimeout(this.playbackStateTimer);
-            }
-            this.playbackStateTimer = setTimeout(async () => {
-                this.playbackStateTimer = null;
+            // ── Paused state: fire immediately so UI responds instantly ──
+            // Only debounce buffering/loading to suppress flicker during transitions.
+            if (state === State.Paused || state === State.Stopped || state === State.None) {
+                if (this.playbackStateTimer) {
+                    clearTimeout(this.playbackStateTimer);
+                    this.playbackStateTimer = null;
+                }
                 try {
                     const progress = await TrackPlayer.getProgress();
                     this.notifyListeners({
                         isPlaying: false,
-                        isBuffering,
+                        isBuffering: false,
                         positionMillis: Math.round((progress.position || 0) * 1000),
                         durationMillis: Math.round((progress.duration || 0) * 1000),
-                        didJustFinish: false,  // NEVER set here — see architecture doc above
+                        didJustFinish: false,
                     });
                 } catch {
                     this.notifyListeners({
                         isPlaying: false,
-                        isBuffering,
+                        isBuffering: false,
                         positionMillis: 0,
                         durationMillis: 0,
                         didJustFinish: false,
                     });
                 }
-            }, 500);
+                return;
+            }
+
+            // ── Buffering/Loading states: debounce 100ms to absorb transient states ──
+            if (this.playbackStateTimer) {
+                clearTimeout(this.playbackStateTimer);
+            }
+            this.playbackStateTimer = setTimeout(() => {
+                this.playbackStateTimer = null;
+                this.notifyListeners({
+                    isPlaying: false,
+                    isBuffering: true,
+                    positionMillis: 0,
+                    durationMillis: 0,
+                    didJustFinish: false,
+                });
+            }, 100);
         });
 
         /**
@@ -700,30 +720,13 @@ export class AudioPlayerService {
         // ── Store queue metadata for pre-download system ──
         this.currentQueueMeta = { surahNum, verses: [...verses], cdnFolder };
 
-        // ── Pre-download the first few verses for instant start ──
-        // Download the starting verse + next 2 to cache before building the queue.
-        // This ensures the first few transitions are gapless from the start.
-        const preDownloadEnd = Math.min(startIndex + 3, verses.length);
-        const preDownloadPromises: Promise<void>[] = [];
-        for (let i = startIndex; i < preDownloadEnd; i++) {
-            preDownloadPromises.push(this.downloadVerseToCache(
-                `${surahNum}:${verses[i].number}`,
-                this.buildUrl(surahNum, verses[i].number, cdnFolder),
-            ));
-        }
-        // Wait for pre-downloads (with a timeout so we don't block forever)
-        await Promise.race([
-            Promise.allSettled(preDownloadPromises),
-            new Promise(resolve => setTimeout(resolve, 4000)), // 4s max wait
-        ]);
-
-        // Build tracks for the entire surah — use cached file:// URLs where available
+        // ── Build tracks immediately using remote URLs — NO blocking pre-download ──
+        // Play starts instantly; pre-download happens in the background for gapless transitions.
         const tracks = verses.map((verse, idx) => {
             const trackId = `${surahNum}:${verse.number}`;
-            const cachedPath = this.cachedPaths.get(trackId);
             return {
                 id: trackId,
-                url: cachedPath || this.buildUrl(surahNum, verse.number, cdnFolder),
+                url: this.buildUrl(surahNum, verse.number, cdnFolder),
                 title: `Surah ${surahName} (${idx + 1}/${verses.length})`,
                 artist: `Verse ${verse.number} · ${reciterName}`,
                 album: 'QuranNotes',
@@ -738,11 +741,15 @@ export class AudioPlayerService {
 
         await TrackPlayer.add(tracks);
 
-        // Skip to the starting verse and play
+        // Skip to the starting verse and play IMMEDIATELY
         if (startIndex > 0) {
             await TrackPlayer.skip(startIndex);
         }
         await TrackPlayer.play();
+
+        // ── Fire-and-forget: pre-download upcoming verses in background ──
+        // This caches the next few tracks for gapless transitions.
+        this.preDownloadAhead(startIndex).catch(() => { /* best-effort */ });
     }
 
     /**

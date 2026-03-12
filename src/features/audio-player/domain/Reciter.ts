@@ -8,11 +8,10 @@ export interface Reciter {
 }
 
 /**
- * Reciters with quranComId get full-surah audio from Quran.com API (zero gaps).
- * Reciters without quranComId fall back to per-verse MP3s from everyayah.com.
+ * ALL reciters use Quran.com full-surah gapless audio (zero gaps between verses).
+ * Per-verse fallback reciters have been removed — see docs/AUDIO_STABILITY.md.
  *
  * Quran.com IDs verified via: GET /api/v4/chapter_recitations/{id}/1
- * EveryAyah available reciters: https://everyayah.com/data/
  */
 export const RECITERS: Reciter[] = [
     {
@@ -38,18 +37,13 @@ export const RECITERS: Reciter[] = [
     },
     {
         id: 'minshawy',
-        name: 'Mohamed Siddiq Al-Minshawi',
+        name: 'Al-Minshawi (Murattal)',
         subfolder: 'ar.minshawi',
         cdnFolder: 'Minshawy_Murattal_128kbps',
         quranComId: 9,
     },
-    {
-        id: 'minshawy_mujawwad',
-        name: 'Al-Minshawi (Mujawwad)',
-        subfolder: 'ar.minshawi',
-        cdnFolder: 'Minshawy_Mujawwad_192kbps',
-        quranComId: 8,
-    },
+    // Minshawi Mujawwad (quranComId: 8) REMOVED — API returns no verse timestamps,
+    // causing playback error. Only Murattal (ID 9) is supported.
     {
         id: 'husary',
         name: 'Mahmoud Khalil Al-Husary',
@@ -79,41 +73,12 @@ export const RECITERS: Reciter[] = [
         quranComId: 13,
     },
     {
-        id: 'maher',
-        name: 'Maher Al-Muaiqly',
-        subfolder: 'ar.maher',
-        cdnFolder: 'MaherAlMuaiqly128kbps',
-        // No quranComId — falls back to per-verse everyayah.com
-    },
-    {
-        id: 'ajamy',
-        name: 'Ahmed Al-Ajamy',
-        subfolder: 'ar.ajamy',
-        cdnFolder: 'Ahmed_ibn_Ali_al-Ajamy_128kbps_ketaballah.net',
-        // No quranComId — falls back to per-verse everyayah.com
-    },
-    {
-        id: 'hudhaify',
-        name: 'Ali Al-Hudhaify',
-        subfolder: 'ar.hudhaify',
-        cdnFolder: 'Hudhaify_128kbps',
-        // No quranComId — falls back to per-verse everyayah.com
-    },
-    {
         id: 'hussary_mujawwad',
         name: 'Al-Husary (Muallim)',
         subfolder: 'ar.husary',
         cdnFolder: 'Husary_128kbps_Mujawwad',
         quranComId: 12,
     },
-    {
-        id: 'alijaber',
-        name: 'Ali Jaber',
-        subfolder: 'ar.jaber',
-        cdnFolder: 'Ali_Jaber_64kbps',
-        // No quranComId — falls back to per-verse everyayah.com
-    },
-    // ── New reciters added from Quran.com API (full-surah gapless available) ──
     {
         id: 'shatri',
         name: 'Abu Bakr Al-Shatri',
@@ -148,3 +113,4 @@ export const getReciterById = (id: string): Reciter => {
 export const hasFullSurahAudio = (reciter: Reciter): boolean => {
     return reciter.quranComId !== undefined;
 };
+
