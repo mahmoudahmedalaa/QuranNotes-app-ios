@@ -48,7 +48,16 @@ export default function DashboardScreen() {
                     {/* 1. Mood Check-In */}
                     <MoodCheckInCard />
 
-                    {/* 2. 2-Column Grid: Khatma + Adhkar */}
+                    {/* 2. Daily Verse */}
+                    <DailyVerseCard />
+
+                    {/* 3. Daily Hadith */}
+                    <DailyHadithCard />
+
+                    {/* 4. Prayer Times */}
+                    <PrayerTimesCard />
+
+                    {/* 5. 2-Column Grid: Khatma + Adhkar */}
                     <MotiView
                         from={{ opacity: 0, translateY: 10 }}
                         animate={{ opacity: 1, translateY: 0 }}
@@ -58,15 +67,6 @@ export default function DashboardScreen() {
                         <KhatmaTile />
                         <AdhkarTile onPress={(period) => { setAdhkarPeriod(period); setShowAdhkar(true); }} />
                     </MotiView>
-
-                    {/* 3. Prayer Times */}
-                    <PrayerTimesCard />
-
-                    {/* 4. Daily Verse */}
-                    <DailyVerseCard />
-
-                    {/* 5. Daily Hadith */}
-                    <DailyHadithCard />
 
                     {/* Bottom padding */}
                     <View style={{ height: 120 }} />

@@ -45,7 +45,7 @@ export function KhatmaTile() {
                 colors={
                     theme.dark
                         ? ['#1e1b4b', '#312e81', '#3730a3'] as const
-                        : ['#e0e7ff', '#c7d2fe', '#a5b4fc'] as const
+                        : ['#c7d2fe', '#a5b4fc', '#818cf8'] as const
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -54,7 +54,7 @@ export function KhatmaTile() {
             {/* Secondary shimmer glow from bottom-right */}
             <LinearGradient
                 colors={[
-                    theme.dark ? 'rgba(139,92,246,0.35)' : 'rgba(129,140,248,0.30)',
+                    theme.dark ? 'rgba(139,92,246,0.35)' : 'rgba(99,102,241,0.25)',
                     'transparent',
                 ]}
                 start={{ x: 1, y: 1 }}
@@ -66,12 +66,12 @@ export function KhatmaTile() {
                 <Svg width={RING_SIZE} height={RING_SIZE}>
                     <Circle
                         cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RADIUS}
-                        stroke={theme.dark ? '#a5b4fc' : theme.colors.primary} strokeOpacity={0.2}
+                        stroke={theme.dark ? '#a5b4fc' : '#FFFFFF'} strokeOpacity={0.25}
                         strokeWidth={STROKE_WIDTH} fill="none"
                     />
                     <Circle
                         cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RADIUS}
-                        stroke={theme.dark ? '#a5b4fc' : theme.colors.primary} strokeWidth={STROKE_WIDTH} fill="none"
+                        stroke={theme.dark ? '#a5b4fc' : '#FFFFFF'} strokeWidth={STROKE_WIDTH} fill="none"
                         strokeLinecap="round"
                         strokeDasharray={CIRCUMFERENCE}
                         strokeDashoffset={strokeDashoffset}
@@ -80,12 +80,12 @@ export function KhatmaTile() {
                     />
                 </Svg>
                 <View style={styles.tileRingCenter}>
-                    <Text style={[styles.tileRingNum, { color: theme.dark ? '#e0e7ff' : theme.colors.primary }]}>{completedCount}</Text>
-                    <Text style={[styles.tileRingDenom, { color: theme.dark ? '#c7d2fe' : theme.colors.primary }]}>/30</Text>
+                    <Text style={[styles.tileRingNum, { color: theme.dark ? '#e0e7ff' : '#FFFFFF' }]}>{completedCount}</Text>
+                    <Text style={[styles.tileRingDenom, { color: theme.dark ? '#c7d2fe' : 'rgba(255,255,255,0.85)' }]}>/30</Text>
                 </View>
             </View>
-            <Text style={[styles.tileLabel, { color: theme.dark ? '#e0e7ff' : theme.colors.primary }]}>Khatma</Text>
-            <Text style={[styles.tileSub, { color: theme.dark ? '#c7d2fe' : theme.colors.primary, opacity: 0.9 }]}>
+            <Text style={[styles.tileLabel, { color: theme.dark ? '#e0e7ff' : '#FFFFFF' }]}>Khatma</Text>
+            <Text style={[styles.tileSub, { color: theme.dark ? '#c7d2fe' : 'rgba(255,255,255,0.85)', opacity: 0.9 }]}>
                 {completedCount === 0 ? 'Start journey' : `${30 - completedCount} remaining`}
             </Text>
         </Pressable>
