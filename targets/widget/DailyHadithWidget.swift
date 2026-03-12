@@ -28,21 +28,21 @@ struct HadithPalette {
 
     static func forHour(_ hour: Int) -> HadithPalette {
         switch hour {
-        case 6..<18:  // Day — soft, warm rose-violet
+        case 6..<18:  // Day — rich, warm rose-violet
             return HadithPalette(
-                top:    Color(hex: "8B6FA8"),  // dusty mauve
-                bottom: Color(hex: "A68EBF"),  // faded plum
-                accent: Color(hex: "EDE0F5"))  // pale rose-lavender
-        case 18..<20: // Twilight — muted berry, reflective
+                top:    Color(hex: "6E4FA0"),  // deep mauve-violet
+                bottom: Color(hex: "9468C4"),  // vibrant plum
+                accent: Color(hex: "DBC6F9"))  // luminous rose-lavender
+        case 18..<20: // Twilight — deep berry, reflective
             return HadithPalette(
-                top:    Color(hex: "644580"),  // soft berry
-                bottom: Color(hex: "876B9E"),  // dusty wisteria
-                accent: Color(hex: "D8C8E8"))  // light orchid
-        default:      // Night (8pm–6am) — soft cosmic, peaceful
+                top:    Color(hex: "4D2D6E"),  // rich berry
+                bottom: Color(hex: "7450A0"),  // vivid wisteria
+                accent: Color(hex: "CCB8EC"))  // soft orchid
+        default:      // Night (8pm–6am) — deep cosmic, peaceful
             return HadithPalette(
-                top:    Color(hex: "201838"),  // muted midnight
-                bottom: Color(hex: "322650"),  // soft plum-indigo
-                accent: Color(hex: "BCADDA"))  // faded amethyst
+                top:    Color(hex: "180F30"),  // deep midnight
+                bottom: Color(hex: "2A1E4A"),  // cosmic plum
+                accent: Color(hex: "AC99D8"))  // amethyst glow
         }
     }
     static func current() -> HadithPalette {
