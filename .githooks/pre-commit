@@ -1,0 +1,79 @@
+#!/bin/bash
+# =============================================================================
+# PRE-COMMIT HOOK: Critical File Protection
+# =============================================================================
+# Prevents accidental deletion or corruption of files critical to app
+# functionality (payments, auth, build config).
+#
+# To bypass for legitimate changes: git commit --no-verify
+# =============================================================================
+
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# --- Protected Files (deletion blocked) ---
+PROTECTED_FILES=(
+    ".env"
+    "GoogleService-Info.plist"
+    "app.json"
+    "firebase.json"
+)
+
+# --- Required keys that must exist in .env ---
+REQUIRED_ENV_KEYS=(
+    "EXPO_PUBLIC_REVENUECAT_IOS_KEY"
+    "EXPO_PUBLIC_FIREBASE_API_KEY"
+    "EXPO_PUBLIC_FIREBASE_PROJECT_ID"
+    "EXPO_PUBLIC_FIREBASE_APP_ID"
+)
+
+BLOCKED=0
+
+# CHECK 1: Block deletion of protected files
+for file in "${PROTECTED_FILES[@]}"; do
+    if git diff --cached --name-only --diff-filter=D | grep -qx "$file"; then
+        echo -e "${RED}🛑 BLOCKED: Critical file '${file}' has been DELETED in this commit.${NC}"
+        echo "   This file is required for the app to function (payments, auth, builds)."
+        echo "   If this is intentional, use: git commit --no-verify"
+        echo ""
+        BLOCKED=1
+    fi
+done
+
+# CHECK 2: If .env is being modified (not deleted), verify required keys are still present
+if git diff --cached --name-only --diff-filter=M | grep -qx ".env"; then
+    # Get the staged version of .env
+    STAGED_ENV=$(git show :.env 2>/dev/null)
+    if [ -n "$STAGED_ENV" ]; then
+        for key in "${REQUIRED_ENV_KEYS[@]}"; do
+            if ! echo "$STAGED_ENV" | grep -q "^${key}=.\+"; then
+                echo -e "${RED}🛑 BLOCKED: Required key '${key}' is missing or empty in .env${NC}"
+                echo "   This key is critical for app functionality."
+                echo "   If this is intentional, use: git commit --no-verify"
+                echo ""
+                BLOCKED=1
+            fi
+        done
+    fi
+fi
+
+# CHECK 3: If .env exists on disk but is not staged, warn (it might have been removed from tracking)
+if [ -f ".env" ] && ! git ls-files --error-unmatch .env >/dev/null 2>&1; then
+    # .env exists on disk but is not tracked — this is expected since it's gitignored
+    # But verify the file has the required keys
+    for key in "${REQUIRED_ENV_KEYS[@]}"; do
+        if ! grep -q "^${key}=.\+" .env; then
+            echo -e "${YELLOW}⚠️  WARNING: Required key '${key}' is missing from local .env${NC}"
+            echo "   Your local builds may fail without this key."
+            echo ""
+        fi
+    done
+fi
+
+if [ $BLOCKED -eq 1 ]; then
+    echo -e "${RED}Commit rejected. Fix the issues above or use --no-verify to bypass.${NC}"
+    exit 1
+fi
+
+exit 0
