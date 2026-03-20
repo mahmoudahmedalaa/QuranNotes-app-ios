@@ -25,6 +25,8 @@ interface PrayerContextType {
     locationError: string | null;
     /** Force-refresh prayer times */
     refresh: () => Promise<void>;
+    /** User's current location (null if unavailable) */
+    userLocation: { latitude: number; longitude: number } | null;
 }
 
 const PrayerContext = createContext<PrayerContextType>({
@@ -35,6 +37,7 @@ const PrayerContext = createContext<PrayerContextType>({
     loading: true,
     locationError: null,
     refresh: async () => { },
+    userLocation: null,
 });
 
 export const usePrayer = () => useContext(PrayerContext);
@@ -57,6 +60,7 @@ export const PrayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [loading, setLoading] = useState(true);
     const [locationError, setLocationError] = useState<string | null>(null);
     const [secondsToNext, setSecondsToNext] = useState(0);
+    const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
     const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const midnightRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -102,6 +106,7 @@ export const PrayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 });
                 latitude = location.coords.latitude;
                 longitude = location.coords.longitude;
+                setUserLocation({ latitude, longitude });
             } catch (locErr) {
                 if (__DEV__) console.warn('[PrayerContext] Failed to get position:', locErr);
                 setLocationError('Unable to determine location');
@@ -254,7 +259,8 @@ export const PrayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         loading,
         locationError,
         refresh: fetchPrayerTimes,
-    }), [prayerTimes, nextPrayer, secondsToNext, timeToNextPrayer, loading, locationError, fetchPrayerTimes]);
+        userLocation,
+    }), [prayerTimes, nextPrayer, secondsToNext, timeToNextPrayer, loading, locationError, fetchPrayerTimes, userLocation]);
 
     return (
         <PrayerContext.Provider value={value}>

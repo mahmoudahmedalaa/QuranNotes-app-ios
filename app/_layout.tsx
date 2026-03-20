@@ -9,6 +9,7 @@ import { AudioProvider } from '../src/features/audio-player/infrastructure/Audio
 import { PrayerProvider } from '../src/features/prayer/infrastructure/PrayerContext';
 import { AdhkarProvider } from '../src/features/adhkar/infrastructure/AdhkarContext';
 import { HadithProvider } from '../src/features/hadith/infrastructure/HadithContext';
+import { TadabburProvider } from '../src/features/tadabbur/infrastructure/TadabburContext';
 import { AudioKhatmaBridge } from '../src/features/khatma/presentation/AudioKhatmaBridge';
 import { NotificationScheduler } from '../src/features/notifications/presentation/NotificationScheduler';
 import { OnboardingProvider, useOnboarding } from '../src/features/onboarding/infrastructure/OnboardingContext';
@@ -52,6 +53,7 @@ const AppProviders = composeProviders([
     NoteProvider,
     HighlightProvider,
     HadithProvider,
+    TadabburProvider,
     FolderProvider,
 ]);
 
@@ -123,6 +125,18 @@ export default function RootLayout() {
                     />
                     <Stack.Screen
                         name="hadith-library"
+                        options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                        name="tadabbur-session"
+                        options={{ presentation: 'fullScreenModal', headerShown: false, animation: 'fade' }}
+                    />
+                    <Stack.Screen
+                        name="reflections"
+                        options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                        name="reflection-detail"
                         options={{ headerShown: false }}
                     />
                 </Stack>

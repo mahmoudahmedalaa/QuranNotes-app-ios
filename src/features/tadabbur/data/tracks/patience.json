@@ -1,0 +1,95 @@
+{
+    "id": "patience",
+    "name": "Patience",
+    "nameArabic": "صَبر",
+    "description": "Verses on perseverance, endurance, and trusting Allah's timing",
+    "difficulty": "intermediate",
+    "estimatedMinutes": 7,
+    "isPro": true,
+    "icon": "weather-sunset",
+    "color": "#3B82F6",
+    "passages": [
+        {
+            "surahNumber": 2,
+            "startVerse": 153,
+            "endVerse": 153,
+            "prompts": [
+                {
+                    "id": "p-2-1",
+                    "text": "What situation in your life right now requires the most patience from you?",
+                    "category": "personal",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "p-2-2",
+                    "text": "This verse links patience with prayer. How has prayer helped you endure something difficult?",
+                    "category": "contemplation",
+                    "aiGenerated": false
+                }
+            ]
+        },
+        {
+            "surahNumber": 12,
+            "startVerse": 18,
+            "endVerse": 18,
+            "prompts": [
+                {
+                    "id": "p-12-1",
+                    "text": "Yaqub's patience was described as 'beautiful patience.' What makes patience beautiful rather than bitter?",
+                    "category": "contemplation",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "p-12-2",
+                    "text": "Have you ever been in a situation where you had to trust Allah's plan despite not understanding it?",
+                    "category": "personal",
+                    "aiGenerated": false
+                }
+            ]
+        },
+        {
+            "surahNumber": 103,
+            "startVerse": 1,
+            "endVerse": 3,
+            "prompts": [
+                {
+                    "id": "p-103-1",
+                    "text": "This surah says humanity is at a loss — except those who believe, do good, and advise patience. How do you advise patience to others?",
+                    "category": "action",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "p-103-2",
+                    "text": "Time is running out, yet truth takes patience to uphold. What truth in your life requires you to be patient?",
+                    "category": "personal",
+                    "aiGenerated": false
+                }
+            ]
+        },
+        {
+            "surahNumber": 94,
+            "startVerse": 5,
+            "endVerse": 6,
+            "prompts": [
+                {
+                    "id": "p-94-1",
+                    "text": "Think of a time when something you dreaded turned into unexpected growth. What did you learn about trusting the process?",
+                    "category": "personal",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "p-94-2",
+                    "text": "The promise is repeated twice — ease comes with hardship. Why do you think Allah emphasised this repetition?",
+                    "category": "contemplation",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "p-94-3",
+                    "text": "What hardship are you currently in, and what ease might already be hidden within it?",
+                    "category": "personal",
+                    "aiGenerated": false
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,75 @@
+{
+    "1:1": [
+        {
+            "id": "p-1-1a",
+            "text": "In the name of Allah, the Most Gracious, the Most Merciful. When have you felt Allah's mercy most recently?",
+            "category": "personal"
+        },
+        {
+            "id": "p-1-1b",
+            "text": "Every action begins with bismillah. How intentional are you about beginning your daily tasks with remembrance?",
+            "category": "action"
+        }
+    ],
+    "1:2": [
+        {
+            "id": "p-1-2a",
+            "text": "All praise belongs to Allah, Lord of all the worlds. What are you most grateful for today?",
+            "category": "gratitude"
+        },
+        {
+            "id": "p-1-2b",
+            "text": "Praising Allah is the first thing taught in the Quran. What would change if you started every morning with praise?",
+            "category": "action"
+        }
+    ],
+    "1:5": [
+        {
+            "id": "p-1-5a",
+            "text": "You alone we worship, and You alone we ask for help. In what area of life do you need to lean on Allah more?",
+            "category": "personal"
+        }
+    ],
+    "1:6": [
+        {
+            "id": "p-1-6a",
+            "text": "Guide us to the straight path. What does staying on course look like for you right now?",
+            "category": "contemplation"
+        }
+    ],
+    "112:1": [
+        {
+            "id": "p-112-1a",
+            "text": "Say: He is Allah, the One. How does this absolute oneness bring you peace in complicated times?",
+            "category": "contemplation"
+        }
+    ],
+    "112:2": [
+        {
+            "id": "p-112-2a",
+            "text": "Allah is As-Samad — the Self-Sufficient. When do you catch yourself relying on things other than Allah?",
+            "category": "personal"
+        }
+    ],
+    "113:1": [
+        {
+            "id": "p-113-1a",
+            "text": "Say: I seek refuge in the Lord of daybreak. What darkness are you asking Allah to protect you from?",
+            "category": "personal"
+        }
+    ],
+    "114:1": [
+        {
+            "id": "p-114-1a",
+            "text": "Say: I seek refuge in the Lord of mankind. What does it mean to you that the Creator of all people is also your personal protector?",
+            "category": "contemplation"
+        }
+    ],
+    "114:5": [
+        {
+            "id": "p-114-5a",
+            "text": "The whisperer whispers into the hearts of people. What recurring thought patterns do you want to break free from?",
+            "category": "personal"
+        }
+    ]
+}

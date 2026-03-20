@@ -8,9 +8,10 @@ import * as Haptics from 'expo-haptics';
 
 import { Spacing } from '../theme/DesignSystem';
 import { NoorMascot } from './mascot/NoorMascot';
+import { QiblaHeaderIndicator } from '../../features/prayer/presentation/QiblaHeaderIndicator';
 
 /**
- * Dashboard header with greeting text, mascot, and settings button.
+ * Dashboard header with greeting text, mascot, Qibla indicator, and settings button.
  */
 export function DashboardHeader() {
     const router = useRouter();
@@ -37,19 +38,23 @@ export function DashboardHeader() {
                     </View>
                 </View>
             </View>
-            <Pressable
-                onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    router.push('/(tabs)/settings');
-                }}
-                style={({ pressed }) => [
-                    styles.settingsButton,
-                    { backgroundColor: theme.colors.surfaceVariant },
-                    pressed && { opacity: 0.7, transform: [{ scale: 0.92 }] },
-                ]}
-            >
-                <Feather name="settings" size={20} color={theme.colors.onSurfaceVariant} />
-            </Pressable>
+            <View style={styles.headerActions}>
+                <QiblaHeaderIndicator />
+                <Pressable
+                    onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        router.push('/(tabs)/settings');
+                    }}
+                    hitSlop={12}
+                    style={({ pressed }) => [
+                        styles.settingsButton,
+                        { backgroundColor: theme.colors.surfaceVariant },
+                        pressed && { opacity: 0.7, transform: [{ scale: 0.92 }] },
+                    ]}
+                >
+                    <Feather name="settings" size={20} color={theme.colors.onSurfaceVariant} />
+                </Pressable>
+            </View>
         </MotiView>
     );
 }
@@ -61,6 +66,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        zIndex: 10,
     },
     headerContent: { flex: 1 },
     headerRow: { flexDirection: 'row', alignItems: 'center' },
@@ -74,5 +80,10 @@ const styles = StyleSheet.create({
     settingsButton: {
         width: 36, height: 36, borderRadius: 18,
         alignItems: 'center', justifyContent: 'center',
+    },
+    headerActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: Spacing.sm,
     },
 });

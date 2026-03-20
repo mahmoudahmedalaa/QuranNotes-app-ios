@@ -2,6 +2,28 @@
  * Mood types and interfaces for Quranic Reflection feature.
  */
 
+import type { IntentCategory } from '../../../features/tadabbur/domain/entities/Reflection';
+
+/** Mapping from MoodType → Tadabbur IntentCategory + session label */
+export interface MoodIntentMapping {
+    category: IntentCategory;
+    label: string;
+}
+
+export const MOOD_TO_INTENT: Record<MoodType, MoodIntentMapping> = {
+    anxious:     { category: 'patience',    label: 'Finding peace through patience' },
+    sad:         { category: 'comfort',     label: "Finding comfort in Allah's words" },
+    hopeful:     { category: 'hope',        label: 'Nurturing your hope' },
+    strong:      { category: 'gratitude',   label: 'Expressing gratitude for strength' },
+    frustrated:  { category: 'patience',    label: 'Seeking patience during difficulty' },
+    lost:        { category: 'guidance',    label: 'Seeking divine guidance' },
+    heartbroken: { category: 'comfort',     label: 'Healing through divine comfort' },
+    confused:    { category: 'guidance',    label: 'Finding clarity and direction' },
+    calm:        { category: 'remembrance', label: 'Deepening your remembrance' },
+    lonely:      { category: 'loneliness',  label: 'You are never alone with Allah' },
+    inspired:    { category: 'gratitude',   label: 'Channeling your inspiration' },
+};
+
 export type MoodType =
     | 'anxious'
     | 'sad'

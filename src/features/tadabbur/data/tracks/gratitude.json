@@ -1,0 +1,89 @@
+{
+    "id": "gratitude",
+    "name": "Gratitude",
+    "nameArabic": "شُكر",
+    "description": "Verses on thankfulness, blessings, and recognising Allah's gifts",
+    "difficulty": "beginner",
+    "estimatedMinutes": 7,
+    "isPro": true,
+    "icon": "hand-heart",
+    "color": "#F59E0B",
+    "passages": [
+        {
+            "surahNumber": 14,
+            "startVerse": 7,
+            "endVerse": 7,
+            "prompts": [
+                {
+                    "id": "g-14-1",
+                    "text": "Think of a blessing you usually take for granted. How would life look without it?",
+                    "category": "personal",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "g-14-2",
+                    "text": "What is one way you can show more gratitude today — not just in words, but in action?",
+                    "category": "action",
+                    "aiGenerated": false
+                }
+            ]
+        },
+        {
+            "surahNumber": 16,
+            "startVerse": 18,
+            "endVerse": 18,
+            "prompts": [
+                {
+                    "id": "g-16-1",
+                    "text": "If you tried to count Allah's blessings, you couldn't. Which uncountable blessings stand out to you right now?",
+                    "category": "contemplation",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "g-16-2",
+                    "text": "How does knowing that Allah is Forgiving and Merciful change the way you see your mistakes?",
+                    "category": "personal",
+                    "aiGenerated": false
+                }
+            ]
+        },
+        {
+            "surahNumber": 31,
+            "startVerse": 12,
+            "endVerse": 12,
+            "prompts": [
+                {
+                    "id": "g-31-1",
+                    "text": "Luqman was given wisdom, and the first thing mentioned is gratitude. What's the connection between wisdom and thankfulness in your experience?",
+                    "category": "contemplation",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "g-31-2",
+                    "text": "Who in your life exemplifies gratitude? What can you learn from them?",
+                    "category": "personal",
+                    "aiGenerated": false
+                }
+            ]
+        },
+        {
+            "surahNumber": 39,
+            "startVerse": 7,
+            "endVerse": 7,
+            "prompts": [
+                {
+                    "id": "g-39-1",
+                    "text": "Allah is not in need of your gratitude, yet He is pleased by it. What does this tell you about the nature of gratitude?",
+                    "category": "contemplation",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "g-39-2",
+                    "text": "When things go wrong, how do you balance gratitude with honest frustration?",
+                    "category": "personal",
+                    "aiGenerated": false
+                }
+            ]
+        }
+    ]
+}

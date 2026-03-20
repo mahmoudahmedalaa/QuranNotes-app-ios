@@ -16,7 +16,7 @@ import {
 import * as Haptics from 'expo-haptics';
 
 const { width: SCREEN_W } = Dimensions.get('window');
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = 9;
 const CURRENT_STEP = 3;
 
 // Sparkle positions for ambient floating particles
@@ -39,13 +39,13 @@ export default function OnboardingAiTafseer() {
     const handleContinue = () => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         goToStep(CURRENT_STEP + 1);
-        router.push('/onboarding/quran-font');
+        router.push('/onboarding/tadabbur' as any);
     };
 
     const handleSkip = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         goToStep(CURRENT_STEP + 1);
-        router.push('/onboarding/quran-font');
+        router.push('/onboarding/tadabbur' as any);
     };
 
     return (

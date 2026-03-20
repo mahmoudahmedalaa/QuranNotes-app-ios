@@ -48,7 +48,8 @@ export default function DashboardScreen() {
                     {/* 1. Mood Check-In */}
                     <MoodCheckInCard />
 
-                    {/* 2. Daily Verse */}
+
+                    {/* 3. Daily Verse */}
                     <DailyVerseCard />
 
                     {/* 3. Daily Hadith */}

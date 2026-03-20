@@ -27,6 +27,8 @@ const VERSES_PER_SESSION = 4;
 interface MoodContextType {
     /** Check in with a mood — returns shuffled verses or null if gated */
     checkIn: (mood: MoodType) => Promise<MoodVerse[] | null>;
+    /** Record a mood entry from an external source (e.g. Tadabbur) without gating */
+    recordMoodEntry: (mood: MoodType) => Promise<void>;
     /** Whether the user can check in (Pro or has free uses) */
     canCheckIn: boolean;
     /** Free uses remaining (0 = gated for free users) */
@@ -45,6 +47,7 @@ interface MoodContextType {
 
 const MoodContext = createContext<MoodContextType>({
     checkIn: async () => null,
+    recordMoodEntry: async () => {},
     canCheckIn: true,
     freeUsesRemaining: MAX_FREE_USES,
     todayMood: null,
@@ -218,6 +221,23 @@ export const MoodProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [canCheckIn, isPro, freeUsesRemaining, moodHistory, uid, recordActivity]);
 
+    /** Record a mood entry from an external source (no gating, no verse selection) */
+    const recordMoodEntry = useCallback(async (mood: MoodType): Promise<void> => {
+        try {
+            const keys = storageKeys(uid);
+            const entry: MoodEntry = {
+                mood,
+                timestamp: new Date().toISOString(),
+                versesShown: [],
+            };
+            const updatedHistory = [entry, ...moodHistory].slice(0, 100);
+            setMoodHistory(updatedHistory);
+            await AsyncStorage.setItem(keys.HISTORY, JSON.stringify(updatedHistory));
+        } catch (e) {
+            if (__DEV__) console.error('[MoodContext] Error recording mood entry:', e);
+        }
+    }, [moodHistory, uid]);
+
     const resetToday = useCallback(() => {
         setTodayMood(null);
         setTodayVerses([]);
@@ -227,6 +247,7 @@ export const MoodProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const value = useMemo(() => ({
         checkIn,
+        recordMoodEntry,
         canCheckIn,
         freeUsesRemaining,
         todayMood,
@@ -234,7 +255,7 @@ export const MoodProvider: React.FC<{ children: React.ReactNode }> = ({ children
         moodHistory,
         resetToday,
         loading,
-    }), [checkIn, canCheckIn, freeUsesRemaining, todayMood, todayVerses, moodHistory, resetToday, loading]);
+    }), [checkIn, recordMoodEntry, canCheckIn, freeUsesRemaining, todayMood, todayVerses, moodHistory, resetToday, loading]);
 
     return (
         <MoodContext.Provider value={value}>

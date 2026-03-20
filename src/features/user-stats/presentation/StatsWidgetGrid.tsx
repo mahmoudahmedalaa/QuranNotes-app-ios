@@ -63,6 +63,7 @@ interface StatsWidgetGridProps {
     pagesRead: number;
     completedJuzCount: number;
     currentRound: number;
+    tadabburSessions?: number;
 }
 
 export const StatsWidgetGrid: React.FC<StatsWidgetGridProps> = ({
@@ -72,6 +73,7 @@ export const StatsWidgetGrid: React.FC<StatsWidgetGridProps> = ({
     pagesRead,
     completedJuzCount,
     currentRound,
+    tadabburSessions = 0,
 }) => {
     const theme = useTheme();
 
@@ -91,6 +93,10 @@ export const StatsWidgetGrid: React.FC<StatsWidgetGridProps> = ({
         {
             light: ['#FFFFFF', '#F8F0FF'],
             dark: ['#1E1A2E', '#251F30'],
+        },
+        {
+            light: ['#FFFFFF', '#ECFDF5'],
+            dark: ['#1A2E2A', '#1F302B'],
         },
     ];
 
@@ -130,6 +136,16 @@ export const StatsWidgetGrid: React.FC<StatsWidgetGridProps> = ({
                 gradientColors={theme.dark ? cardGradients[3].dark : cardGradients[3].light}
                 delay={400}
             />
+            {tadabburSessions > 0 && (
+                <StatCard
+                    icon="leaf-outline"
+                    label="Tadabbur Sessions"
+                    value={`${tadabburSessions}`}
+                    color="#14B8A6"
+                    gradientColors={theme.dark ? cardGradients[4].dark : cardGradients[4].light}
+                    delay={500}
+                />
+            )}
         </View>
     );
 };

@@ -2,6 +2,8 @@
  * MoodCheckInCard — Home screen mood selection card.
  * Headspace/Calm-inspired: soft rounded bubbles with custom illustrations + label.
  * Shows as a collapsible card below StreakCounter.
+ *
+ * On mood selection → shows MoodSplashOverlay (2 seconds) → navigates to Tadabbur session.
  */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { View, StyleSheet, Pressable, Dimensions, Animated as RNAnimated, Easing as RNEasing } from 'react-native';
@@ -17,11 +19,12 @@ import {
     interpolate,
     Extrapolation,
 } from 'react-native-reanimated';
-import { MoodType, MOOD_CONFIGS, MOOD_LIST, MoodVerse } from '../../../core/domain/entities/Mood';
+import { MoodType, MOOD_CONFIGS, MOOD_LIST } from '../../../core/domain/entities/Mood';
 import { useMood } from '../infrastructure/MoodContext';
 import { usePro } from '../../auth/infrastructure/ProContext';
+import { useTadabbur } from '../../tadabbur/infrastructure/TadabburContext';
 import { Spacing, BorderRadius, Typography } from '../../../core/theme/DesignSystem';
-import VerseRecommendationSheet from './VerseRecommendationSheet';
+import { MoodSplashOverlay } from './MoodSplashOverlay';
 
 
 
@@ -101,7 +104,7 @@ function AnimatedMoodPill({
                         {config.label}
                     </Text>
                     <Text style={[styles.todayHint, { color: theme.colors.onSurfaceVariant }]}>
-                        Tap to view your verses
+                        Tap to start reflection
                     </Text>
                 </View>
                 {/* Chevron */}
@@ -126,11 +129,11 @@ export default function MoodCheckInCard() {
     const theme = useTheme();
     const router = useRouter();
     const { isPro } = usePro();
-    const { checkIn, canCheckIn, freeUsesRemaining, todayMood, todayVerses } = useMood();
-    const [selectedVerses, setSelectedVerses] = useState<MoodVerse[]>([]);
-    const [sheetVisible, setSheetVisible] = useState(false);
+    const { checkIn, canCheckIn, freeUsesRemaining, todayMood } = useMood();
+    const { startMoodSession } = useTadabbur();
     const [loading, setLoading] = useState(false);
     const [isEditingMood, setIsEditingMood] = useState(false);
+    const [splashMood, setSplashMood] = useState<MoodType | null>(null);
 
     const handleMoodSelect = useCallback(async (mood: MoodType) => {
         if (!canCheckIn) {
@@ -142,21 +145,41 @@ export default function MoodCheckInCard() {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         setLoading(true);
 
-        const verses = await checkIn(mood);
+        // Record the mood check-in (still tracks today's mood)
+        await checkIn(mood);
         setLoading(false);
+        setIsEditingMood(false);
 
-        if (verses) {
-            setSelectedVerses(verses);
-            setIsEditingMood(false);
-            setSheetVisible(true);
-        }
-    }, [canCheckIn, checkIn, router]);
+        // Show the mood splash overlay
+        setSplashMood(mood);
 
-    const handleViewTodayVerses = useCallback(() => {
+        // Start the Tadabbur session in the BACKGROUND while splash is visible
+        // This way AI verse loading happens during the 10-second splash
+        startMoodSession(mood).catch((e) => {
+            if (__DEV__) console.warn('[MoodCheckIn] Session start failed:', e);
+        });
+    }, [canCheckIn, checkIn, router, startMoodSession]);
+
+    const handleSplashComplete = useCallback(() => {
+        // Session is already started (during splash) — just navigate
+        setSplashMood(null);
+        router.push('/tadabbur-session');
+    }, [router]);
+
+    const handleSplashCancel = useCallback(() => {
+        setSplashMood(null);
+    }, []);
+
+    const handleTodayMoodTap = useCallback(async () => {
+        if (!todayMood) return;
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        setSelectedVerses(todayVerses);
-        setSheetVisible(true);
-    }, [todayVerses]);
+
+        // Show splash and start session in the background
+        setSplashMood(todayMood);
+        startMoodSession(todayMood).catch((e) => {
+            if (__DEV__) console.warn('[MoodCheckIn] Session start failed:', e);
+        });
+    }, [todayMood, startMoodSession]);
 
     const animationStyle = useCallback((value: number) => {
         'worklet';
@@ -236,7 +259,7 @@ export default function MoodCheckInCard() {
                         /* ── Already checked in — animated mood pill ── */
                         <AnimatedMoodPill
                             mood={todayMood}
-                            onPress={handleViewTodayVerses}
+                            onPress={handleTodayMoodTap}
                             onChangeMood={() => setIsEditingMood(true)}
                         />
                     ) : (
@@ -284,12 +307,14 @@ export default function MoodCheckInCard() {
                 </View>
             </MotiView>
 
-            <VerseRecommendationSheet
-                visible={sheetVisible}
-                verses={selectedVerses}
-                mood={todayMood}
-                onDismiss={() => setSheetVisible(false)}
-            />
+            {/* Mood Splash Overlay — shown for 2 seconds after mood selection */}
+            {splashMood && (
+                <MoodSplashOverlay
+                    mood={splashMood}
+                    onComplete={handleSplashComplete}
+                    onCancel={handleSplashCancel}
+                />
+            )}
         </>
     );
 }
@@ -323,7 +348,8 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         textAlign: 'center',
         letterSpacing: 0.2,
-        marginTop: -25, // Stronger offset for the bottom padding in the PNG to prevent cutoff
+        marginTop: -20,
+        width: ITEM_WIDTH + 45,
     },
     // ── Selected mood pill ──
     todayPill: {

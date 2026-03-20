@@ -91,6 +91,7 @@ export default function InsightsScreen() {
                         pagesRead={stats.pagesRead}
                         completedJuzCount={completedJuz.length}
                         currentRound={currentRound}
+                        tadabburSessions={stats.tadabburSessions}
                     />
 
                     <ActivityChart data={dailyActivity} />

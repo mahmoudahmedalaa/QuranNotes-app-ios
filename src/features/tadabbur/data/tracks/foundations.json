@@ -1,0 +1,107 @@
+{
+    "id": "foundations",
+    "name": "Foundations",
+    "nameArabic": "أساسيات",
+    "description": "Core beliefs and pillars of faith — perfect for beginners",
+    "difficulty": "beginner",
+    "estimatedMinutes": 5,
+    "isPro": false,
+    "icon": "book-open-page-variant",
+    "color": "#A78BFA",
+    "passages": [
+        {
+            "surahNumber": 1,
+            "startVerse": 1,
+            "endVerse": 7,
+            "prompts": [
+                {
+                    "id": "f-1-1",
+                    "text": "When have you felt Allah's mercy most recently in your life?",
+                    "category": "personal",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "f-1-2",
+                    "text": "What does it mean to you personally that Allah is 'Lord of all the worlds'?",
+                    "category": "contemplation",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "f-1-3",
+                    "text": "Think about the 'straight path' — what does staying on it look like in your daily routine?",
+                    "category": "action",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "f-1-4",
+                    "text": "You ask Allah for guidance every day in this surah. What guidance are you seeking most right now?",
+                    "category": "personal",
+                    "aiGenerated": false
+                }
+            ]
+        },
+        {
+            "surahNumber": 112,
+            "startVerse": 1,
+            "endVerse": 4,
+            "prompts": [
+                {
+                    "id": "f-112-1",
+                    "text": "Allah is described as 'The One.' How does this oneness bring you comfort when life feels chaotic?",
+                    "category": "contemplation",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "f-112-2",
+                    "text": "What does it mean to you that Allah is 'As-Samad' — the Self-Sufficient upon whom all depend?",
+                    "category": "personal",
+                    "aiGenerated": false
+                }
+            ]
+        },
+        {
+            "surahNumber": 113,
+            "startVerse": 1,
+            "endVerse": 5,
+            "prompts": [
+                {
+                    "id": "f-113-1",
+                    "text": "What is one thing you feel you need protection from today? Speak honestly.",
+                    "category": "personal",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "f-113-2",
+                    "text": "Seeking refuge in Allah is an act of trust. When has that trust been most tested for you?",
+                    "category": "contemplation",
+                    "aiGenerated": false
+                }
+            ]
+        },
+        {
+            "surahNumber": 114,
+            "startVerse": 1,
+            "endVerse": 6,
+            "prompts": [
+                {
+                    "id": "f-114-1",
+                    "text": "The 'whisperer' retreats when you remember Allah. What are the whispers you struggle with most?",
+                    "category": "personal",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "f-114-2",
+                    "text": "How do you ground yourself when negative thoughts start to spiral?",
+                    "category": "action",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "f-114-3",
+                    "text": "Allah is described as King, God, and Protector of mankind. Which role resonates with you most today?",
+                    "category": "contemplation",
+                    "aiGenerated": false
+                }
+            ]
+        }
+    ]
+}

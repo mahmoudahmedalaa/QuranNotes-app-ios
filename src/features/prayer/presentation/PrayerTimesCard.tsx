@@ -9,6 +9,7 @@ import { useTheme } from 'react-native-paper';
 import { Feather } from '@expo/vector-icons';
 import { MotiView } from 'moti';
 import { usePrayer } from '../infrastructure/PrayerContext';
+import { QiblaCompass } from './QiblaCompass';
 import { Spacing, BorderRadius, Shadows } from '../../../core/theme/DesignSystem';
 import * as Haptics from 'expo-haptics';
 
@@ -174,6 +175,16 @@ export const PrayerTimesCard: React.FC = () => {
                                     </View>
                                 </MotiView>
                             ))}
+
+                            {/* Qibla Compass */}
+                            <View style={[styles.divider, { backgroundColor: theme.colors.outlineVariant }]} />
+                            <MotiView
+                                from={{ opacity: 0, translateY: 8 }}
+                                animate={{ opacity: 1, translateY: 0 }}
+                                transition={{ type: 'timing', duration: 300, delay: 300 }}
+                            >
+                                <QiblaCompass enabled={expanded} />
+                            </MotiView>
                         </View>
                     )}
                 </View>

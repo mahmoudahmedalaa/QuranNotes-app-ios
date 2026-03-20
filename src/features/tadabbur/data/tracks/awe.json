@@ -1,0 +1,82 @@
+{
+    "id": "awe",
+    "name": "Awe & Wonder",
+    "nameArabic": "تأمّل",
+    "description": "Marvel at creation and the signs of Allah in the universe",
+    "difficulty": "beginner",
+    "estimatedMinutes": 8,
+    "isPro": true,
+    "icon": "creation",
+    "color": "#8B5CF6",
+    "passages": [
+        {
+            "surahNumber": 55,
+            "startVerse": 1,
+            "endVerse": 13,
+            "prompts": [
+                {
+                    "id": "a-55-1",
+                    "text": "Allah begins by saying He taught the Quran. What has the Quran taught you that nothing else could?",
+                    "category": "personal",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "a-55-2",
+                    "text": "Which of your Lord's favours would you deny? Pause and name three you've experienced today.",
+                    "category": "gratitude",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "a-55-3",
+                    "text": "The sun, moon, stars, and plants all submit to Allah. What does 'submission' look like for you?",
+                    "category": "contemplation",
+                    "aiGenerated": false
+                }
+            ]
+        },
+        {
+            "surahNumber": 67,
+            "startVerse": 3,
+            "endVerse": 4,
+            "prompts": [
+                {
+                    "id": "a-67-1",
+                    "text": "Allah challenges you to look for any flaw in creation. When you look at the sky or nature, what amazes you most?",
+                    "category": "contemplation",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "a-67-2",
+                    "text": "Your vision will return 'humbled and exhausted' after searching for imperfection. What does this teach you about perfectionism in your own life?",
+                    "category": "personal",
+                    "aiGenerated": false
+                }
+            ]
+        },
+        {
+            "surahNumber": 78,
+            "startVerse": 6,
+            "endVerse": 16,
+            "prompts": [
+                {
+                    "id": "a-78-1",
+                    "text": "The earth is described as a bed, mountains as pegs, and the night as a covering. Which of these images speaks to you most — and why?",
+                    "category": "contemplation",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "a-78-2",
+                    "text": "Sleep is called a 'rest' and the day is for livelihood. How intentionally do you use your mornings?",
+                    "category": "action",
+                    "aiGenerated": false
+                },
+                {
+                    "id": "a-78-3",
+                    "text": "Rain is sent from clouds to bring forth grain and vegetation. What spiritual 'rain' has revived something in your life recently?",
+                    "category": "personal",
+                    "aiGenerated": false
+                }
+            ]
+        }
+    ]
+}

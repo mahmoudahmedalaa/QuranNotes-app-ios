@@ -4,11 +4,14 @@ import { useStreaks } from '../../features/auth/infrastructure/StreakContext';
 import { useKhatma } from '../../features/khatma/infrastructure/KhatmaContext';
 import { useAdhkar } from '../../features/adhkar/infrastructure/AdhkarContext';
 import { useRepositories } from '../di/RepositoryContext';
+import { useAuth } from '../../features/auth/infrastructure/AuthContext';
 import { Colors } from '../theme/DesignSystem';
 import { Recording } from '../domain/entities/Recording';
 import { Note } from '../../features/notes/domain/Note';
 import { TimeframePeriod } from '../../shared/components/TimeframeSelector';
 import { ReadingActivityLog } from '../infrastructure/ReadingActivityLog';
+import TadabburRepository from '../../features/tadabbur/data/TadabburRepository';
+import { TadabburSession } from '../../features/tadabbur/domain/entities/Reflection';
 
 // ── Smart time formatting ────────────────────────────────────────────
 export function formatTime(totalMinutes: number): string {
@@ -56,6 +59,8 @@ export interface InsightMetrics {
         recordingsCount: number;
         totalRecordingMinutes: number;
         favoritesCount: number;
+        tadabburSessions: number;
+        tadabburMinutes: number;
     };
     loading: boolean;
 }
@@ -65,24 +70,29 @@ export const useInsightsData = (breakdownTimeframe: TimeframePeriod = 'all'): In
     const { totalPagesRead, completedJuz, completedSurahs, readingLog } = useKhatma();
     const { getCompletionPercentage } = useAdhkar();
     const { recordingRepo, noteRepo } = useRepositories();
+    const { user } = useAuth();
+    const uid = user?.id || 'anonymous';
     const [recordings, setRecordings] = useState<Recording[]>([]);
     const [notes, setNotes] = useState<Note[]>([]);
+    const [tadabburSessions, setTadabburSessions] = useState<TadabburSession[]>([]);
     const [loading, setLoading] = useState(true);
 
     const fetchData = useCallback(async () => {
         try {
-            const [fetchedRecordings, fetchedNotes] = await Promise.all([
+            const [fetchedRecordings, fetchedNotes, fetchedTadabbur] = await Promise.all([
                 recordingRepo.getAllRecordings(),
                 noteRepo.getAllNotes(),
+                TadabburRepository.getSessions(uid),
             ]);
             setRecordings(fetchedRecordings);
             setNotes(fetchedNotes);
+            setTadabburSessions(fetchedTadabbur);
         } catch (error) {
             if (__DEV__) console.error('Failed to fetch insight data:', error);
         } finally {
             setLoading(false);
         }
-    }, [recordingRepo, noteRepo]);
+    }, [recordingRepo, noteRepo, uid]);
 
     useFocusEffect(
         useCallback(() => {
@@ -102,6 +112,12 @@ export const useInsightsData = (breakdownTimeframe: TimeframePeriod = 'all'): In
         if (!cutoff) return notes;
         return notes.filter(n => new Date(n.createdAt) >= cutoff);
     }, [notes, breakdownTimeframe]);
+
+    const filteredTadabbur = useMemo(() => {
+        const cutoff = getCutoffDate(breakdownTimeframe);
+        if (!cutoff) return tadabburSessions;
+        return tadabburSessions.filter(s => new Date(s.createdAt) >= cutoff);
+    }, [tadabburSessions, breakdownTimeframe]);
 
     // Pages read filtered by timeframe using actual date-stamped reading log
     const filteredPagesRead = useMemo(() => {
@@ -144,6 +160,16 @@ export const useInsightsData = (breakdownTimeframe: TimeframePeriod = 'all'): In
             const dateStr = isNaN(nd.getTime()) ? '' : nd.toISOString().split('T')[0];
             if (activityMap.has(dateStr)) {
                 activityMap.set(dateStr, (activityMap.get(dateStr) || 0) + 5);
+            }
+        });
+
+        // Tadabbur sessions
+        tadabburSessions.forEach(s => {
+            const sd = new Date(s.createdAt);
+            const dateStr = isNaN(sd.getTime()) ? '' : sd.toISOString().split('T')[0];
+            if (activityMap.has(dateStr)) {
+                const mins = Math.max(1, Math.round((s.durationSeconds || 0) / 60));
+                activityMap.set(dateStr, (activityMap.get(dateStr) || 0) + mins);
             }
         });
 
@@ -204,6 +230,15 @@ export const useInsightsData = (breakdownTimeframe: TimeframePeriod = 'all'): In
             }
         }
 
+        // Tadabbur sessions contribute to heatmap
+        tadabburSessions.forEach(s => {
+            const sd = new Date(s.createdAt);
+            const dateStr = isNaN(sd.getTime()) ? '' : sd.toISOString().split('T')[0];
+            if (dateStr) {
+                heatmap.set(dateStr, (heatmap.get(dateStr) || 0) + 1);
+            }
+        });
+
         return Array.from(heatmap.entries()).map(([date, count]) => ({ date, count }));
     };
 
@@ -227,7 +262,12 @@ export const useInsightsData = (breakdownTimeframe: TimeframePeriod = 'all'): In
             return sum + Math.round(5 * (pct / 100));
         }, 0);
 
-        const totalMins = readingMins + recordingMins + notesMins + adhkarMins;
+        // Tadabbur: actual duration from sessions
+        const tadabburMins = Math.ceil(
+            filteredTadabbur.reduce((acc, s) => acc + (s.durationSeconds || 0), 0) / 60,
+        );
+
+        const totalMins = readingMins + recordingMins + notesMins + adhkarMins + tadabburMins;
 
         if (totalMins === 0) {
             return {
@@ -250,19 +290,22 @@ export const useInsightsData = (breakdownTimeframe: TimeframePeriod = 'all'): In
             { value: donutVal(adhkarMins), color: Colors.chartAdhkar, text: `${pct(adhkarMins)}%`, label: 'Adhkar', minutes: adhkarMins },
             { value: donutVal(recordingMins), color: Colors.chartRecording, text: `${pct(recordingMins)}%`, label: 'Recording', minutes: recordingMins },
             { value: donutVal(notesMins), color: Colors.chartNotes, text: `${pct(notesMins)}%`, label: 'Notes', minutes: notesMins },
+            { value: donutVal(tadabburMins), color: Colors.chartTadabbur, text: `${pct(tadabburMins)}%`, label: 'Tadabbur', minutes: tadabburMins },
         ];
 
         return { topicBreakdown: breakdown, filteredTotalTime: totalMins };
-    }, [filteredRecordings, filteredNotes, filteredPagesRead, getCompletionPercentage]);
+    }, [filteredRecordings, filteredNotes, filteredPagesRead, filteredTadabbur, getCompletionPercentage]);
 
     // 4. Overall Stats (always all-time)
     const totalRecordingSeconds = recordings.reduce((acc, r) => acc + (r.duration || 0), 0);
+    const totalTadabburSeconds = tadabburSessions.reduce((acc, s) => acc + (s.durationSeconds || 0), 0);
     const totalTimeMinutes = useMemo(() => {
         const recSecs = recordings.reduce((acc, r) => acc + (r.duration || 0), 0);
         const noteSecs = notes.length * 5 * 60;
         const khatmaSecs = totalPagesRead * 2 * 60;
-        return Math.round((recSecs + noteSecs + khatmaSecs) / 60);
-    }, [recordings, notes, totalPagesRead]);
+        const tadabburSecs = tadabburSessions.reduce((acc, s) => acc + (s.durationSeconds || 0), 0);
+        return Math.round((recSecs + noteSecs + khatmaSecs + tadabburSecs) / 60);
+    }, [recordings, notes, totalPagesRead, tadabburSessions]);
 
     return {
         dailyActivity: getDailyActivity(),
@@ -279,6 +322,8 @@ export const useInsightsData = (breakdownTimeframe: TimeframePeriod = 'all'): In
             recordingsCount: recordings.length,
             totalRecordingMinutes: Math.round(totalRecordingSeconds / 60),
             favoritesCount: completedSurahs.length,
+            tadabburSessions: tadabburSessions.length,
+            tadabburMinutes: Math.round(totalTadabburSeconds / 60),
         },
         loading,
     };

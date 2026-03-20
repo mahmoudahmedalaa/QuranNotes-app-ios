@@ -63,6 +63,7 @@ const lightColors = {
     chartAdhkar: '#F59E0B',    // Warm amber (Adhkar)
     chartRecording: '#EF4444', // Coral red (Recording)
     chartNotes: '#3B82F6',     // Sky blue (Notes)
+    chartTadabbur: '#14B8A6',  // Teal (Tadabbur/Meditation)
     chartEmpty: '#E2E8F0',     // Grey 3: Borders/Empty states
 
     // Heatmap (Strict Purple scale)
@@ -115,6 +116,7 @@ const darkColors = {
     chartAdhkar: '#FBBF24',    // Warm amber
     chartRecording: '#F87171', // Light coral
     chartNotes: '#60A5FA',     // Lighter blue
+    chartTadabbur: '#2DD4BF',  // Light teal (Tadabbur/Meditation)
     chartEmpty: '#27272A',     // Grey 3
 
     // Heatmap
